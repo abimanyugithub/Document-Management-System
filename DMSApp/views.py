@@ -15,7 +15,7 @@ class DepartemenListView(CreateView, ListView):
     template_name = 'DMSApp/CrudDepartemen/view.html'
     context_object_name = 'departemen_list'  # For ListView
     fields = ['nm_departemen', 'nm_perusahaan', 'deskripsi']
-    success_url = '/departemen/page/'
+    success_url = '/departemen/page'
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -27,14 +27,18 @@ class DepartemenListView(CreateView, ListView):
         if Departemen.objects.filter(nm_departemen=nm_departemen).exists():
             form.add_error('nm_departemen', "A department with this name already exists.")
             return self.form_invalid(form)
-        return super().form_valid(form)
+        else:
+            response = super().form_valid(form)
+        return redirect(self.request.META.get('HTTP_REFERER'))
 
 class DepartemenUpdateView(UpdateView):
+    model = Departemen
+    fields = ['nm_departemen', 'nm_perusahaan', 'deskripsi']
     
     def post(self, request, pk):
-        department_instance_update = Departemen.objects.get(nm_departemen=pk)
+        department_instance_update = Departemen.objects.get(id=pk)
         nama_dept = request.POST.get('nm_departemen')
-        nama_pt = request.POST.get('nm_perusahaan')
+        '''nama_pt = request.POST.get('nm_perusahaan')
         desc = request.POST.get('deskripsi')
 
         if nama_dept:
@@ -45,14 +49,24 @@ class DepartemenUpdateView(UpdateView):
             department_instance_update.nm_perusahaan = nama_pt
             department_instance_update.deskripsi = desc
 
-        department_instance_update.save(update_fields=['nm_departemen', 'nm_perusahaan', 'deskripsi'])
+        department_instance_update.save(update_fields=['nm_departemen', 'nm_perusahaan', 'deskripsi'])'''
+        
+        # Check if there is an existing Dokumen instance with the same no_dokumen and nama_dokumen
+        existing_department = Departemen.objects.filter(nm_departemen=nama_dept).exclude(id=pk).exists()
+        
+        if not existing_department:
+            # Update other fields if there's no existing Dokumen instance with the same values
+            for field in self.fields:
+                if request.POST.get(field):
+                    setattr(department_instance_update, field, request.POST.get(field))
+            department_instance_update.save(update_fields=self.fields)
 
         return redirect(self.request.META.get('HTTP_REFERER'))
 
 class DepartemenEnableDisableView(UpdateView):
 
     def post(self, request, pk):
-        department_instance_update = Departemen.objects.get(nm_departemen=pk)
+        department_instance_update = Departemen.objects.get(id=pk)
         set_aktif = request.POST.get('aktivasi')
 
         if set_aktif == "nonaktif":
@@ -98,9 +112,9 @@ class DokumenListView(CreateView, ListView):
             pass
 
         # Extracting file names only for file_pdf and file_sheet
-        for dl in queryset:
+        '''for dl in queryset:
             dl.file_pdf = os.path.basename(dl.file_pdf.name)
-            dl.file_sheet = os.path.basename(dl.file_sheet.name)
+            dl.file_sheet = os.path.basename(dl.file_sheet.name)'''
         return queryset
     
     def get_context_data(self, **kwargs):
@@ -125,7 +139,7 @@ class DokumenListView(CreateView, ListView):
             form.instance.nama_file_pdf = form.cleaned_data['file_pdf']
             form.instance.nama_file_sheet = form.cleaned_data['file_sheet']
             # Define the directory path
-            directory = folder_target + menu_name + '/' + dept_name
+            directory = os.path.join(folder_target, menu_name, dept_name)
             # Create the directory if it doesn't exist
             if not os.path.exists(directory):
                 os.makedirs(directory)
@@ -135,13 +149,13 @@ class DokumenListView(CreateView, ListView):
             form.instance.file_sheet.name = os.path.join(directory, form.instance.file_sheet.name)
             form.save()
             
-            with open(form.instance.file_pdf.name, 'wb+') as destination:
+            '''with open(form.instance.file_pdf.name, 'wb+') as destination:
                 for chunk in form.cleaned_data['file_pdf'].chunks():
                     destination.write(chunk)
                     
             with open(form.instance.file_sheet.name, 'wb+') as destination:
                 for chunk in form.cleaned_data['file_sheet'].chunks():
-                    destination.write(chunk)
+                    destination.write(chunk)'''
 
             response = super().form_valid(form)
         # Redirect to the dokumen_view URL with the menu parameter
@@ -154,7 +168,10 @@ class DokumenUpdateView(UpdateView):
     
     def post(self, request, pk):
         dokumen_instance_update = Dokumen.objects.get(id=pk)
-
+        menu_name = self.request.GET.get('menu')
+        dept_name = self.request.GET.get('dept')
+        # Define the directory path
+        directory = os.path.join(folder_target, menu_name, dept_name)
         no_dokumen = request.POST.get('no_dokumen')
         nama_dokumen = request.POST.get('nama_dokumen')
         
@@ -166,6 +183,21 @@ class DokumenUpdateView(UpdateView):
             for field in self.fields:
                 if request.POST.get(field):
                     setattr(dokumen_instance_update, field, request.POST.get(field))
+
+            # Handle FileField updates
+            if 'file_pdf' in request.FILES:
+                # Overwrite existing file or delete if new file is None
+                if dokumen_instance_update.file_pdf:
+                    os.remove(dokumen_instance_update.file_pdf.path)
+                file_pdf = request.FILES['file_pdf']
+                dokumen_instance_update.file_pdf.save(os.path.join(directory, file_pdf.name), file_pdf, save=False)
+            if 'file_sheet' in request.FILES:
+                # Overwrite existing file or delete if new file is None
+                if dokumen_instance_update.file_sheet:
+                    os.remove(dokumen_instance_update.file_sheet.path)
+                file_sheet = request.FILES['file_sheet']
+                dokumen_instance_update.file_sheet.save(os.path.join(directory, file_sheet.name), file_sheet, save=False)
+
             dokumen_instance_update.save(update_fields=self.fields)
             
         return redirect(self.request.META.get('HTTP_REFERER'))

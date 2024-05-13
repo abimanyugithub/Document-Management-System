@@ -1,4 +1,5 @@
 {% load static %}
+{% load custom_filters %}
 
 {% include 'DMSApp/Komponen/navbar.html' %}
 
@@ -10,7 +11,7 @@
           <div class="row">
             <div class="col-12 col-xl-8 mb-4 mb-xl-0">
               <h3 class="font-weight-bold">Document Management System</h3>
-              <h6 class="font-weight-normal mb-0">Department</h6>
+              <p class="font-weight-normal mb-0">Department</p>
             </div>
             <div class="col-12 col-xl-4">
              <div class="justify-content-end d-flex">
@@ -44,10 +45,10 @@
                   {% for field in form %}
                   <div class="form-group">
                     <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                    {% if field.name != 'deskripsi' %}
-                      <input type="text" class="form-control" id="{{ field.id_for_label }}" name="{{ field.name }}" placeholder="{{ field.label }}" required>
+                    {% if field.name == 'deskripsi' %}
+                    <textarea class="form-control" id="{{ field.id_for_label }}" name="{{ field.name }}" placeholder="{{ field.label }}" required></textarea>
                     {% else %}
-                      <textarea class="form-control" id="{{ field.id_for_label }}" name="{{ field.name }}" placeholder="{{ field.label }}" required></textarea>
+                    <input type="text" class="form-control" id="{{ field.id_for_label }}" name="{{ field.name }}" placeholder="{{ field.label }}" required>
                     {% endif %}
                   </div>
                   {% endfor %}
@@ -121,20 +122,23 @@
                 </button>
               </div>
               <div class="modal-body">
-                <form class="forms-sample" method="post" action="{% url 'departemen_update' pk=obj.nm_departemen %}" autocomplete="off">
+                <form class="forms-sample" method="post" action="{% url 'departemen_update' pk=obj.id %}" autocomplete="off">
                   {% csrf_token %}
                   {% for field in form %}
                   <div class="form-group">
                     <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                    {% if field.name != 'deskripsi' %}
-                      {% if field.name == 'nm_departemen' %}
-                      <input type="text" class="form-control" id="{{ field.id_for_label }}" name="{{ field.name }}" placeholder="{{ field.label }}" value="{{ obj.nm_departemen }}" required>
-                      {% elif field.name == 'nm_perusahaan' %}
-                      <input type="text" class="form-control" id="{{ field.id_for_label }}" name="{{ field.name }}" placeholder="{{ field.label }}" value="{{ obj.nm_perusahaan }}" required>
-                      {% endif %}
-                    {% else %}
-                    <textarea class="form-control" id="{{ field.id_for_label }}" name="{{ field.name }}" placeholder="{{ field.label }}" required>{{ obj.deskripsi }}</textarea>
-                    {% endif %}
+                    {% if field.name == 'deskripsi' %}
+                    <textarea class="form-control" id="{{ field.id_for_label }}" name="{{ field.name }}" placeholder="{{ field.label }}" required>{{ obj|get_field_value:field.name }}</textarea>
+                    {% elif field.name == 'is_priority2' %}
+                  <div class="form-check form-check-flat form-check-primary">
+                    <label class="form-check-label" for="{{ field.id_for_label }}">
+                      <input type="checkbox" class="form-check-input" id="{{ field.id_for_label }}" name="{{ field.name }}" {% if obj.is_priority2 %}checked{% endif %}>
+                      {{ field.label }}
+                    </label>
+                  </div>
+                  {% else %}
+                  <input type="text" class="form-control" id="{{ field.id_for_label }}" name="{{ field.name }}" placeholder="{{ field.label }}" value="{{ obj|get_field_value:field.name }}" required>
+                  {% endif %}
                   </div>
                   {% endfor %}
                   <button type="submit" class="btn btn-primary mr-2">Submit</button>
@@ -167,7 +171,7 @@
                   {% if obj.is_active %}Deactivate{% else %}Activate{% endif %} department?
               </div>
               <div class="modal-footer">
-                <form class="forms-sample" method="post" action="{% url 'departemen_is_active' pk=obj.nm_departemen %}">
+                <form class="forms-sample" method="post" action="{% url 'departemen_is_active' pk=obj.id %}">
                   {% csrf_token %}
                   <input type="hidden" name="aktivasi" {% if obj.is_active %}value="nonaktif"{% endif %}>
                 <button type="submit" class="btn btn-primary mr-2">Yes</button>
