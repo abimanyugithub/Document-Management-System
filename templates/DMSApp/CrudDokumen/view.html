@@ -1,4 +1,5 @@
 {% load static %}
+{% load custom_filters %}
 
 {% include 'DMSApp/Komponen/navbar.html' %}
       <!-- partial -->
@@ -9,7 +10,7 @@
               <div class="row">
                 <div class="col-12 col-xl-8 mb-4 mb-xl-0">
                   <h3 class="font-weight-bold">Document Management System</h3>
-                  <h6 class="font-weight-normal mb-0">Document / {{ sub_directory.sub_directory|capfirst }}{% if nm_department %} / {{ nm_department|capfirst }}{% endif %}</h6>
+                  <p class="font-weight-normal mb-0">Document / {{ sub_directory.sub_directory|capfirst }}{% if nm_department %} / {{ nm_department|capfirst }}{% endif %}</p>
                 </div>
                 {% if nm_department %}
                 <div class="col-12 col-xl-4">
@@ -63,14 +64,14 @@
                           </div>
                           {% endfor %}
                           <button type="submit" class="btn btn-primary mr-2">Upload</button>
-                          <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+                          <button type="button" class="btn btn-danger" data-dismiss="modal">Tutup</button>
                         </form>
                       </div>
                       <div class="col-md-6">
-                        <div class="form-group" id="pdf_viewer_container">
+                        <div class="form-group" >
                           <label for="pdf_viewer">PDF Viewer</label>
                           <!-- <iframe id="pdf_viewer" src="" width="100%" height="650px" frameborder="0"></iframe> -->
-                          <embed id="pdf_viewer" src="" type="application/pdf" width="100%" height="650px" />
+                          <embed class="pdf_viewer" src="" type="application/pdf" width="100%" height="650px" />
                         </div>
                       </div>
                     </div>
@@ -88,7 +89,7 @@
               if (input.files && input.files[0]) {
                 var reader = new FileReader();
                 reader.onload = function(e) {
-                  $('#pdf_viewer').attr('src', e.target.result);
+                  $('.pdf_viewer').attr('src', e.target.result);
                 }
                 reader.readAsDataURL(input.files[0]);
               }
@@ -136,6 +137,7 @@
                           <th>PDF File</th>
                           <th>Sheet File</th>
                           <th>Status</th>
+                          <th>Action</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -149,6 +151,16 @@
                           <td>{{ dl.file_pdf }}</td>
                           <td>{{ dl.file_sheet }}</td>
                           <td>{% if dl.is_approved %}<div class="badge badge-success">Completed</div>{% else %}<div class="badge badge-warning">Pending</div>{% endif %}</td>
+                          <td>
+                            <div class="d-flex">
+                              <button type="button" class="mr-2 btn btn-primary btn-rounded btn-icon" data-toggle="modal" data-target="#mod0-{{ dl.id }}">
+                                <i class="ti-pencil-alt"></i>
+                              </button>
+                              <button type="button" class="btn btn-rounded btn-icon btn-danger" data-toggle="modal" data-target="#mod1-{{ dl.id }}">
+                                <i class="ti-trash"></i>
+                              </button>
+                            </div>
+                          </td>
                         </tr>
                         {% endfor %}
                       </tbody>
@@ -159,6 +171,105 @@
             </div>
           </div>
           {% endif %}
+
+          <!-- Modal update dokumen -->
+          {% for obj in dokumen_list %}
+          <div class="modal fade" id="mod0-{{ obj.id }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true" data-backdrop="static">
+            <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="exampleModalLabel" style="display: flex; align-items: center;">
+                    <i class="mdi mdi-help-circle mdi-24px text-primary mr-2"></i>
+                    update<b>&nbsp;{{ obj.no_dokumen }}-{{ obj.nama_dokumen }}</b>
+                  </h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body">
+                  <div class="row">
+                    <div class="col-md-6">
+                      <form class="forms-sample" action="{% url 'dokumen_update' pk=obj.id %}" method="post" autocomplete="off" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        {% for field in form %}
+                        <div class="form-group">
+                          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                          {% if field.name == 'tanggal_efektif' or field.name == 'tanggal_revisi' %}
+                          <input type="date" class="form-control" id="{{ field.id_for_label }}" name="{{ field.name }}" placeholder="{{ field.label }}" value="{% with date_value=obj|get_field_value:field.name %}{% if date_value %}{{ date_value|date:'Y-m-d' }}{% endif %}{% endwith %}"  required>
+                          {% elif field.name == 'file_pdf' or field.name == 'file_sheet' %}
+                          <input type="file" name="{{ field.name }}" class="file-upload-default" accept={% if field.name == 'file_pdf' %}".pdf"{% else %}".ods, .xlsx"{% endif %} {% if field.name == 'file_pdf' %}onchange="displayPDF(this)"{% endif %} value="{{ obj|get_field_value:field.name }}">
+                          <div class="input-group col-xs-12">
+                            <input type="text" class="form-control file-upload-info" disabled placeholder="{{ field.label }}" value="{{ obj|get_field_value:field.name }}">
+                            <span class="input-group-append">
+                              <button class="file-upload-browse btn btn-primary" type="button">Browse</button>
+                            </span>
+                          </div>
+                          {% else %}
+                          <input type="text" class="form-control" id="{{ field.id_for_label }}" name="{{ field.name }}" placeholder="{{ field.label }}" value="{{ obj|get_field_value:field.name }}" required>
+                          {% endif %}
+                        </div>
+                        {% endfor %}
+                        <button type="submit" class="btn btn-primary mr-2">Edit</button>
+                        <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+                      </form>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="form-group" >
+                        <label for="pdf_viewer">PDF Viewer</label>
+                        <!-- <iframe id="pdf_viewer" src="" width="100%" height="650px" frameborder="0"></iframe> -->
+                        <embed class="pdf_viewer" src="" type="application/pdf" width="100%" height="650px" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="modal-footer">
+                  <!-- footer modal -->
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <script>
+            function displayPDF(input) {
+              if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                  $('.pdf_viewer').attr('src', e.target.result);
+                }
+                reader.readAsDataURL(input.files[0]);
+              }
+            }
+          </script>
+          {% endfor %}
+
+          <!-- Modal delete dokumen -->
+          {% for obj in dokumen_list %}
+          <div class="modal fade" id="mod1-{{ obj.id }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="exampleModalLabel" style="display: flex; align-items: center;">
+                    <i class="mdi mdi-help-circle mdi-24px text-primary mr-2"></i>
+                    <b>hapus dokumen {{ obj.no_dokumen }}</b>
+                  </h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body">
+                  Ini akan dihapus secara <span class="text-danger">permanen</span>, tetap hapus dokumen?
+                </div>
+                <div class="modal-footer">
+                  <form class="forms-sample" method="post" action="{% url 'dokumen_delete' pk=obj.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary mr-2">Hapus</button>
+                    <button type="button" class="btn btn-danger" data-dismiss="modal">Tutup</button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
 
           
         </div>

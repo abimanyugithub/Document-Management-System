@@ -66,6 +66,9 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
+            'libraries': { #   masukan DMSApp/templatetags/custom_filters.py sebagai library
+                'custom_filters': 'DMSApp.templatetags.custom_filters'
+            }
         },
     },
 ]

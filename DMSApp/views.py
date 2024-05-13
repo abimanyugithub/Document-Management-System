@@ -1,11 +1,9 @@
-from typing import Any
 from django.shortcuts import render
-from django.views.generic import TemplateView, CreateView, ListView, UpdateView
+from django.views.generic import TemplateView, CreateView, ListView, UpdateView, DeleteView
 from .models import MenuDokumen, Departemen, Dokumen
 from django.shortcuts import redirect
-from django.http import JsonResponse
-from django.urls import reverse
 import os
+
 folder_target = 'media/DMSApp/'
 # Create your views here.
 class DashboardView(TemplateView):
@@ -19,6 +17,10 @@ class DepartemenListView(CreateView, ListView):
     fields = ['nm_departemen', 'nm_perusahaan', 'deskripsi']
     success_url = '/departemen/page/'
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        return queryset.order_by('nm_departemen')
+    
     def form_valid(self, form):
         # Custom form validation
         nm_departemen = form.cleaned_data['nm_departemen']
@@ -84,7 +86,7 @@ class DokumenListView(CreateView, ListView):
     context_object_name = 'dokumen_list'
     # paginate_by = 10
     fields = ['no_dokumen', 'nama_dokumen', 'tanggal_efektif', 'revisi_no', 'tanggal_revisi', 'file_pdf', 'file_sheet']
-    success_url = '/document'
+    success_url = '/document/page'
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -109,7 +111,7 @@ class DokumenListView(CreateView, ListView):
             nm_directory = MenuDokumen.objects.get(sub_directory=menu_name)
             context['sub_directory'] = nm_directory
             context['nm_department'] = dept_name
-            context['departemen_list'] = Departemen.objects.all()
+            context['departemen_list'] = Departemen.objects.all().order_by('nm_departemen')
         return context
 
     def form_valid(self, form):
@@ -144,6 +146,47 @@ class DokumenListView(CreateView, ListView):
             response = super().form_valid(form)
         # Redirect to the dokumen_view URL with the menu parameter
         # return redirect(reverse('dokumen_view') + f'?menu={self.request.GET.get("menu")}')
+        return redirect(self.request.META.get('HTTP_REFERER'))
+    
+class DokumenUpdateView(UpdateView):
+    model = Dokumen
+    fields = ['no_dokumen', 'nama_dokumen', 'tanggal_efektif', 'revisi_no', 'tanggal_revisi', 'file_pdf', 'file_sheet']
+    
+    def post(self, request, pk):
+        dokumen_instance_update = Dokumen.objects.get(id=pk)
+
+        no_dokumen = request.POST.get('no_dokumen')
+        nama_dokumen = request.POST.get('nama_dokumen')
+        
+        # Check if there is an existing Dokumen instance with the same no_dokumen and nama_dokumen
+        existing_dokumen = Dokumen.objects.filter(no_dokumen=no_dokumen, nama_dokumen=nama_dokumen).exclude(id=pk).exists()
+        
+        if not existing_dokumen:
+            # Update other fields if there's no existing Dokumen instance with the same values
+            for field in self.fields:
+                if request.POST.get(field):
+                    setattr(dokumen_instance_update, field, request.POST.get(field))
+            dokumen_instance_update.save(update_fields=self.fields)
+            
+        return redirect(self.request.META.get('HTTP_REFERER'))
+    
+
+class DokumenDeleteView(DeleteView):
+    
+    def post(self, request, pk):
+        document_instance_delete = Dokumen.objects.get(id=pk)
+        # Get the file paths from the file_pdf and file_sheet fields
+        file_pdf_path = document_instance_delete.file_pdf.path
+        file_sheet_path = document_instance_delete.file_sheet.path
+
+        # Delete the files if they exist
+        if os.path.exists(file_pdf_path):
+            os.remove(file_pdf_path)
+        if os.path.exists(file_sheet_path):
+            os.remove(file_sheet_path)
+        # Delete the Dokumen object
+        document_instance_delete.delete()
+
         return redirect(self.request.META.get('HTTP_REFERER'))
         
 '''class SOPFlowListView(ListView):
