@@ -35,6 +35,12 @@
   <script src="{% static 'DMSApp/js/dashboard.js' %}"></script>
   <script src="{% static 'DMSApp/js/Chart.roundedBarCharts.js' %}"></script>
   <script src="{% static 'DMSApp/js/file-upload.js' %}"></script>
+  <script>
+    $(window).on('load', function() {
+        $('#loading').fadeOut('slow', function() {
+            $('#content').fadeIn('slow');
+        });
+    });
+  </script>
 </body>
-
 </html>
