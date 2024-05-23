@@ -217,13 +217,13 @@
                       <div class="form-group" >
                         <label for="pdf_viewer">PDF Viewer</label>
                         <!-- <iframe id="pdf_viewer" src="" width="100%" height="650px" frameborder="0"></iframe> -->
-                        <embed class="pdf_viewer" src="{{ obj.file_pdf.url }}" type="application/pdf" width="100%" height="650px" />
+                        <embed class="pdf_viewer" src="{{ obj.file_pdf_url }}" type="application/pdf" width="100%" height="650px" />
                       </div>
                     </div>
                   </div>
                 </div>
                 <div class="modal-footer">
-                  <!-- footer modal --><a href="{{ obj.file_pdf.url }}">Open PDF</a>
+                  <!-- footer modal --><a href="{{ obj.file_pdf_url }}" target="_blank">Open PDF</a>
                 </div>
               </div>
             </div>

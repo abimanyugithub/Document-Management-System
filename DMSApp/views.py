@@ -2,6 +2,8 @@ from django.shortcuts import render
 from django.views.generic import TemplateView, CreateView, ListView, UpdateView, DeleteView
 from .models import MenuDokumen, Departemen, Dokumen
 from django.shortcuts import redirect
+from django.conf import settings
+from urllib.parse import urljoin
 import os
 
 folder_target = 'media/DMSApp/'
@@ -111,10 +113,14 @@ class DokumenListView(CreateView, ListView):
         else:
             pass
 
-        # Extracting file names only for file_pdf and file_sheet
-        '''for dl in queryset:
+        # Process each item in the queryset
+        for dl in queryset:
+            # Use urljoin to create the full URL for file_pdf
+            dl.file_pdf_url = urljoin(settings.MEDIA_URL, dl.file_pdf.url)
+
+            # Extract the base names for file_pdf and file_sheet
             dl.file_pdf = os.path.basename(dl.file_pdf.name)
-            dl.file_sheet = os.path.basename(dl.file_sheet.name)'''
+            dl.file_sheet = os.path.basename(dl.file_sheet.name)
         return queryset
     
     def get_context_data(self, **kwargs):
