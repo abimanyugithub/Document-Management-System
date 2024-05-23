@@ -49,8 +49,9 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    #   masukan middleware classes DMSApp/middleware.py u/ set to "SAMEORIGIN"
+    'DMSApp.middleware.CustomXFrameOptionsMiddleware',
 ]
-
 ROOT_URLCONF = 'DMSProject.urls'
 
 TEMPLATES = [
@@ -127,6 +128,11 @@ USE_TZ = False
 
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+
+# Define the base URL for serving media files
+MEDIA_URL = '/'
+# Define the directory where uploaded media files will be stored
+MEDIA_ROOT = BASE_DIR
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
