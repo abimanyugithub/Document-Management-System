@@ -32,6 +32,11 @@
     .modal.fade.show *:focus {
       outline: none !important;
     }
+    .breadcrumb {
+      border-radius: 0; /* Remove border-radius */
+      border: none; /* Remove border */
+      background-color: transparent; /* Make background transparent */
+    }
   </style>
   <style>
     #loading {
@@ -114,11 +119,33 @@
         transform: translate(24px, 0);
       }
     }
-
     .loading-text {
       margin-bottom: 20px; /* Space between text and spinner */
       font-size: 1.5rem;
       color: inherit; /* Inherit color from parent */
+    }
+
+
+    .inputs{
+      position: relative;
+     }
+  
+    .form-control-search {
+      text-indent: 15px;
+      border: none;
+      height: 45px;
+      border-radius: 0px;
+      border-bottom: 1px solid #eee;
+    }
+    /* ganti warna input text 
+    .form-control:focus  {
+        color: blue;
+    } 
+    */
+    .inputs i{
+      position: absolute;
+      top: 14px;
+      left: 4px;
     }
   </style>
 </head>
