@@ -119,12 +119,12 @@
         transform: translate(24px, 0);
       }
     }
+
     .loading-text {
       margin-bottom: 20px; /* Space between text and spinner */
       font-size: 1.5rem;
       color: inherit; /* Inherit color from parent */
     }
-
 
     .inputs{
       position: relative;
@@ -517,7 +517,16 @@
                 <div class="form-group">
                   <label for="new_menu">Document Name</label>
                     <input type="text" class="form-control" id="new_menu" name="new_menu" placeholder="Enter new document item" required>
-                </div>
+                    
+                    <p class="mt-2">By default, when creating a new document name, the program will only ask to upload PDF files (.pdf) and sheet files (.xls, .xlsx, .ods).</p>
+                    <p>Secara default, saat membuat nama baru dokumen, program hanya akan meminta untuk mengunggah file PDF (.pdf) dan file sheet (.xls, .xlsx, .ods).</p>
+                    <div class="form-check">
+                      <label class="form-check-label">
+                        <input type="checkbox" class="form-check-input" name="additional">Include additional file
+                      </label>
+                      </div>
+                  </div>
+
                 <button type="submit" class="btn btn-primary mr-2">Create</button>
                 <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
               </form>

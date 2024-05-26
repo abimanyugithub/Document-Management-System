@@ -167,6 +167,7 @@
                       <tbody>
                         {% for dl in dokumen_list %}
                         <tr>
+                          <td>{{ dl.no_form }}</td>
                           <td>{{ dl.no_dokumen }}</td>
                           <td>{{ dl.nama_dokumen }}</td>
                           <td>{{ dl.tanggal_efektif|date:"d-m-Y" }}</td>

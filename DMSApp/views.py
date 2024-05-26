@@ -1,10 +1,11 @@
 from django.shortcuts import render
 from django.views.generic import TemplateView, CreateView, ListView, UpdateView, DeleteView
-from .models import MenuDokumen, Departemen, Dokumen
+from .models import MenuDokumen, Departemen, Dokumen, LampiranDokumen
 from django.shortcuts import redirect
 from django.conf import settings
 from urllib.parse import urljoin
 import os
+from django import forms
 
 folder_target = 'media/DMSApp/'
 # Create your views here.
@@ -84,9 +85,10 @@ class DepartemenEnableDisableView(UpdateView):
 def add_menu(request):
     if request.method == 'POST':
         new_menu_name = request.POST.get('new_menu')
+        add_additional = request.POST.get('additional') == 'on'  # Check if the checkbox is checked
         if new_menu_name:
             if not MenuDokumen.objects.filter(sub_directory=new_menu_name).exists():
-                MenuDokumen.objects.create(sub_directory=new_menu_name)
+                MenuDokumen.objects.create(sub_directory=new_menu_name, is_additional=add_additional)
                 # Define the directory path
                 directory = folder_target + new_menu_name
                 # Create the directory if it doesn't exist
@@ -96,23 +98,55 @@ def add_menu(request):
             
     return redirect(request.META.get('HTTP_REFERER'))
 
+class CreateMenuDokumenView(CreateView):
+    model = MenuDokumen
+    template_name = 'DMSApp/CrudMenuDokumen/create.html'
+    fields = ['sub_directory', 'no_form', 'no_dokumen', 'nama_dokumen',
+              'tanggal_efektif', 'revisi_no', 'tanggal_revisi', 'no_part', 'nama_part','nama_supplier',
+              'nama_customer', 'doc_pdf', 'doc_sheet', 'doc_additional']
+    success_url = '/document/page'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Specify the fields you want to render as checkboxes dynamically
+        context['default_checked'] = ['no_dokumen', 'nama_dokumen', 'tanggal_efektif', 'revisi_no', 'tanggal_revisi']
+        context['doc_file'] = ['doc_pdf', 'doc_sheet', 'doc_additional']
+        return context
+
 class DokumenListView(CreateView, ListView):
     model = Dokumen
     template_name = 'DMSApp/CrudDokumen/view.html'
     context_object_name = 'dokumen_list'
     # paginate_by = 10
-    fields = ['no_dokumen', 'nama_dokumen', 'tanggal_efektif', 'revisi_no', 'tanggal_revisi', 'file_pdf', 'file_sheet']
+    fields = ['no_form', 'no_dokumen', 'nama_dokumen', 'tanggal_efektif', 'revisi_no', 'tanggal_revisi', 'no_part', 'nama_part','nama_supplier', 'nama_customer']
     success_url = '/document/page'
 
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        directory_id = self.request.GET.get('directory_id')
+        if directory_id:
+            try:
+                directory = MenuDokumen.objects.get(pk=directory_id)
+                # Add conditions for other fields based on your needs
+                # Example conditions (assuming similar boolean fields exist)
+                if not directory.is_active:  # Adjust this condition based on your actual logic
+                    form.fields.pop('no_form', None)
+                    form.fields.pop('nama_part', None)
+                    form.fields.pop('no_part', None)
+                    form.fields.pop('nama_supplier', None)
+            except MenuDokumen.DoesNotExist:
+                pass
+        return form
+   
     def get_queryset(self):
         queryset = super().get_queryset()
         menu_name = self.request.GET.get('menu')
         dept_name = self.request.GET.get('dept')  # get the value of 'dept' parameter
         if menu_name:
             queryset = queryset.filter(directory__sub_directory=menu_name, dokumen_dept__nm_departemen=dept_name)
-        else:
-            pass
-
+        return queryset
+        
+    '''
         # Process each item in the queryset
         for dl in queryset:
             # Use urljoin to create the full URL for file_pdf
@@ -122,6 +156,7 @@ class DokumenListView(CreateView, ListView):
             dl.file_pdf = os.path.basename(dl.file_pdf.name)
             dl.file_sheet = os.path.basename(dl.file_sheet.name)
         return queryset
+    '''
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
