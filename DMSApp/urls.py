@@ -13,7 +13,7 @@ urlpatterns = [
    # path('fms/sop-flow/dokumen/', views.DokumenListView.as_view(), name='list_view'),
 
     path('add-menu/', views.add_menu, name='add-menu'),
-    path('add-menu/create/', views.CreateMenuDokumenView.as_view(), name='menu_dokumen_view'),
+    path('add-menu/create/', views.CreateMenuDokumenView.as_view(), name='menu_dokumen_create'),
 
     path('document/page/', views.DokumenListView.as_view(), name='dokumen_view'),
     path('document/update/<str:pk>/', views.DokumenUpdateView.as_view(), name='dokumen_update'),

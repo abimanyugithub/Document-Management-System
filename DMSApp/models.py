@@ -6,7 +6,7 @@ class Departemen(models.Model):
     nm_departemen = models.CharField(max_length=100, null=True)
     deskripsi = models.CharField(max_length=100, null=True)
     nm_perusahaan = models.CharField(max_length=100, null=True)
-    is_active = models.BooleanField(default=True, null=True)
+    is_active = models.BooleanField(default=True)
 
     def __str__(self):
         return self.nm_departemen
@@ -15,21 +15,21 @@ class MenuDokumen(models.Model):
     sub_directory = models.CharField(max_length=100, null=True)
     # dokumen_dept = models.ForeignKey(Departemen, on_delete=models.CASCADE)
     # nm_dokumen = models.CharField(max_length=100, null=True)
-    doc_pdf = models.BooleanField(default=True, null=True)
-    doc_sheet = models.BooleanField(default=True, null=True)
-    doc_additional = models.BooleanField(default=False, null=True)
-    no_form = models.BooleanField(default=False, null=True)
-    no_part = models.BooleanField(default=False, null=True)
-    nama_part = models.BooleanField(default=False, null=True)
-    nama_supplier = models.BooleanField(default=False, null=True)
-    nama_customer = models.BooleanField(default=False, null=True)
+    doc_pdf = models.BooleanField(default=True)
+    doc_sheet = models.BooleanField(default=True)
+    doc_additional = models.BooleanField(default=False)
+    no_form = models.BooleanField(default=False)
+    no_part = models.BooleanField(default=False)
+    nama_part = models.BooleanField(default=False)
+    nama_supplier = models.BooleanField(default=False)
+    nama_customer = models.BooleanField(default=False)
     # default
-    no_dokumen = models.BooleanField(default=True, null=True)
-    nama_dokumen = models.BooleanField(default=True, null=True)
-    tanggal_efektif = models.BooleanField(default=True, null=True)
-    revisi_no = models.BooleanField(default=True, null=True)
-    tanggal_revisi = models.BooleanField(default=True, null=True)
-    is_active = models.BooleanField(default=True, null=True)
+    no_dokumen = models.BooleanField(default=True)
+    nama_dokumen = models.BooleanField(default=True)
+    tanggal_efektif = models.BooleanField(default=True)
+    revisi_no = models.BooleanField(default=True)
+    tanggal_revisi = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=True)
 
 
 class Dokumen(models.Model):
@@ -48,9 +48,9 @@ class Dokumen(models.Model):
     nama_supplier = models.CharField(max_length=100, null=True)
     nama_customer = models.CharField(max_length=100, null=True)
     is_approved = models.BooleanField(default=False, null=True)
-    is_active = models.BooleanField(default=True, null=True)
+    is_active = models.BooleanField(default=True)
 
 class LampiranDokumen(models.Model):
     dokumen = models.ForeignKey(Dokumen, on_delete=models.CASCADE, null=True)
     lampiran = models.FileField(null=True, storage=None)
-    is_active = models.BooleanField(default=True, null=True)
+    is_active = models.BooleanField(default=True)

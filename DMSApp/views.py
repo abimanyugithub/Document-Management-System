@@ -109,8 +109,8 @@ class CreateMenuDokumenView(CreateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         # Specify the fields you want to render as checkboxes dynamically
-        context['default_checked'] = ['no_dokumen', 'nama_dokumen', 'tanggal_efektif', 'revisi_no', 'tanggal_revisi']
-        context['doc_file'] = ['doc_pdf', 'doc_sheet', 'doc_additional']
+        context['default_checked'] = ['no_dokumen', 'nama_dokumen', 'tanggal_efektif', 'revisi_no', 'tanggal_revisi', 'doc_pdf', 'doc_sheet']
+        # context['doc_file'] = ['doc_pdf', 'doc_sheet', 'doc_additional']
         return context
 
 class DokumenListView(CreateView, ListView):
