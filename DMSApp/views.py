@@ -112,7 +112,7 @@ class CreateMenuDokumenView(CreateView):
         context['default_checked'] = ['no_dokumen', 'nama_dokumen', 'tanggal_efektif', 'revisi_no', 'tanggal_revisi', 'doc_pdf', 'doc_sheet']
         # context['doc_file'] = ['doc_pdf', 'doc_sheet', 'doc_additional']
         return context
-
+    
 class DokumenListView(CreateView, ListView):
     model = Dokumen
     template_name = 'DMSApp/CrudDokumen/view.html'
