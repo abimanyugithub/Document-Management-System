@@ -83,15 +83,15 @@
                           <td><input type="checkbox" {% if dl.document_name %}checked{% endif %} disabled></td>
                           <td><input type="checkbox" {% if dl.effective_date %}checked{% endif %} disabled></td>
                           <td><input type="checkbox" {% if dl.revision_no %}checked{% endif %} disabled></td>
-                          <td><input type="checkbox" {% if dl.tanggal_revisi %}checked{% endif %} disabled></td>
-                          <td><input type="checkbox" {% if dl.no_part %}checked{% endif %} disabled></td>
-                          <td><input type="checkbox" {% if dl.nama_part %}checked{% endif %} disabled></td>
-                          <td><input type="checkbox" {% if dl.nama_supplier %}checked{% endif %} disabled></td>
-                          <td><input type="checkbox" {% if dl.nama_customer %}checked{% endif %} disabled></td>
+                          <td><input type="checkbox" {% if dl.revision_date %}checked{% endif %} disabled></td>
+                          <td><input type="checkbox" {% if dl.part_no %}checked{% endif %} disabled></td>
+                          <td><input type="checkbox" {% if dl.part_name %}checked{% endif %} disabled></td>
+                          <td><input type="checkbox" {% if dl.supplier_name %}checked{% endif %} disabled></td>
+                          <td><input type="checkbox" {% if dl.customer_name %}checked{% endif %} disabled></td>
                           <td>
-                            <input type="checkbox" {% if dl.doc_pdf %}checked{% endif %} disabled> PDF
-                            <input type="checkbox" {% if dl.doc_sheet %}checked{% endif %} disabled> Sheet
-                            <input type="checkbox" {% if dl.doc_additional %}checked{% endif %} disabled> Additional
+                            <input type="checkbox" {% if dl.pdf_file %}checked{% endif %} disabled> PDF
+                            <input type="checkbox" {% if dl.sheet_file %}checked{% endif %} disabled> Sheet
+                            <input type="checkbox" {% if dl.other_file %}checked{% endif %} disabled> Additional
                           </td>
                         </tr>
                         {% endfor %}
