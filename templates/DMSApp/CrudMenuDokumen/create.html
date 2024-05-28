@@ -34,7 +34,7 @@
           </div>
 
           <div class="row">
-            <div class="col-md-12 grid-margin stretch-card">
+            <div class="col-lg-6 grid-margin stretch-card">
               <div class="card">
                 <div class="card-body">
                   <p class="card-title">Create New Document</p>
@@ -43,12 +43,12 @@
                       <form class="forms-sample" autocomplete="off" method="post" enctype="multipart/form-data">
                         {% csrf_token %}
                         <div class="row">
-                          <div class="col-md-6">
+                          <div class="col">
                         {% for field in form %}
                           {% if field.name == 'sub_directory' %}
                           <div class="form-group">
                             <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                            <input type="text" class="form-control" id="{{ field.id_for_label }}" name="{{ field.name }}" placeholder="{{ field.label }}">
+                            <input type="text" class="form-control" id="{{ field.id_for_label }}" name="{{ field.name }}" placeholder="{{ field.label }}" required>
                           </div>
                           {% endif %}
                         {% endfor %}
@@ -57,19 +57,22 @@
 
                         <h5>Label Items & Doc. File Items</h5>
                         <div class="row">
-                          <div class="col-md-2">
+                          <div class="col">
                         {% for field in form %}
                           {% if field.name != 'sub_directory' %}
                           
                             <div class="form-group">
                               <div class="form-check">
                                 <label class="form-check-label">
-                                  <input type="checkbox" class="form-check-input" name="additional" {% if field.name in default_checked %}disabled checked{% endif %}>{{ field.label }}
+                                  <input type="checkbox" class="form-check-input" name="{{ field.name }}" {% if field.name in default_checked %}checked disabled{% endif %}>{{ field.label }}
                                 </label>
+                                {% if field.name in default_checked %}
+                                    <input type="hidden" name="{{ field.name }}" value="True">
+                                {% endif %}
                               </div>
                             </div>
                             {% if forloop.counter0|divisibleby:5 %}
-                            </div><div class="col-md-2">
+                            </div><div class="col">
                             {% endif %}
 
                           {% endif %}

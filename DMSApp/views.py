@@ -87,8 +87,8 @@ def add_menu(request):
         new_menu_name = request.POST.get('new_menu')
         add_additional = request.POST.get('additional') == 'on'  # Check if the checkbox is checked
         if new_menu_name:
-            if not MenuDokumen.objects.filter(sub_directory=new_menu_name).exists():
-                MenuDokumen.objects.create(sub_directory=new_menu_name, is_additional=add_additional)
+            if not MenuDokumen.objects.filter(document=new_menu_name).exists():
+                MenuDokumen.objects.create(document=new_menu_name, is_additional=add_additional)
                 # Define the directory path
                 directory = folder_target + new_menu_name
                 # Create the directory if it doesn't exist
@@ -98,27 +98,37 @@ def add_menu(request):
             
     return redirect(request.META.get('HTTP_REFERER'))
 
-class CreateMenuDokumenView(CreateView):
+class MenuDokumenListView(CreateView, ListView):
     model = MenuDokumen
-    template_name = 'DMSApp/CrudMenuDokumen/create.html'
-    fields = ['sub_directory', 'no_form', 'no_dokumen', 'nama_dokumen',
-              'tanggal_efektif', 'revisi_no', 'tanggal_revisi', 'no_part', 'nama_part','nama_supplier',
-              'nama_customer', 'doc_pdf', 'doc_sheet', 'doc_additional']
+    template_name = 'DMSApp/CrudMenuDokumen/view.html'
+    fields = ['document', 'form_no', 'document_no', 'document_name',
+              'effective_date', 'revision_no', 'revision_date', 'part_no', 'part_name','supplier_name',
+              'customer_name', 'pdf_file', 'sheet_file', 'other_file']
     success_url = '/document/page'
+    context_object_name = 'menu_dokumen_list'
+
+    def get_queryset(self):
+        return MenuDokumen.objects.order_by('document')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         # Specify the fields you want to render as checkboxes dynamically
-        context['default_checked'] = ['no_dokumen', 'nama_dokumen', 'tanggal_efektif', 'revisi_no', 'tanggal_revisi', 'doc_pdf', 'doc_sheet']
+        context['default_checked'] = ['document', 'effective_date', 'revision_no', 'revision_date', 'pdf_file', 'sheet_file']
         # context['doc_file'] = ['doc_pdf', 'doc_sheet', 'doc_additional']
         return context
+    
+'''class Viewadditional_fileView(ListView):
+    model = additional_file
+    template_name = 'DMSApp/CrudMenuDokumen/view.html'
+    context_object_name = 'menu_dokumen_list'
+    '''
     
 class DokumenListView(CreateView, ListView):
     model = Dokumen
     template_name = 'DMSApp/CrudDokumen/view.html'
     context_object_name = 'dokumen_list'
     # paginate_by = 10
-    fields = ['no_form', 'no_dokumen', 'nama_dokumen', 'tanggal_efektif', 'revisi_no', 'tanggal_revisi', 'no_part', 'nama_part','nama_supplier', 'nama_customer']
+    fields = ['no_form', 'no_dokumen', 'nama_dokumen', 'tanggal_efektif', 'no_revisi', 'tanggal_revisi', 'no_part', 'nama_part','nama_supplier', 'nama_customer']
     success_url = '/document/page'
 
     def get_form(self, form_class=None):
@@ -205,7 +215,7 @@ class DokumenListView(CreateView, ListView):
     
 class DokumenUpdateView(UpdateView):
     model = Dokumen
-    fields = ['no_dokumen', 'nama_dokumen', 'tanggal_efektif', 'revisi_no', 'tanggal_revisi', 'file_pdf', 'file_sheet']
+    fields = ['no_dokumen', 'nama_dokumen', 'tanggal_efektif', 'no_revisi', 'tanggal_revisi', 'file_pdf', 'file_sheet']
     
     def post(self, request, pk):
         dokumen_instance_update = Dokumen.objects.get(id=pk)

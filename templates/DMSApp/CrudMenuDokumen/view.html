@@ -1,0 +1,107 @@
+{% load static %}
+{% load custom_filters %}
+
+{% include 'DMSApp/Komponen/navbar.html' %}
+      <!-- partial -->
+      <div class="main-panel">
+        <div class="content-wrapper">
+          <div class="row">
+            <div class="col-md-12 grid-margin">
+              <div class="row">
+                <div class="col-12 col-xl-8 mb-4 mb-xl-0">
+                  <h3 class="font-weight-bold">Document Management System</h3>
+                  <nav aria-label="breadcrumb rounded-0">
+                    <ol class="breadcrumb">
+                      <li class="breadcrumb-item">Document</li>
+                      <li class="breadcrumb-item active" aria-current="page">{% if nm_department %}<a href='{% url 'dokumen_view' %}?menu={{ sub_directory.sub_directory }}'>{% endif %}{{ sub_directory.sub_directory|capfirst }}</a></li>
+                      {% if nm_department %}
+                      <li class="breadcrumb-item active" aria-current="page">{{ nm_department|capfirst }}</li>
+                      {% endif %}
+                    </ol>
+                  </nav>
+                </div>
+                <div class="col-12 col-xl-4">
+                  <div class="justify-content-end d-flex">
+                    <div class="dropdown flex-md-grow-1 flex-xl-grow-0">
+                      <button type="button" class="btn btn-primary btn-icon-text" data-toggle="modal" data-target="#modal-create">
+                        <i class="ti-plus btn-icon-prepend"></i>
+                        New
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="row">
+            <div class="col-lg-12 grid-margin stretch-card">
+              <div class="card shadow">
+                <div class="card-body">
+
+                  <div class="row">
+                    <div class="col-8">
+                      <h4 class="card-title">List Documents</h4>
+                      <p class="card-description">
+                        Add class <code>.table-striped</code>
+                      </p>
+                    </div>
+                    <div class="col-4">
+                      <div class="justify-content-end d-flex">
+                        <div class="m-3 inputs">
+                          <i class="icon-search"></i>
+                          <input type="text" class="form-control form-control-search" placeholder="Search {{ sub_directory.sub_directory }}">
+                        </div>
+                    </div>
+                    </div>
+                  </div>
+
+                  <div class="table-responsive">
+                    <table class="table table-md table-striped table-hover">
+                      <thead>
+                        <tr>
+                          <th>Document</th>
+                          <th>Form No.</th>
+                          <th>Document No.</th>
+                          <th>Document Name</th>
+                          <th>Effective Date</th>
+                          <th>Revision No.</th>
+                          <th>Revision Date</th>
+                          <th>Part No.</th>
+                          <th>Part Name</th>
+                          <th>Supplier Name</th>
+                          <th>Customer Name</th>
+                          <th>Available File</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for dl in menu_dokumen_list %}
+                        <tr>
+                          <td>{{ dl.document }}</td>
+                          <td><input type="checkbox" {% if dl.form_no %}checked{% endif %} disabled></td>
+                          <td><input type="checkbox" {% if dl.document_no %}checked{% endif %} disabled></td>
+                          <td><input type="checkbox" {% if dl.document_name %}checked{% endif %} disabled></td>
+                          <td><input type="checkbox" {% if dl.effective_date %}checked{% endif %} disabled></td>
+                          <td><input type="checkbox" {% if dl.revision_no %}checked{% endif %} disabled></td>
+                          <td><input type="checkbox" {% if dl.tanggal_revisi %}checked{% endif %} disabled></td>
+                          <td><input type="checkbox" {% if dl.no_part %}checked{% endif %} disabled></td>
+                          <td><input type="checkbox" {% if dl.nama_part %}checked{% endif %} disabled></td>
+                          <td><input type="checkbox" {% if dl.nama_supplier %}checked{% endif %} disabled></td>
+                          <td><input type="checkbox" {% if dl.nama_customer %}checked{% endif %} disabled></td>
+                          <td>
+                            <input type="checkbox" {% if dl.doc_pdf %}checked{% endif %} disabled> PDF
+                            <input type="checkbox" {% if dl.doc_sheet %}checked{% endif %} disabled> Sheet
+                            <input type="checkbox" {% if dl.doc_additional %}checked{% endif %} disabled> Additional
+                          </td>
+                        </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% include 'DMSApp/CrudMenuDokumen/modal_create.html' %}
+        {% include 'DMSApp/Komponen/footer.html' %}

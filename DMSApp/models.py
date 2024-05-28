@@ -12,23 +12,23 @@ class Departemen(models.Model):
         return self.nm_departemen
 
 class MenuDokumen(models.Model):
-    sub_directory = models.CharField(max_length=100, null=True)
+    document = models.CharField(max_length=100, null=True)
     # dokumen_dept = models.ForeignKey(Departemen, on_delete=models.CASCADE)
     # nm_dokumen = models.CharField(max_length=100, null=True)
-    doc_pdf = models.BooleanField(default=True)
-    doc_sheet = models.BooleanField(default=True)
-    doc_additional = models.BooleanField(default=False)
-    no_form = models.BooleanField(default=False)
-    no_part = models.BooleanField(default=False)
-    nama_part = models.BooleanField(default=False)
-    nama_supplier = models.BooleanField(default=False)
-    nama_customer = models.BooleanField(default=False)
+    pdf_file = models.BooleanField(default=True)
+    sheet_file = models.BooleanField(default=True)
+    other_file = models.BooleanField(default=False)
+    form_no = models.BooleanField(default=False)
+    part_no = models.BooleanField(default=False)
+    part_name = models.BooleanField(default=False)
+    supplier_name = models.BooleanField(default=False)
+    customer_name = models.BooleanField(default=False)
+    document_no = models.BooleanField(default=True)
     # default
-    no_dokumen = models.BooleanField(default=True)
-    nama_dokumen = models.BooleanField(default=True)
-    tanggal_efektif = models.BooleanField(default=True)
-    revisi_no = models.BooleanField(default=True)
-    tanggal_revisi = models.BooleanField(default=True)
+    document_name = models.BooleanField(default=True)
+    effective_date = models.BooleanField(default=True)
+    revision_no = models.BooleanField(default=True)
+    revision_date = models.BooleanField(default=True)
     is_active = models.BooleanField(default=True)
 
 
@@ -39,7 +39,7 @@ class Dokumen(models.Model):
     no_dokumen = models.CharField(max_length=100, null=True) # id_dokumen
     nama_dokumen = models.CharField(max_length=100, null=True) # nm_dokumen
     tanggal_efektif = models.DateTimeField(null=True)
-    revisi_no = models.CharField(max_length=100, null=True)
+    no_revisi = models.CharField(max_length=100, null=True)
     tanggal_revisi = models.DateTimeField(null=True)
     # file_pdf = models.FileField(null=True, storage=None) 
     # file_sheet = models.FileField(null=True, storage=None)
