@@ -1,4 +1,5 @@
-from django.db import models
+from django.db import models # type: ignore
+from django.utils import timezone # type: ignore
 import os
 
 # Create your models here.
@@ -29,7 +30,13 @@ class MenuDokumen(models.Model):
     effective_date = models.BooleanField(default=True)
     revision_no = models.BooleanField(default=True)
     revision_date = models.BooleanField(default=True)
+    date_created = models.DateTimeField(default=timezone.now, blank=True)
+    date_modified = models.DateTimeField(null=True)
     is_active = models.BooleanField(default=True)
+
+    def save(self, *args, **kwargs):
+        self.date_modified = timezone.now()
+        super(MenuDokumen, self).save(*args, **kwargs)
 
 
 class Dokumen(models.Model):

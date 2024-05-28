@@ -61,7 +61,7 @@
                       <thead>
                         <tr>
                           <th>Document</th>
-                          <th>Form No.</th>
+                          <!-- <th>Form No.</th>
                           <th>Document No.</th>
                           <th>Document Name</th>
                           <th>Effective Date</th>
@@ -71,14 +71,17 @@
                           <th>Part Name</th>
                           <th>Supplier Name</th>
                           <th>Customer Name</th>
-                          <th>Available File</th>
+                          <th>Available File</th> -->
+                          <th>Date Created</th>
+                          <th>Date Modified</th>
+                          <th>Action</th>
                         </tr>
                       </thead>
                       <tbody>
                         {% for dl in menu_dokumen_list %}
                         <tr>
-                          <td>{{ dl.document }}</td>
-                          <td><input type="checkbox" {% if dl.form_no %}checked{% endif %} disabled></td>
+                          <td>{{ dl.document|capfirst }}</td>
+                          <!--<td><input type="checkbox" {% if dl.form_no %}checked{% endif %} disabled></td>
                           <td><input type="checkbox" {% if dl.document_no %}checked{% endif %} disabled></td>
                           <td><input type="checkbox" {% if dl.document_name %}checked{% endif %} disabled></td>
                           <td><input type="checkbox" {% if dl.effective_date %}checked{% endif %} disabled></td>
@@ -91,8 +94,11 @@
                           <td>
                             <input type="checkbox" {% if dl.pdf_file %}checked{% endif %} disabled> PDF
                             <input type="checkbox" {% if dl.sheet_file %}checked{% endif %} disabled> Sheet
-                            <input type="checkbox" {% if dl.other_file %}checked{% endif %} disabled> Additional
-                          </td>
+                            <input type="checkbox" {% if dl.other_file %}checked{% endif %} disabled> Other
+                          </td>-->
+                          <td>{{ dl.date_created|date:"d-m-Y H:i" }}</td>
+                          <td>{{ dl.date_modified|date:"d-m-Y H:i" }}</td>
+                          <td>Edit Delete</td>
                         </tr>
                         {% endfor %}
                       </tbody>
