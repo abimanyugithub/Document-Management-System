@@ -1,0 +1,103 @@
+{% load custom_filters %}
+
+<!-- Modal update departemen -->
+{% for obj in menu_dokumen_list %}
+<div class="modal fade" id="mod0-{{ obj.document }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true" data-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel" style="display: flex; align-items: center;">
+          <i class="mdi mdi-help-circle mdi-24px text-primary mr-2"></i>
+          update<b>&nbsp;{{ obj.department }}</b>
+        </h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form class="forms-sample" method="post" action="{% url 'departemen_update' pk=obj.id %}" autocomplete="off">
+          {% csrf_token %}
+          <div class="row">
+            <div class="col">
+              {% for field in form %}
+              <div class="form-group">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {% if field.name == 'deskripsi' %}
+                <textarea class="form-control" id="{{ field.id_for_label }}" name="{{ field.name }}" placeholder="{{ field.label }}" required>{{ obj|get_field_value:field.name }}</textarea>
+                {% elif field.name == 'is_priority2' %}
+              <div class="form-check form-check-flat form-check-primary">
+                <label class="form-check-label" for="{{ field.id_for_label }}">
+                  <input type="checkbox" class="form-check-input" id="{{ field.id_for_label }}" name="{{ field.name }}" {% if obj.is_priority2 %}checked{% endif %}>
+                  {{ field.label }}
+                </label>
+              </div>
+              {% else %}
+              <input type="text" class="form-control" id="{{ field.id_for_label }}" name="{{ field.name }}" placeholder="{{ field.label }}" value="{{ obj|get_field_value:field.name }}" required>
+              {% endif %}
+              </div>
+              {% endfor %}
+            </div>
+
+            <div class="col">
+              <p>Allowed Documents</p>
+              <div class="row">
+                {% for dokumen in list_menu_dokumen %}
+                <div class="col-md-6 col-lg-4">
+                  <div class="form-check">
+                    <label class="form-check-label">
+                    <input type="checkbox" class="form-check-input" name="ceklis_dokumen" value="{{ dokumen.id }}"
+                    {% if dokumen in obj.menu_dokumen.all %} checked {% endif %}
+                    >{{ dokumen.document|capfirst }}
+                    </label>
+                <!-- {% if field.name in default_checked %}
+                    <input type="hidden" name="{{ field.name }}" value="True">
+                {% endif %} -->
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+
+          </div>
+
+          <button type="submit" class="btn btn-primary mr-2">Submit</button>
+          <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <!-- footer modal -->
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %}
+
+<!-- Modal disable departemen -->
+{% for obj in departemen_list %}
+<div class="modal fade" id="mod1-{{ obj.department }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel" style="display: flex; align-items: center;">
+          <i class="mdi mdi-help-circle mdi-24px text-primary mr-2"></i>
+          <b>department {{ obj.department }}</b>
+        </h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+          {% if obj.is_active %}Deactivate{% else %}Activate{% endif %} department?
+      </div>
+      <div class="modal-footer">
+        <form class="forms-sample" method="post" action="{% url 'departemen_is_active' pk=obj.id %}">
+          {% csrf_token %}
+          <input type="hidden" name="aktivasi" {% if obj.is_active %}value="nonaktif"{% endif %}>
+        <button type="submit" class="btn btn-primary mr-2">Yes</button>
+      </form>
+        <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %}

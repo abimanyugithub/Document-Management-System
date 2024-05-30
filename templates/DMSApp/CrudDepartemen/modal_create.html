@@ -1,0 +1,60 @@
+
+<!-- Modal create departemen -->
+<div class="modal fade" id="mod1" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true" data-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title" id="exampleModalLabel" style="display: flex; align-items: center;">
+          <i class="mdi mdi-help-circle mdi-24px text-primary mr-2"></i>
+          create new department
+        </h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form class="forms-sample" method="post" autocomplete="off">
+          {% csrf_token %}
+          <div class="row">
+            <div class="col">
+              {% for field in form %}
+              <div class="form-group">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {% if field.name == 'deskripsi' %}
+                <textarea class="form-control" id="{{ field.id_for_label }}" name="{{ field.name }}" placeholder="{{ field.label }}" required></textarea>
+                {% else %}
+                <input type="text" class="form-control" id="{{ field.id_for_label }}" name="{{ field.name }}" placeholder="{{ field.label }}" required>
+                {% endif %}
+              </div>
+              {% endfor %}
+            </div>
+          
+            <div class="col">
+              <p>Allow Documents</p>
+              <div class="row">
+                {% for dokumen in list_menu_dokumen %}
+                <div class="col-md-6 col-lg-4">
+                  <div class="form-check">
+                    <label class="form-check-label">
+                    <input type="checkbox" class="form-check-input" name="ceklis_dokumen" value="{{ dokumen.id }}">{{ dokumen.document|capfirst }}
+                    </label>
+                <!-- {% if field.name in default_checked %}
+                    <input type="hidden" name="{{ field.name }}" value="True">
+                {% endif %} -->
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary mr-2">Submit</button>
+          <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <!-- footer modal -->
+      </div>
+    </div>
+  </div>
+</div>

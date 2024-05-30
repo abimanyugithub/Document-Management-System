@@ -17,54 +17,62 @@ class DepartemenListView(CreateView, ListView):
     model = Departemen
     template_name = 'DMSApp/CrudDepartemen/view.html'
     context_object_name = 'departemen_list'  # For ListView
-    fields = ['nm_departemen', 'nm_perusahaan', 'deskripsi']
+    fields = ['department', 'company', 'location']
     success_url = '/departemen/page'
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        return queryset.order_by('nm_departemen')
+        return queryset.order_by('department')
     
     def form_valid(self, form):
         # Custom form validation
-        nm_departemen = form.cleaned_data['nm_departemen']
-        if Departemen.objects.filter(nm_departemen=nm_departemen).exists():
-            form.add_error('nm_departemen', "A department with this name already exists.")
+        nm_departemen = form.cleaned_data['department']
+        if Departemen.objects.filter(department=nm_departemen).exists():
+            form.add_error('department', "A department with this name already exists.")
             return self.form_invalid(form)
         else:
-            response = super().form_valid(form)
+            departemen = form.save()
+            menu_dokumen_ids = self.request.POST.getlist('ceklis_dokumen')
+            menu_dokumen = MenuDokumen.objects.filter(id__in=menu_dokumen_ids)
+            departemen.menu_dokumen.set(menu_dokumen)
+
         return redirect(self.request.META.get('HTTP_REFERER'))
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['list_menu_dokumen'] = MenuDokumen.objects.all()
+        return context
 
 class DepartemenUpdateView(UpdateView):
     model = Departemen
-    fields = ['nm_departemen', 'nm_perusahaan', 'deskripsi']
+    fields = ['department', 'company', 'location']
     
     def post(self, request, pk):
         department_instance_update = Departemen.objects.get(id=pk)
-        nama_dept = request.POST.get('nm_departemen')
-        '''nama_pt = request.POST.get('nm_perusahaan')
-        desc = request.POST.get('deskripsi')
-
-        if nama_dept:
-            if not Departemen.objects.filter(nm_departemen=nama_dept).exists():
-                department_instance_update.nm_departemen = nama_dept
-
-        if nama_pt or desc:
-            department_instance_update.nm_perusahaan = nama_pt
-            department_instance_update.deskripsi = desc
-
-        department_instance_update.save(update_fields=['nm_departemen', 'nm_perusahaan', 'deskripsi'])'''
-        
+        nama_dept = request.POST.get('department')
         # Check if there is an existing Dokumen instance with the same no_dokumen and nama_dokumen
-        existing_department = Departemen.objects.filter(nm_departemen=nama_dept).exclude(id=pk).exists()
+        existing_department = Departemen.objects.filter(department=nama_dept).exclude(id=pk).exists()
         
         if not existing_department:
             # Update other fields if there's no existing Dokumen instance with the same values
             for field in self.fields:
                 if request.POST.get(field):
                     setattr(department_instance_update, field, request.POST.get(field))
+
+            # Save the updated fields
             department_instance_update.save(update_fields=self.fields)
+            # Get the list of selected MenuDokumen ids from the request
+            selected_menu_dokumen_ids = request.POST.getlist('ceklis_dokumen')
+
+            # Clear the existing associations
+            department_instance_update.menu_dokumen.clear()
+
+            # Associate the selected MenuDokumen instances with the Departemen
+            selected_menu_dokumen = MenuDokumen.objects.filter(id__in=selected_menu_dokumen_ids)
+            department_instance_update.menu_dokumen.add(*selected_menu_dokumen)
 
         return redirect(self.request.META.get('HTTP_REFERER'))
+    
 
 class DepartemenEnableDisableView(UpdateView):
 
@@ -101,11 +109,11 @@ def add_menu(request):
 class MenuDokumenListView(CreateView, ListView):
     model = MenuDokumen
     template_name = 'DMSApp/CrudMenuDokumen/view.html'
+    context_object_name = 'menu_dokumen_list'  # For ListView
     fields = ['document', 'form_no', 'document_no', 'document_name',
               'effective_date', 'revision_no', 'revision_date', 'part_no', 'part_name','supplier_name',
               'customer_name', 'pdf_file', 'sheet_file', 'other_file']
     success_url = '/document/page'
-    context_object_name = 'menu_dokumen_list'
 
     def get_queryset(self):
         return MenuDokumen.objects.order_by('document')

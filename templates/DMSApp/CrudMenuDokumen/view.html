@@ -2,112 +2,122 @@
 {% load custom_filters %}
 
 {% include 'DMSApp/Komponen/navbar.html' %}
-      <!-- partial -->
-      <div class="main-panel">
-        <div class="content-wrapper">
-          <div class="row">
-            <div class="col-md-12 grid-margin">
-              <div class="row">
-                <div class="col-12 col-xl-8 mb-4 mb-xl-0">
-                  <h3 class="font-weight-bold">Document Management System</h3>
-                  <nav aria-label="breadcrumb rounded-0">
-                    <ol class="breadcrumb">
-                      <li class="breadcrumb-item">Document</li>
-                      <li class="breadcrumb-item active" aria-current="page">{% if nm_department %}<a href='{% url 'dokumen_view' %}?menu={{ sub_directory.sub_directory }}'>{% endif %}{{ sub_directory.sub_directory|capfirst }}</a></li>
-                      {% if nm_department %}
-                      <li class="breadcrumb-item active" aria-current="page">{{ nm_department|capfirst }}</li>
-                      {% endif %}
-                    </ol>
-                  </nav>
-                </div>
-                <div class="col-12 col-xl-4">
-                  <div class="justify-content-end d-flex">
-                    <div class="dropdown flex-md-grow-1 flex-xl-grow-0">
-                      <button type="button" class="btn btn-primary btn-icon-text" data-toggle="modal" data-target="#modal-create">
-                        <i class="ti-plus btn-icon-prepend"></i>
-                        New
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+<!-- partial -->
+<div class="main-panel">
+  <div class="content-wrapper">
+    <div class="row">
+      <div class="col-md-12 grid-margin">
+        <div class="row">
+          <div class="col-12 col-xl-8 mb-4 mb-xl-0">
+            <h3 class="font-weight-bold">Document Management System</h3>
+            <nav aria-label="breadcrumb rounded-0">
+              <ol class="breadcrumb">
+                <li class="breadcrumb-item">Document</li>
+                <li class="breadcrumb-item active" aria-current="page">{% if nm_department %}<a href='{% url 'dokumen_view' %}?menu={{ sub_directory.sub_directory }}'>{% endif %}{{ sub_directory.sub_directory|capfirst }}</a></li>
+                {% if nm_department %}
+                <li class="breadcrumb-item active" aria-current="page">{{ nm_department|capfirst }}</li>
+                {% endif %}
+              </ol>
+            </nav>
           </div>
-          
-          <div class="row">
-            <div class="col-lg-12 grid-margin stretch-card">
-              <div class="card shadow">
-                <div class="card-body">
-
-                  <div class="row">
-                    <div class="col-8">
-                      <h4 class="card-title">List Documents</h4>
-                      <p class="card-description">
-                        Add class <code>.table-striped</code>
-                      </p>
-                    </div>
-                    <div class="col-4">
-                      <div class="justify-content-end d-flex">
-                        <div class="m-3 inputs">
-                          <i class="icon-search"></i>
-                          <input type="text" class="form-control form-control-search" placeholder="Search {{ sub_directory.sub_directory }}">
-                        </div>
-                    </div>
-                    </div>
-                  </div>
-
-                  <div class="table-responsive">
-                    <table class="table table-md table-striped table-hover">
-                      <thead>
-                        <tr>
-                          <th>Document</th>
-                          <!-- <th>Form No.</th>
-                          <th>Document No.</th>
-                          <th>Document Name</th>
-                          <th>Effective Date</th>
-                          <th>Revision No.</th>
-                          <th>Revision Date</th>
-                          <th>Part No.</th>
-                          <th>Part Name</th>
-                          <th>Supplier Name</th>
-                          <th>Customer Name</th>
-                          <th>Available File</th> -->
-                          <th>Date Created</th>
-                          <th>Date Modified</th>
-                          <th>Action</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {% for dl in menu_dokumen_list %}
-                        <tr>
-                          <td>{{ dl.document|capfirst }}</td>
-                          <!--<td><input type="checkbox" {% if dl.form_no %}checked{% endif %} disabled></td>
-                          <td><input type="checkbox" {% if dl.document_no %}checked{% endif %} disabled></td>
-                          <td><input type="checkbox" {% if dl.document_name %}checked{% endif %} disabled></td>
-                          <td><input type="checkbox" {% if dl.effective_date %}checked{% endif %} disabled></td>
-                          <td><input type="checkbox" {% if dl.revision_no %}checked{% endif %} disabled></td>
-                          <td><input type="checkbox" {% if dl.revision_date %}checked{% endif %} disabled></td>
-                          <td><input type="checkbox" {% if dl.part_no %}checked{% endif %} disabled></td>
-                          <td><input type="checkbox" {% if dl.part_name %}checked{% endif %} disabled></td>
-                          <td><input type="checkbox" {% if dl.supplier_name %}checked{% endif %} disabled></td>
-                          <td><input type="checkbox" {% if dl.customer_name %}checked{% endif %} disabled></td>
-                          <td>
-                            <input type="checkbox" {% if dl.pdf_file %}checked{% endif %} disabled> PDF
-                            <input type="checkbox" {% if dl.sheet_file %}checked{% endif %} disabled> Sheet
-                            <input type="checkbox" {% if dl.other_file %}checked{% endif %} disabled> Other
-                          </td>-->
-                          <td>{{ dl.date_created|date:"d-m-Y H:i" }}</td>
-                          <td>{{ dl.date_modified|date:"d-m-Y H:i" }}</td>
-                          <td>Edit Delete</td>
-                        </tr>
-                        {% endfor %}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
+          <div class="col-12 col-xl-4">
+            <div class="justify-content-end d-flex">
+              <div class="dropdown flex-md-grow-1 flex-xl-grow-0">
+                <button type="button" class="btn btn-primary btn-icon-text" data-toggle="modal" data-target="#modal-create">
+                  <i class="ti-plus btn-icon-prepend"></i>
+                  New
+                </button>
               </div>
             </div>
           </div>
         </div>
-        {% include 'DMSApp/CrudMenuDokumen/modal_create.html' %}
-        {% include 'DMSApp/Komponen/footer.html' %}
+      </div>
+    </div>
+    
+    <div class="row">
+      <div class="col-lg-12 grid-margin stretch-card">
+        <div class="card shadow">
+          <div class="card-body">
+
+            <div class="row">
+              <div class="col-8">
+                <h4 class="card-title">List Documents</h4>
+                <p class="card-description">
+                  Add class <code>.table-striped</code>
+                </p>
+              </div>
+              <div class="col-4">
+                <div class="justify-content-end d-flex">
+                  <div class="m-3 inputs">
+                    <i class="icon-search"></i>
+                    <input type="text" class="form-control form-control-search" placeholder="Search {{ sub_directory.sub_directory }}">
+                  </div>
+              </div>
+              </div>
+            </div>
+
+            <div class="table-responsive">
+              <table class="table table-md table-striped table-hover">
+                <thead>
+                  <tr>
+                    <th>Document</th>
+                    <!-- <th>Form No.</th>
+                    <th>Document No.</th>
+                    <th>Document Name</th>
+                    <th>Effective Date</th>
+                    <th>Revision No.</th>
+                    <th>Revision Date</th>
+                    <th>Part No.</th>
+                    <th>Part Name</th>
+                    <th>Supplier Name</th>
+                    <th>Customer Name</th>
+                    <th>Available File</th> -->
+                    <th>Created Dated</th>
+                    <th>Modified Date</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for obj in menu_dokumen_list %}
+                  <tr>
+                    <td>{{ obj.document|capfirst }}</td>
+                    <!--<td><input type="checkbox" {% if dl.form_no %}checked{% endif %} disabled></td>
+                    <td><input type="checkbox" {% if dl.document_no %}checked{% endif %} disabled></td>
+                    <td><input type="checkbox" {% if dl.document_name %}checked{% endif %} disabled></td>
+                    <td><input type="checkbox" {% if dl.effective_date %}checked{% endif %} disabled></td>
+                    <td><input type="checkbox" {% if dl.revision_no %}checked{% endif %} disabled></td>
+                    <td><input type="checkbox" {% if dl.revision_date %}checked{% endif %} disabled></td>
+                    <td><input type="checkbox" {% if dl.part_no %}checked{% endif %} disabled></td>
+                    <td><input type="checkbox" {% if dl.part_name %}checked{% endif %} disabled></td>
+                    <td><input type="checkbox" {% if dl.supplier_name %}checked{% endif %} disabled></td>
+                    <td><input type="checkbox" {% if dl.customer_name %}checked{% endif %} disabled></td>
+                    <td>
+                      <input type="checkbox" {% if dl.pdf_file %}checked{% endif %} disabled> PDF
+                      <input type="checkbox" {% if dl.sheet_file %}checked{% endif %} disabled> Sheet
+                      <input type="checkbox" {% if dl.other_file %}checked{% endif %} disabled> Other
+                    </td>-->
+                    <td>{{ obj.created_date|date:"d-m-Y H:i" }}</td>
+                    <td>{{ obj.modified_date|date:"d-m-Y H:i" }}</td>
+                    <td>
+                      <div class="d-flex">
+                        <button type="button" class="mr-2 btn btn-primary btn-rounded btn-icon" data-toggle="modal" data-target="#mod0-{{ obj.document }}">
+                          <i class="ti-pencil-alt"></i>
+                        </button>
+                        <button type="button" class="btn btn-rounded btn-icon {% if obj.is_active %}btn-danger{% else %}btn-secondary{% endif %}" data-toggle="modal" data-target="#mod1-{{ obj.document }}">
+                          <i class="ti-check-box"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% include 'DMSApp/CrudMenuDokumen/modal_update.html' %}
+{% include 'DMSApp/CrudMenuDokumen/modal_create.html' %}
+{% include 'DMSApp/Komponen/footer.html' %}

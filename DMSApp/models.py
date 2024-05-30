@@ -1,13 +1,15 @@
 from django.db import models # type: ignore
-from django.utils import timezone # type: ignore
 import os
 
 # Create your models here.
 class Departemen(models.Model):
-    nm_departemen = models.CharField(max_length=100, null=True)
-    deskripsi = models.CharField(max_length=100, null=True)
-    nm_perusahaan = models.CharField(max_length=100, null=True)
+    department = models.CharField(max_length=100, null=True)
+    company = models.CharField(max_length=100, null=True)
+    location = models.CharField(max_length=100, null=True)
     is_active = models.BooleanField(default=True)
+    created_date = models.DateTimeField(auto_now_add=True)
+    modified_date = models.DateTimeField(auto_now=True)
+    menu_dokumen = models.ManyToManyField('MenuDokumen', blank=True)
 
     def __str__(self):
         return self.nm_departemen
@@ -30,13 +32,9 @@ class MenuDokumen(models.Model):
     effective_date = models.BooleanField(default=True)
     revision_no = models.BooleanField(default=True)
     revision_date = models.BooleanField(default=True)
-    date_created = models.DateTimeField(default=timezone.now, blank=True)
-    date_modified = models.DateTimeField(null=True)
+    created_date = models.DateTimeField(auto_now_add=True)
+    modified_date = models.DateTimeField(auto_now=True)
     is_active = models.BooleanField(default=True)
-
-    def save(self, *args, **kwargs):
-        self.date_modified = timezone.now()
-        super(MenuDokumen, self).save(*args, **kwargs)
 
 
 class Dokumen(models.Model):
