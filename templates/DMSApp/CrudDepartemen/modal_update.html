@@ -2,7 +2,7 @@
 
 <!-- Modal update departemen -->
 {% for obj in departemen_list %}
-<div class="modal fade" id="mod0-{{ obj.department }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true" data-backdrop="static">
+<div class="modal fade" id="mod0-{{ obj.id }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true" data-backdrop="static">
   <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
     <div class="modal-content">
       <div class="modal-header">
@@ -74,7 +74,7 @@
 
 <!-- Modal disable departemen -->
 {% for obj in departemen_list %}
-<div class="modal fade" id="mod1-{{ obj.department }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+<div class="modal fade" id="mod1-{{ obj.id }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">
       <div class="modal-header">

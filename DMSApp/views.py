@@ -50,11 +50,11 @@ class DepartemenUpdateView(UpdateView):
     def post(self, request, pk):
         department_instance_update = Departemen.objects.get(id=pk)
         nama_dept = request.POST.get('department')
-        # Check if there is an existing Dokumen instance with the same no_dokumen and nama_dokumen
+        # Check if there is an existing Department instance with the same no_dokumen and nama_dokumen
         existing_department = Departemen.objects.filter(department=nama_dept).exclude(id=pk).exists()
         
         if not existing_department:
-            # Update other fields if there's no existing Dokumen instance with the same values
+            # Update other fields if there's no existing Department instance with the same values
             for field in self.fields:
                 if request.POST.get(field):
                     setattr(department_instance_update, field, request.POST.get(field))
@@ -113,7 +113,7 @@ class MenuDokumenListView(CreateView, ListView):
     fields = ['document', 'form_no', 'document_no', 'document_name',
               'effective_date', 'revision_no', 'revision_date', 'part_no', 'part_name','supplier_name',
               'customer_name', 'pdf_file', 'sheet_file', 'other_file']
-    success_url = '/document/page'
+    success_url = '/menu-dokumen/page/'
 
     def get_queryset(self):
         return MenuDokumen.objects.order_by('document')
@@ -131,6 +131,27 @@ class MenuDokumenListView(CreateView, ListView):
     context_object_name = 'menu_dokumen_list'
     '''
     
+class MenuDokumenUpdateView(UpdateView):
+    model = MenuDokumen
+    fields = ['document', 'form_no', 'document_no', 'document_name',
+              'effective_date', 'revision_no', 'revision_date', 'part_no', 'part_name','supplier_name',
+              'customer_name', 'pdf_file', 'sheet_file', 'other_file']
+    
+    def post(self, request, pk):
+        document_instance_update = MenuDokumen.objects.get(id=pk)
+        nama_dok = request.POST.get('document')
+        document_instance_update = Departemen.objects.filter(document=nama_dok).exclude(id=pk).exists()
+
+        if not document_instance_update:
+            # Update other fields if there's no existing Dokumen instance with the same values
+            for field in self.fields:
+                if request.POST.get(field):
+                    setattr(document_instance_update, field, request.POST.get(field))
+
+            # Save the updated fields
+            document_instance_update.save(update_fields=self.fields)
+
+
 class DokumenListView(CreateView, ListView):
     model = Dokumen
     template_name = 'DMSApp/CrudDokumen/view.html'

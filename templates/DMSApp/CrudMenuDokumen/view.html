@@ -100,10 +100,10 @@
                     <td>{{ obj.modified_date|date:"d-m-Y H:i" }}</td>
                     <td>
                       <div class="d-flex">
-                        <button type="button" class="mr-2 btn btn-primary btn-rounded btn-icon" data-toggle="modal" data-target="#mod0-{{ obj.document }}">
+                        <button type="button" class="mr-2 btn btn-primary btn-rounded btn-icon" data-toggle="modal" data-target="#mod0-{{ obj.id }}">
                           <i class="ti-pencil-alt"></i>
                         </button>
-                        <button type="button" class="btn btn-rounded btn-icon {% if obj.is_active %}btn-danger{% else %}btn-secondary{% endif %}" data-toggle="modal" data-target="#mod1-{{ obj.document }}">
+                        <button type="button" class="btn btn-rounded btn-icon {% if obj.is_active %}btn-danger{% else %}btn-secondary{% endif %}" data-toggle="modal" data-target="#mod1-{{ obj.id }}">
                           <i class="ti-check-box"></i>
                         </button>
                       </div>

@@ -12,8 +12,9 @@ urlpatterns = [
    # path('fms/sop-flow/', views.SOPFlowListView.as_view(), name='sop_flow_view'),
    # path('fms/sop-flow/dokumen/', views.DokumenListView.as_view(), name='list_view'),
 
-    path('add-menu/', views.add_menu, name='add-menu'),
-    path('add-menu/page/', views.MenuDokumenListView.as_view(), name='menu_dokumen_view'),
+    path('menu-dokumen/', views.add_menu, name='add-menu'),
+    path('menu-dokumen/page/', views.MenuDokumenListView.as_view(), name='menu_dokumen_view'),
+    path('menu-dokumen/update/<str:pk>/', views.MenuDokumenUpdateView.as_view(), name='menu_dokumen_update'),
     # path('add-menu/create/', views.CreateMenuDokumenView.as_view(), name='menu_dokumen_create'),
 
     path('document/page/', views.DokumenListView.as_view(), name='dokumen_view'),
