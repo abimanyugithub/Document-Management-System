@@ -69,6 +69,7 @@ class DepartemenUpdateView(UpdateView):
 
             # Associate the selected MenuDokumen instances with the Departemen
             selected_menu_dokumen = MenuDokumen.objects.filter(id__in=selected_menu_dokumen_ids)
+            # "*" operator is used to unpack the selected_menu_dokumen iterable, which contains instances that need to be added to the menu_dokumen field
             department_instance_update.menu_dokumen.add(*selected_menu_dokumen)
 
         return redirect(self.request.META.get('HTTP_REFERER'))
@@ -90,7 +91,7 @@ class DepartemenEnableDisableView(UpdateView):
         return redirect(self.request.META.get('HTTP_REFERER'))
     
 
-def add_menu(request):
+'''def add_menu(request):
     if request.method == 'POST':
         new_menu_name = request.POST.get('new_menu')
         add_additional = request.POST.get('additional') == 'on'  # Check if the checkbox is checked
@@ -104,7 +105,7 @@ def add_menu(request):
                     os.makedirs(directory)
                 # return JsonResponse({'success': True, 'menu_name': menu.name})
             
-    return redirect(request.META.get('HTTP_REFERER'))
+    return redirect(request.META.get('HTTP_REFERER'))'''
 
 class MenuDokumenListView(CreateView, ListView):
     model = MenuDokumen
@@ -125,213 +126,101 @@ class MenuDokumenListView(CreateView, ListView):
         # context['doc_file'] = ['doc_pdf', 'doc_sheet', 'doc_additional']
         return context
     
-'''class Viewadditional_fileView(ListView):
-    model = additional_file
-    template_name = 'DMSApp/CrudMenuDokumen/view.html'
-    context_object_name = 'menu_dokumen_list'
-    '''
-    
 class MenuDokumenUpdateView(UpdateView):
     model = MenuDokumen
     fields = ['document', 'form_no', 'document_no', 'document_name',
               'effective_date', 'revision_no', 'revision_date', 'part_no', 'part_name','supplier_name',
               'customer_name', 'pdf_file', 'sheet_file', 'other_file']
+    success_url = '/menu-dokumen/page/'
     
+
+    def form_valid(self, form):
+        # Perform custom validation
+        nama_dok = form.cleaned_data.get('document')
+        if MenuDokumen.objects.filter(document=nama_dok).exclude(pk=self.object.pk).exists():
+            #form.add_error('document', ValidationError("A document with this name already exists."))
+            return self.form_invalid(form)
+        return super().form_valid(form)
+    
+class MenuDokumenEnableDisableView(UpdateView):
+
     def post(self, request, pk):
-        document_instance_update = MenuDokumen.objects.get(id=pk)
-        nama_dok = request.POST.get('document')
-        document_instance_update = Departemen.objects.filter(document=nama_dok).exclude(id=pk).exists()
+        menu_document_instance_update = MenuDokumen.objects.get(id=pk)
+        set_aktif = request.POST.get('aktivasi')
 
-        if not document_instance_update:
-            # Update other fields if there's no existing Dokumen instance with the same values
-            for field in self.fields:
-                if request.POST.get(field):
-                    setattr(document_instance_update, field, request.POST.get(field))
+        if set_aktif == "nonaktif":
+            menu_document_instance_update.is_active = False
+            menu_document_instance_update.save(update_fields=['is_active'])
+        else:
+            menu_document_instance_update.is_active = True
+            menu_document_instance_update.save(update_fields=['is_active'])
 
-            # Save the updated fields
-            document_instance_update.save(update_fields=self.fields)
+        return redirect(self.request.META.get('HTTP_REFERER'))
+    
 
+class DokumenListView(ListView):
+    model = Departemen
+    template_name = 'DMSApp/CrudUploadDokumen/view.html'
+    context_object_name = 'departemen_dokumen_list'
 
-class DokumenListView(CreateView, ListView):
+    def get_queryset(self):
+        # Get the nama_dept from the request parameters
+        nama_dept = self.request.GET.get('dept')
+
+        if nama_dept:
+            # Retrieve the Departemen object with the given department_id
+            departemen = Departemen.objects.get(department=nama_dept)
+                
+            # Retrieve the related MenuDokumen objects for the Departemen
+            queryset = departemen.menu_dokumen.all().order_by('document')
+        return queryset
+    
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        menu_name = self.request.GET.get('menu')
+        dept_name = self.request.GET.get('dept')
+        if dept_name:
+            # nm_directory = MenuDokumen.objects.get(sub_directory=menu_name)
+            context['menu_dokumen'] = menu_name
+            context['nm_department'] = dept_name
+            context['menu_dokumen_list'] = MenuDokumen.objects.filter(document=menu_name)
+        return context
+    
+class DokumenCreateView(CreateView):
     model = Dokumen
-    template_name = 'DMSApp/CrudDokumen/view.html'
+    template_name = 'DMSApp/CrudUploadDokumen/create.html'
     context_object_name = 'dokumen_list'
     # paginate_by = 10
     fields = ['no_form', 'no_dokumen', 'nama_dokumen', 'tanggal_efektif', 'no_revisi', 'tanggal_revisi', 'no_part', 'nama_part','nama_supplier', 'nama_customer']
     success_url = '/document/page'
 
-    def get_form(self, form_class=None):
-        form = super().get_form(form_class)
-        directory_id = self.request.GET.get('directory_id')
-        if directory_id:
-            try:
-                directory = MenuDokumen.objects.get(pk=directory_id)
-                # Add conditions for other fields based on your needs
-                # Example conditions (assuming similar boolean fields exist)
-                if not directory.is_active:  # Adjust this condition based on your actual logic
-                    form.fields.pop('no_form', None)
-                    form.fields.pop('nama_part', None)
-                    form.fields.pop('no_part', None)
-                    form.fields.pop('nama_supplier', None)
-            except MenuDokumen.DoesNotExist:
-                pass
-        return form
-   
-    def get_queryset(self):
+    '''def get_queryset(self):
+        # Assuming menu_name is available as a variable or passed through the URL
+        menu_name = menu_name = self.request.GET.get('menu')
         queryset = super().get_queryset()
-        menu_name = self.request.GET.get('menu')
-        dept_name = self.request.GET.get('dept')  # get the value of 'dept' parameter
-        if menu_name:
-            queryset = queryset.filter(directory__sub_directory=menu_name, dokumen_dept__nm_departemen=dept_name)
-        return queryset
-        
-    '''
-        # Process each item in the queryset
-        for dl in queryset:
-            # Use urljoin to create the full URL for file_pdf
-            dl.file_pdf_url = urljoin(settings.MEDIA_URL, dl.file_pdf.url)
-
-            # Extract the base names for file_pdf and file_sheet
-            dl.file_pdf = os.path.basename(dl.file_pdf.name)
-            dl.file_sheet = os.path.basename(dl.file_sheet.name)
-        return queryset
-    '''
-    
+        return queryset.filter(document=menu_name)
+'''
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         menu_name = self.request.GET.get('menu')
         dept_name = self.request.GET.get('dept')
         if menu_name:
-            nm_directory = MenuDokumen.objects.get(sub_directory=menu_name)
-            context['sub_directory'] = nm_directory
+            context['menu_dokumen'] = menu_name
             context['nm_department'] = dept_name
-            context['departemen_list'] = Departemen.objects.all().order_by('nm_departemen')
+            context['menu_dokumen_list'] = MenuDokumen.objects.filter(document=menu_name)
         return context
-
-    def form_valid(self, form):
-        menu_name = self.request.GET.get('menu')
-        dept_name = self.request.GET.get('dept')
-        if menu_name and dept_name:
-            nm_directory = MenuDokumen.objects.get(sub_directory=menu_name)
-            department = Departemen.objects.get(nm_departemen=dept_name) 
-            form.instance.directory = nm_directory
-            form.instance.dokumen_dept = department
-            form.instance.nama_file_pdf = form.cleaned_data['file_pdf']
-            form.instance.nama_file_sheet = form.cleaned_data['file_sheet']
-            # Define the directory path
-            directory = os.path.join(folder_target, menu_name, dept_name)
-            # Create the directory if it doesn't exist
-            if not os.path.exists(directory):
-                os.makedirs(directory)
-            
-            # Save the form including the uploaded files
-            form.instance.file_pdf.name = os.path.join(directory, form.instance.file_pdf.name)
-            form.instance.file_sheet.name = os.path.join(directory, form.instance.file_sheet.name)
-            form.save()
-            
-            '''with open(form.instance.file_pdf.name, 'wb+') as destination:
-                for chunk in form.cleaned_data['file_pdf'].chunks():
-                    destination.write(chunk)
-                    
-            with open(form.instance.file_sheet.name, 'wb+') as destination:
-                for chunk in form.cleaned_data['file_sheet'].chunks():
-                    destination.write(chunk)'''
-
-            response = super().form_valid(form)
-        # Redirect to the dokumen_view URL with the menu parameter
-        # return redirect(reverse('dokumen_view') + f'?menu={self.request.GET.get("menu")}')
-        return redirect(self.request.META.get('HTTP_REFERER'))
-    
-class DokumenUpdateView(UpdateView):
-    model = Dokumen
-    fields = ['no_dokumen', 'nama_dokumen', 'tanggal_efektif', 'no_revisi', 'tanggal_revisi', 'file_pdf', 'file_sheet']
-    
-    def post(self, request, pk):
-        dokumen_instance_update = Dokumen.objects.get(id=pk)
-        menu_name = self.request.GET.get('menu')
-        dept_name = self.request.GET.get('dept')
-        # Define the directory path
-        directory = os.path.join(folder_target, menu_name, dept_name)
-        no_dokumen = request.POST.get('no_dokumen')
-        nama_dokumen = request.POST.get('nama_dokumen')
-        
-        # Check if there is an existing Dokumen instance with the same no_dokumen and nama_dokumen
-        existing_dokumen = Dokumen.objects.filter(no_dokumen=no_dokumen, nama_dokumen=nama_dokumen).exclude(id=pk).exists()
-        
-        if not existing_dokumen:
-            # Update other fields if there's no existing Dokumen instance with the same values
-            for field in self.fields:
-                if request.POST.get(field):
-                    setattr(dokumen_instance_update, field, request.POST.get(field))
-
-            # Handle FileField updates
-            if 'file_pdf' in request.FILES:
-                # Overwrite existing file or delete if new file is None
-                if dokumen_instance_update.file_pdf:
-                    os.remove(dokumen_instance_update.file_pdf.path)
-                file_pdf = request.FILES['file_pdf']
-                dokumen_instance_update.file_pdf.save(os.path.join(directory, file_pdf.name), file_pdf, save=False)
-            if 'file_sheet' in request.FILES:
-                # Overwrite existing file or delete if new file is None
-                if dokumen_instance_update.file_sheet:
-                    os.remove(dokumen_instance_update.file_sheet.path)
-                file_sheet = request.FILES['file_sheet']
-                dokumen_instance_update.file_sheet.save(os.path.join(directory, file_sheet.name), file_sheet, save=False)
-
-            dokumen_instance_update.save(update_fields=self.fields)
-            
-        return redirect(self.request.META.get('HTTP_REFERER'))
-    
-
-class DokumenDeleteView(DeleteView):
-    
-    def post(self, request, pk):
-        document_instance_delete = Dokumen.objects.get(id=pk)
-        # Get the file paths from the file_pdf and file_sheet fields
-        file_pdf_path = document_instance_delete.file_pdf.path
-        file_sheet_path = document_instance_delete.file_sheet.path
-
-        # Delete the files if they exist
-        if os.path.exists(file_pdf_path):
-            os.remove(file_pdf_path)
-        if os.path.exists(file_sheet_path):
-            os.remove(file_sheet_path)
-        # Delete the Dokumen object
-        document_instance_delete.delete()
-
-        return redirect(self.request.META.get('HTTP_REFERER'))
-        
-'''class SOPFlowListView(ListView):
-    model = Departemen
-    template_name = 'FMS/view.html'
-    context_object_name = 'departemen_list'  # For ListView
-
-
-class CreateDokumen(CreateView):
-    model = Dokumen
-    template_name = 'FMS/create.html'
-    context_object_name = 'departemen_list'  # For ListView
-    
-
-class DokumenListView(CreateView, ListView):
-    model = Dokumen
-    template_name = 'FMS/list.html'
-    context_object_name = 'dokument_list'
-    paginate_by = 10
-    fields = ['id_dokumen', 'nm_dokumen']
-    success_url = '/fms/sop-flow/dokumen/'
-
+'''
     def get_queryset(self):
         queryset = super().get_queryset()
-        dept_name = self.request.GET.get('dept')
-        if dept_name:
-            queryset = queryset.filter(dokumen_dept=dept_name)
+        nama_dept = self.request.GET.get('dept')
+        if nama_dept:
+            queryset = queryset.filter(menu_dokumen__departemen__department=nama_dept).distinct()
         return queryset
-
-    def form_valid(self, form):
-        dept_name = self.request.GET.get('dept')
-        if dept_name:
-            form.instance.dokumen_dept_name = dept_name
-        return super().form_valid(form)
-'''
-
+    
+    def get_queryset(self):
+        nama_dept = self.request.GET.get('dept')
+        # queryset = queryset.filter(menu_dokumen__departemen__department=nama_dept)
+        queryset = Departemen.objects.get(menu_dokumen__departemen__department=nama_dept)
+        # departemen = Departemen.objects.get(pk=departemen_id)
+        return queryset'''

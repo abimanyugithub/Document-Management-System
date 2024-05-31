@@ -1,6 +1,6 @@
 {% load custom_filters %}
 
-<!-- Modal update departemen -->
+<!-- Modal update menu document -->
 {% for obj in menu_dokumen_list %}
 <div class="modal fade" id="mod0-{{ obj.id }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true" data-backdrop="static">
   <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
@@ -15,7 +15,7 @@
         </button>
       </div>
       <div class="modal-body">
-        <form class="forms-sample" method="post" action="{% url 'departemen_update' pk=obj.id %}" autocomplete="off">
+        <form class="forms-sample" method="post" action="{% url 'menu_dokumen_update' pk=obj.id %}" autocomplete="off">
           {% csrf_token %}
           <div class="row">
             <div class="col">
@@ -67,25 +67,25 @@
 </div>
 {% endfor %}
 
-<!-- Modal disable departemen -->
-{% for obj in departemen_list %}
+<!-- Modal disable menu document -->
+{% for obj in menu_dokumen_list %}
 <div class="modal fade" id="mod1-{{ obj.id }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="exampleModalLabel" style="display: flex; align-items: center;">
           <i class="mdi mdi-help-circle mdi-24px text-primary mr-2"></i>
-          <b>department {{ obj.department }}</b>
+          <b>document {{ obj.document }}</b>
         </h5>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
       <div class="modal-body">
-          {% if obj.is_active %}Deactivate{% else %}Activate{% endif %} department?
+          {% if obj.is_active %}Deactivate{% else %}Activate{% endif %} document?
       </div>
       <div class="modal-footer">
-        <form class="forms-sample" method="post" action="{% url 'departemen_is_active' pk=obj.id %}">
+        <form class="forms-sample" method="post" action="{% url 'menu_dokumen_is_active' pk=obj.id %}">
           {% csrf_token %}
           <input type="hidden" name="aktivasi" {% if obj.is_active %}value="nonaktif"{% endif %}>
         <button type="submit" class="btn btn-primary mr-2">Yes</button>

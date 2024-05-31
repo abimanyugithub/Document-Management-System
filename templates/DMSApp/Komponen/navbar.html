@@ -488,56 +488,18 @@
             </a>
             <div class="collapse" id="fms">
               <ul class="nav flex-column sub-menu">
-                {% for sub in menu_list_dokumen %}
-                <li class="nav-item"> <a class="nav-link" href="{% url 'dokumen_view' %}?menu={{ sub.sub_directory }}"> {{ sub.sub_directory|capfirst }}</a></li>
+                <!-- {% for sub in menu_list_dokumen %}
+                <li class="nav-item"> <a class="nav-link" href="{% url 'dokumen_view' %}?menu={{ sub.document }}"> {{ sub.document|capfirst }}</a></li>
+                {% endfor %} -->
+                {% for sub in departemen_list %}
+                <li class="nav-item"> <a class="nav-link" href="{% url 'dokumen_view' %}?dept={{ sub.department }}"> {{ sub.department|capfirst }}</a></li>
                 {% endfor %}
-                <a class="nav-link text-light" href="#" data-toggle="modal"
-                data-target="#mod0"> + Add new </a>
               </ul>
             </div>
           </li>
         </ul>
       </nav>
-
-      <!-- Modal create sub directory -->
-      <div class="modal fade" id="mod0" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true" data-backdrop="static">
-        <div class="modal-dialog modal-dialog-centered" role="document">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h4 class="modal-title" id="exampleModalLabel" style="display: flex; align-items: center;">
-                <i class="mdi mdi-help-circle mdi-24px text-primary mr-2"></i>
-                create new document
-              </h4>
-              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-              </button>
-            </div>
-            <div class="modal-body">
-              <form class="forms-sample" method="post" autocomplete="off" action="{% url 'add-menu' %}">
-                {% csrf_token %}
-                <div class="form-group">
-                  <label for="new_menu">Document Name</label>
-                    <input type="text" class="form-control" id="new_menu" name="new_menu" placeholder="Enter new document item" required>
-                    
-                    <p class="mt-2">By default, when creating a new document name, the program will only ask to upload PDF files (.pdf) and sheet files (.xls, .xlsx, .ods).</p>
-                    <p>Secara default, saat membuat nama baru dokumen, program hanya akan meminta untuk mengunggah file PDF (.pdf) dan file sheet (.xls, .xlsx, .ods).</p>
-                    <div class="form-check">
-                      <label class="form-check-label">
-                        <input type="checkbox" class="form-check-input" name="additional">Include additional file
-                      </label>
-                      </div>
-                  </div>
-
-                <button type="submit" class="btn btn-primary mr-2">Create</button>
-                <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
-              </form>
-            </div>
-            <div class="modal-footer">
-              <!-- footer modal -->
-            </div>
-          </div>
-        </div>
-      </div>
+      
 
 
 
