@@ -13,20 +13,21 @@
             <nav aria-label="breadcrumb rounded-0">
               <ol class="breadcrumb">
                 <li class="breadcrumb-item">Document</li>
-                {% if nm_department %}
-                <li class="breadcrumb-item active" aria-current="page">{{ nm_department|capfirst }}</li>
+                <li class="breadcrumb-item">Archive</li>
+                {% if nm_departemen %}
+                <li class="breadcrumb-item active" aria-current="page">{{ nm_departemen|capfirst }}</li>
                 {% endif %}
-                {% if menu_dokumen %}
-                <li class="breadcrumb-item active" aria-current="page">{{ menu_dokumen|capfirst }}</li>
+                {% if nm_dokumen %}
+                <li class="breadcrumb-item active" aria-current="page">{{ nm_dokumen|capfirst }}</li>
                 {% endif %}
               </ol>
             </nav>
           </div>
-          {% if menu_dokumen %}
+          {% if nm_dokumen %}
           <div class="col-12 col-xl-4">
             <div class="justify-content-end d-flex">
               <div class="dropdown flex-md-grow-1 flex-xl-grow-0">
-               <button onclick="window.location.href='{% url 'dokumen_create' %}?menu={{ menu_dokumen }}&dept={{ nm_department }}'" class="btn btn-primary btn-icon-text">
+               <button onclick="window.location.href='{% url 'archive_create' %}?menu={{ nm_dokumen }}&dept={{ nm_departemen }}'" class="btn btn-primary btn-icon-text">
                   <i class="ti-plus btn-icon-prepend"></i>
                   Register
                 </button>
@@ -38,14 +39,14 @@
       </div>
     </div>
 
-    {% if not menu_dokumen %}
+    {% if not nm_dokumen %}
     <div class="row">
-      {% for dl in departemen_dokumen_list %}
+      {% for dl in departemen_list %}
       <div class="col-xl-4 mb-4 stretch-card transparent">
         
-        <!-- <button onclick="window.location.href='{% url 'dokumen_view' %}?menu={{ dl.document }}&dept={{ nm_department }}'" 
+        <!-- <button onclick="window.location.href='{% url 'dokumen_view' %}?menu={{ dl.document }}&dept={{ nm_departemen }}'" 
         class="card card-dark-blue border-0 shadow"> -->
-        <button onclick="window.location.href='{% url 'dokumen_view' %}?menu={{ dl.document }}&dept={{ nm_department }}'" 
+        <button onclick="window.location.href='{% url 'menu_dokumen_view' %}?menu={{ dl.document }}&dept={{ nm_departemen }}'" 
         class="card card-dark-blue border-0 shadow">
             <div class="card-body">
               <p class="m-1">{{ dl.document|capfirst }}</p>
@@ -58,5 +59,5 @@
 
   </div>
 
-{% include 'DMSApp/CrudUploadDokumen/modal_create.html' %}
+{% include 'DMSApp/CrudArsip/modal_create.html' %}
 {% include 'DMSApp/Komponen/footer.html' %}

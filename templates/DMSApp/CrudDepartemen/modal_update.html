@@ -41,12 +41,12 @@
             <div class="col">
               <p>Allowed Documents</p>
               <div class="row">
-                {% for dokumen in list_menu_dokumen %}
+                {% for dokumen in list_dokumen %}
                 <div class="col-md-6 col-lg-4">
                   <div class="form-check">
                     <label class="form-check-label">
-                    <input type="checkbox" class="form-check-input" name="ceklis_dokumen" value="{{ dokumen.id }}"
-                    {% if dokumen in obj.menu_dokumen.all %} checked {% endif %}
+                    <input type="checkbox" class="form-check-input" name="checklist_dokumen" value="{{ dokumen.id }}"
+                    {% if dokumen in obj.related_document.all %} checked {% endif %}
                     >{{ dokumen.document|capfirst }}
                     </label>
                 <!-- {% if field.name in default_checked %}

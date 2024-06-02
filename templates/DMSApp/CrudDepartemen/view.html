@@ -12,10 +12,6 @@
             <nav aria-label="breadcrumb rounded-0">
               <ol class="breadcrumb">
                 <li class="breadcrumb-item">Department</li>
-                <li class="breadcrumb-item active" aria-current="page">{% if nm_department %}<a href='{% url 'dokumen_view' %}?menu={{ sub_directory.sub_directory }}'>{% endif %}{{ sub_directory.sub_directory|capfirst }}</a></li>
-                {% if nm_department %}
-                <li class="breadcrumb-item active" aria-current="page">{{ nm_department|capfirst }}</li>
-                {% endif %}
               </ol>
             </nav>
           </div>
@@ -61,7 +57,7 @@
                   <tr>
                     <th>Department</th>
                     <th>Company</th>
-                    <th>Location</th>
+                    <th>Address</th>
                     <th>Date Created</th>
                     <th>Date Modified</th>
                     <th>Action</th>
@@ -73,12 +69,12 @@
                   <tr>
                     <td>{{ obj.department|capfirst }}</td>
                     <td>{{ obj.company|capfirst }}</td>
-                    <td>{{ obj.location|capfirst }}</td>
+                    <td>{{ obj.address|capfirst }}</td>
                     <td>{{ obj.created_date|date:"d-m-Y H:i" }}</td>
                     <td>{{ obj.modified_date|date:"d-m-Y H:i" }}</td>
                     <td>
                       <div class="d-flex">
-                        <button type="button" class="mr-2 btn btn-primary btn-rounded btn-icon" data-toggle="modal" data-target="#mod0-{{ obj.id }}">
+                        <button type="button" class="mr-2 btn btn-primary btn-rounded btn-icon" data-toggle="modal" data-target="#mod0-{{ obj.id }}" {% if not obj.is_active %} disabled {% endif %}>
                           <i class="ti-pencil-alt"></i>
                         </button>
                         <button type="button" class="btn btn-rounded btn-icon {% if obj.is_active %}btn-danger{% else %}btn-secondary{% endif %}" data-toggle="modal" data-target="#mod1-{{ obj.id }}">

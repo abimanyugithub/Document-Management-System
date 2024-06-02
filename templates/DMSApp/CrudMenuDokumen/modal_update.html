@@ -1,7 +1,7 @@
 {% load custom_filters %}
 
 <!-- Modal update menu document -->
-{% for obj in menu_dokumen_list %}
+{% for obj in dokumen_list %}
 <div class="modal fade" id="mod0-{{ obj.id }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true" data-backdrop="static">
   <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
     <div class="modal-content">
@@ -15,48 +15,42 @@
         </button>
       </div>
       <div class="modal-body">
-        <form class="forms-sample" method="post" action="{% url 'menu_dokumen_update' pk=obj.id %}" autocomplete="off">
+        <form class="forms-sample" autocomplete="off" method="post" action="{% url 'dokumen_update' pk=obj.id %}" enctype="multipart/form-data">
           {% csrf_token %}
           <div class="row">
             <div class="col">
-          {% for field in form %}
-            {% if field.name == 'document' %}
-            <div class="form-group">
-              <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-              <input type="text" class="form-control" id="{{ field.id_for_label }}" name="{{ field.name }}" placeholder="{{ field.label }}" value="{{ obj.document }}" required>
-            </div>
-            {% endif %}
-          {% endfor %}
-          </div>
-        </div>
-
-          <h5>Label Items & Doc. File Items</h5>
-          <div class="row">
-            <div class="col">
-          {% for field in form %}
-            {% if field.name != 'document' %}
-            
+              {% for field in form %}
               <div class="form-group">
-                <div class="form-check">
-                  <label class="form-check-label">
-                    <input type="checkbox" class="form-check-input" name="{{ field.name }}" {% if obj|get_field_value:field.name %} checked {% endif %}>{{ field.label }}
-                  </label>
-                  <!-- {% if field.name in default_checked %}
-                      <input type="hidden" name="{{ field.name }}" value="True">
-                  {% endif %} -->
-                </div>
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                <input type="text" class="form-control" id="{{ field.id_for_label }}" name="{{ field.name }}" placeholder="{{ field.label }}" value="{{ obj.document }}" required>
               </div>
-              {% if forloop.counter0|divisibleby:5 %}
-              </div><div class="col">
-              {% endif %}
-
-            {% endif %}
-          {% endfor %}
+              {% endfor %}
             </div>
           </div>
 
-          <button type="submit" class="btn btn-primary mr-2">Submit</button>
-          <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+          <h5>Labels</h5>
+          <div class="row">
+            <div class="col-4">
+              {% for label_dict in list_label %}
+                {% for key, value in label_dict.items %}
+                <div class="form-group">
+                  <div class="form-check">
+                    <label class="form-check-label">
+                      <input type="checkbox" class="form-check-input" name="checklist_label" value="{{ key }}"
+                      {% for u in obj.related_label.all %}{% if u.name == key %}checked{% endif %}{% endfor %}
+                      >{{ value.label }}
+                    </label>
+                  </div>
+                </div>
+                  {% if forloop.counter|divisibleby:5 %}
+                </div><div class="col-4">
+                {% endif %}
+                {% endfor %}
+              {% endfor %}
+            </div>
+          </div>
+                
+          <button type="submit" class="btn btn-primary">Save</button>
         </form>
       </div>
       <div class="modal-footer">
@@ -68,7 +62,7 @@
 {% endfor %}
 
 <!-- Modal disable menu document -->
-{% for obj in menu_dokumen_list %}
+{% for obj in dokumen_list %}
 <div class="modal fade" id="mod1-{{ obj.id }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">
@@ -85,7 +79,7 @@
           {% if obj.is_active %}Deactivate{% else %}Activate{% endif %} document?
       </div>
       <div class="modal-footer">
-        <form class="forms-sample" method="post" action="{% url 'menu_dokumen_is_active' pk=obj.id %}">
+        <form class="forms-sample" method="post" action="{% url 'dokumen_is_active' pk=obj.id %}">
           {% csrf_token %}
           <input type="hidden" name="aktivasi" {% if obj.is_active %}value="nonaktif"{% endif %}>
         <button type="submit" class="btn btn-primary mr-2">Yes</button>

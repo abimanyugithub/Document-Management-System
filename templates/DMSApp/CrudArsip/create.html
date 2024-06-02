@@ -1,0 +1,116 @@
+{% load static %}
+{% load custom_filters %}
+
+{% include 'DMSApp/Komponen/navbar.html' %}
+<!-- partial -->
+<div class="main-panel">
+  <div class="content-wrapper">
+    <div class="row">
+      <div class="col-md-12 grid-margin">
+        <div class="row">
+          <div class="col-12 col-xl-8 mb-4 mb-xl-0">
+            <h3 class="font-weight-bold">Document Management System</h3>
+            <nav aria-label="breadcrumb rounded-0">
+              <ol class="breadcrumb">
+                <li class="breadcrumb-item">Register Document</li>
+                <li class="breadcrumb-item active" aria-current="page">{{ nm_dokumen|capfirst }}</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ nm_department|capfirst }}</li>
+              </ol>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function displayPDF(input) {
+        if (input.files && input.files[0]) {
+          var reader = new FileReader();
+          reader.onload = function(e) {
+            $('.pdf_viewer').attr('src', e.target.result);
+          }
+          reader.readAsDataURL(input.files[0]);
+        }
+      }
+    </script>
+
+    <div class="row">
+      <div class="col-lg-12 grid-margin stretch-card">
+        <div class="card shadow">
+          <div class="card-body">
+
+            <div class="row">
+              <div class="col-8">
+                <h4 class="card-title">Register New Document ({{ nm_dokumen|capfirst }})</h4>
+                <p class="card-description">
+                  Add class <code>.table-striped</code>{% for u in get_id %}{{ u.name }}{% endfor %}
+                </p>
+              </div>
+              <div class="col-4">
+                <div class="justify-content-end d-flex">
+                  <div class="m-3 inputs">
+                    <i class="icon-search"></i>
+                    <input type="text" class="form-control form-control-search" placeholder="Search {{ sub_directory.sub_directory }}">
+                  </div>
+              </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6">
+                <form class="forms-sample" method="post" autocomplete="off" enctype="multipart/form-data">
+                  {% csrf_token %}
+                  {% for label_dict in list_label %}
+                    {% for key, value in label_dict.items %}
+                    <!-- # Get the names of the related labels -->
+                      {% for u in nm_label %}
+                        {% if u.name == key %}
+                        {% if not value.type == "file" %}
+                  <div class="form-group">
+                    <label for="{{ key }}">{{ value.label }}</label>
+                    <input type="{{ value.type }}" class="form-control" id="{{ key }}" name="{{ key }}" placeholder="{{ value.label }}" required>
+                  </div>
+                        {% else %}
+                  <div class="form-group">
+                    <label>{{ value.label }}</label>
+                    <input type="file" name="{{ key }}" class="file-upload-default" accept="{{ value.extension }}" {% if value.label == "PDF File" %}onchange="displayPDF(this)"{% endif %}>
+                    <div class="input-group col-xs-12">
+                      <input type="text" class="form-control file-upload-info" disabled placeholder="{{ value.label }}">
+                      <span class="input-group-append">
+                        <button class="file-upload-browse btn btn-primary" type="button">Browse</button>
+                      </span>
+                    </div>
+                  </div>
+                        {% endif %}
+                        {% endif %}
+                      {% endfor %}
+                    {% endfor %}
+                  {% endfor %}
+                  <button type="submit" class="btn btn-primary mr-2">Upload</button>
+                  <button type="button" class="btn btn-danger" data-dismiss="modal">Tutup</button>
+                </form>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group" >
+                  <label for="pdf_viewer">PDF Viewer</label>
+                  <embed class="pdf_viewer w-100 h-100 d-inline-block" src="" type="application/pdf" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <script>
+    function displayPDF(input) {
+      if (input.files && input.files[0]) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+          $('.pdf_viewer').attr('src', e.target.result);
+        }
+        reader.readAsDataURL(input.files[0]);
+      }
+    }
+  </script>
+{% include 'DMSApp/Komponen/footer.html' %}

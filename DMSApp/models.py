@@ -5,57 +5,43 @@ import os
 class Departemen(models.Model):
     department = models.CharField(max_length=100, null=True)
     company = models.CharField(max_length=100, null=True)
-    location = models.CharField(max_length=100, null=True)
+    address = models.TextField()
     is_active = models.BooleanField(default=True)
     created_date = models.DateTimeField(auto_now_add=True)
     modified_date = models.DateTimeField(auto_now=True)
-    menu_dokumen = models.ManyToManyField('MenuDokumen', blank=True)
-
-    def __str__(self):
-        return self.nm_departemen
-
-class MenuDokumen(models.Model):
-    document = models.CharField(max_length=100, null=True)
-    # dokumen_dept = models.ForeignKey(Departemen, on_delete=models.CASCADE)
-    # nm_dokumen = models.CharField(max_length=100, null=True)
-    pdf_file = models.BooleanField(default=True)
-    sheet_file = models.BooleanField(default=True)
-    other_file = models.BooleanField(default=False)
-    form_no = models.BooleanField(default=False)
-    part_no = models.BooleanField(default=False)
-    part_name = models.BooleanField(default=False)
-    supplier_name = models.BooleanField(default=False)
-    customer_name = models.BooleanField(default=False)
-    document_no = models.BooleanField(default=True)
-    # default
-    document_name = models.BooleanField(default=True)
-    effective_date = models.BooleanField(default=True)
-    revision_no = models.BooleanField(default=True)
-    revision_date = models.BooleanField(default=True)
-    created_date = models.DateTimeField(auto_now_add=True)
-    modified_date = models.DateTimeField(auto_now=True)
-    is_active = models.BooleanField(default=True)
-
-
+    related_document = models.ManyToManyField('Dokumen')
+    
 class Dokumen(models.Model):
-    directory = models.ForeignKey(MenuDokumen, on_delete=models.CASCADE)
-    dokumen_dept = models.ForeignKey(Departemen, on_delete=models.CASCADE, null=True)
-    no_form = models.CharField(max_length=100, null=True) # no_from
-    no_dokumen = models.CharField(max_length=100, null=True) # id_dokumen
-    nama_dokumen = models.CharField(max_length=100, null=True) # nm_dokumen
-    tanggal_efektif = models.DateTimeField(null=True)
-    no_revisi = models.CharField(max_length=100, null=True)
-    tanggal_revisi = models.DateTimeField(null=True)
-    # file_pdf = models.FileField(null=True, storage=None) 
-    # file_sheet = models.FileField(null=True, storage=None)
-    no_part = models.CharField(max_length=100, null=True)
-    nama_part = models.CharField(max_length=100, null=True)
-    nama_supplier = models.CharField(max_length=100, null=True)
-    nama_customer = models.CharField(max_length=100, null=True)
+    document = models.CharField(max_length=100, null=True)
+    created_date = models.DateTimeField(auto_now_add=True)
+    modified_date = models.DateTimeField(auto_now=True)
+    is_active = models.BooleanField(default=True)
+    related_label = models.ManyToManyField('DokumenLabel')
+
+class DokumenLabel(models.Model):
+    name = models.CharField(max_length=100)
+
+class Arsip(models.Model):
+    parent_document = models.ForeignKey(Dokumen, on_delete=models.CASCADE)
+    parent_department = models.ForeignKey(Departemen, on_delete=models.CASCADE, null=True)
+    form_no = models.CharField(max_length=100, null=True)
+    document_no = models.CharField(max_length=100, null=True)
+    document_name = models.CharField(max_length=100, null=True)
+    effective_date = models.DateTimeField(null=True)
+    revision_no = models.CharField(max_length=100, null=True)
+    revision_date = models.DateTimeField(null=True)
+    part_no = models.CharField(max_length=100, null=True)
+    part_name = models.CharField(max_length=100, null=True)
+    supplier_name = models.CharField(max_length=100, null=True)
+    customer_name = models.CharField(max_length=100, null=True)
     is_approved = models.BooleanField(default=False, null=True)
     is_active = models.BooleanField(default=True)
-
+    pdf_file = models.FileField(null=True, storage=None) 
+    sheet_file = models.FileField(null=True, storage=None)
+    other_file = models.FileField(null=True, storage=None)
+'''
 class LampiranDokumen(models.Model):
     dokumen = models.ForeignKey(Dokumen, on_delete=models.CASCADE, null=True)
     lampiran = models.FileField(null=True, storage=None)
     is_active = models.BooleanField(default=True)
+'''

@@ -1,7 +1,6 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.views.generic import TemplateView, CreateView, ListView, UpdateView, DeleteView
-from .models import MenuDokumen, Departemen, Dokumen, LampiranDokumen
-from django.shortcuts import redirect
+from .models import Dokumen, Departemen, DokumenLabel, Arsip
 from django.conf import settings
 from urllib.parse import urljoin
 import os
@@ -17,7 +16,7 @@ class DepartemenListView(CreateView, ListView):
     model = Departemen
     template_name = 'DMSApp/CrudDepartemen/view.html'
     context_object_name = 'departemen_list'  # For ListView
-    fields = ['department', 'company', 'location']
+    fields = ['department', 'company', 'address']
     success_url = '/departemen/page'
 
     def get_queryset(self):
@@ -26,34 +25,34 @@ class DepartemenListView(CreateView, ListView):
     
     def form_valid(self, form):
         # Custom form validation
-        nm_departemen = form.cleaned_data['department']
-        if Departemen.objects.filter(department=nm_departemen).exists():
+        nma_departemen = form.cleaned_data['department']
+        if Departemen.objects.filter(department=nma_departemen).exists():
             form.add_error('department', "A department with this name already exists.")
             return self.form_invalid(form)
         else:
             departemen = form.save()
-            menu_dokumen_ids = self.request.POST.getlist('ceklis_dokumen')
-            menu_dokumen = MenuDokumen.objects.filter(id__in=menu_dokumen_ids)
-            departemen.menu_dokumen.set(menu_dokumen)
+            selected_dokumen_ids = self.request.POST.getlist('checklist_dokumen')
+            dokumen = Dokumen.objects.filter(id__in=selected_dokumen_ids)
+            departemen.related_document.set(dokumen)
 
         return redirect(self.request.META.get('HTTP_REFERER'))
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['list_menu_dokumen'] = MenuDokumen.objects.all()
+        context['list_dokumen'] = Dokumen.objects.filter(is_active=True)
         return context
 
 class DepartemenUpdateView(UpdateView):
     model = Departemen
-    fields = ['department', 'company', 'location']
+    fields = ['department', 'company', 'address']
     
     def post(self, request, pk):
         department_instance_update = Departemen.objects.get(id=pk)
-        nama_dept = request.POST.get('department')
-        # Check if there is an existing Department instance with the same no_dokumen and nama_dokumen
-        existing_department = Departemen.objects.filter(department=nama_dept).exclude(id=pk).exists()
+        nma_departemen = request.POST.get('department')
+        # Check if there is an existing Department
+        departemen_yang_ada = Departemen.objects.filter(department=nma_departemen).exclude(id=pk).exists()
         
-        if not existing_department:
+        if not departemen_yang_ada:
             # Update other fields if there's no existing Department instance with the same values
             for field in self.fields:
                 if request.POST.get(field):
@@ -61,16 +60,17 @@ class DepartemenUpdateView(UpdateView):
 
             # Save the updated fields
             department_instance_update.save(update_fields=self.fields)
-            # Get the list of selected MenuDokumen ids from the request
-            selected_menu_dokumen_ids = request.POST.getlist('ceklis_dokumen')
 
             # Clear the existing associations
-            department_instance_update.menu_dokumen.clear()
+            department_instance_update.related_document.clear()
 
-            # Associate the selected MenuDokumen instances with the Departemen
-            selected_menu_dokumen = MenuDokumen.objects.filter(id__in=selected_menu_dokumen_ids)
-            # "*" operator is used to unpack the selected_menu_dokumen iterable, which contains instances that need to be added to the menu_dokumen field
-            department_instance_update.menu_dokumen.add(*selected_menu_dokumen)
+            # Get the list of selected Dokumen ids from the request
+            selected_dokumen_ids = request.POST.getlist('checklist_dokumen')
+
+            # Associate the selected Dokumen instances with the Departemen
+            selected_dokumen = Dokumen.objects.filter(id__in=selected_dokumen_ids)
+            # "*" operator is used to unpack the selected_dokumen iterable, which contains instances that need to be added to the related_documents field
+            department_instance_update.related_document.add(*selected_dokumen)
 
         return redirect(self.request.META.get('HTTP_REFERER'))
     
@@ -79,9 +79,9 @@ class DepartemenEnableDisableView(UpdateView):
 
     def post(self, request, pk):
         department_instance_update = Departemen.objects.get(id=pk)
-        set_aktif = request.POST.get('aktivasi')
+        opsi_aktivasi = request.POST.get('aktivasi')
 
-        if set_aktif == "nonaktif":
+        if opsi_aktivasi == "nonaktif":
             department_instance_update.is_active = False
             department_instance_update.save(update_fields=['is_active'])
         else:
@@ -105,50 +105,94 @@ class DepartemenEnableDisableView(UpdateView):
                     os.makedirs(directory)
                 # return JsonResponse({'success': True, 'menu_name': menu.name})
             
-    return redirect(request.META.get('HTTP_REFERER'))'''
+    return redirect(request.META.get('HTTP_REFERER'))
+'''
 
-class MenuDokumenListView(CreateView, ListView):
-    model = MenuDokumen
+daftar_label = [{'form_no': {"label": "Form Number", "type": "text"},
+                'document_no': {"label": "Document Number", "type": "text"},
+                'effective_date': {"label": "Effective Date", "type": "date"},
+                'revision_no': {"label": "Revision No", "type": "text"},
+                'revision_date': {"label": "Revision Date", "type": "date"},
+                'part_no': {"label": "Part Number", "type": "text"},
+                'part_name': {"label": "Part Name", "type": "text"},
+                'supplier_name': {"label": "Supplier Name", "type": "text"},
+                'customer_name': {"label": "Customer Name", "type": "text"},
+                'pdf_file': {"label": "PDF File", "type": "file", "extension": ".pdf"},
+                'sheet_file': {"label": "Sheet File", "type": "file", "extension": ".ods, .xlsx"},
+                'other_file': {"label": "Additional File", "type": "file"}
+                }]
+
+class DokumenListView(CreateView, ListView):
+    model = Dokumen
     template_name = 'DMSApp/CrudMenuDokumen/view.html'
-    context_object_name = 'menu_dokumen_list'  # For ListView
-    fields = ['document', 'form_no', 'document_no', 'document_name',
-              'effective_date', 'revision_no', 'revision_date', 'part_no', 'part_name','supplier_name',
-              'customer_name', 'pdf_file', 'sheet_file', 'other_file']
-    success_url = '/menu-dokumen/page/'
+    context_object_name = 'dokumen_list'  # For ListView
+    fields = ['document']
+    success_url = '/document/page/'
 
     def get_queryset(self):
-        return MenuDokumen.objects.order_by('document')
+        return Dokumen.objects.order_by('document')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         # Specify the fields you want to render as checkboxes dynamically
-        context['default_checked'] = ['document', 'effective_date', 'revision_no', 'revision_date', 'pdf_file', 'sheet_file']
-        # context['doc_file'] = ['doc_pdf', 'doc_sheet', 'doc_additional']
+        context['default_checked'] = ['document_name', 'effective_date', 'revision_no', 'revision_date', 'pdf_file', 'sheet_file']
+        context['list_label'] = daftar_label
         return context
     
-class MenuDokumenUpdateView(UpdateView):
-    model = MenuDokumen
-    fields = ['document', 'form_no', 'document_no', 'document_name',
-              'effective_date', 'revision_no', 'revision_date', 'part_no', 'part_name','supplier_name',
-              'customer_name', 'pdf_file', 'sheet_file', 'other_file']
-    success_url = '/menu-dokumen/page/'
-    
-
     def form_valid(self, form):
-        # Perform custom validation
-        nama_dok = form.cleaned_data.get('document')
-        if MenuDokumen.objects.filter(document=nama_dok).exclude(pk=self.object.pk).exists():
-            #form.add_error('document', ValidationError("A document with this name already exists."))
+        # Check if a Dokumen with the same document already exists
+        nma_dokumen = form.cleaned_data['document']
+        if Dokumen.objects.filter(document=nma_dokumen).exists():
             return self.form_invalid(form)
-        return super().form_valid(form)
-    
-class MenuDokumenEnableDisableView(UpdateView):
+        else:
+            dokumen = form.save()
+            selected_labels = self.request.POST.getlist('checklist_label')
+            for nma_label in selected_labels:
+                # Get or create the Label instance
+                label, created = DokumenLabel.objects.get_or_create(name=nma_label)
+                dokumen.related_label.add(label)
+            return super().form_valid(form)
+            
+
+class DokumenUpdateView(UpdateView):
+    model = Dokumen
+    fields = ['document']
 
     def post(self, request, pk):
-        menu_document_instance_update = MenuDokumen.objects.get(id=pk)
-        set_aktif = request.POST.get('aktivasi')
+        document_instance_update = Dokumen.objects.get(id=pk)
+        nma_dokumen = request.POST.get('document')
+        # Check if there is an existing Dokumen
+        dokumen_yang_ada = Dokumen.objects.filter(document=nma_dokumen).exclude(id=pk).exists()
+        
+        if not dokumen_yang_ada:
+            # Update other fields if there's no existing Dokumen instance with the same values
+            for field in self.fields:
+                if request.POST.get(field):
+                    setattr(document_instance_update, field, request.POST.get(field))
 
-        if set_aktif == "nonaktif":
+            # Save the updated fields
+            document_instance_update.save(update_fields=self.fields)
+
+            # Clear the existing associations
+            document_instance_update.related_label.clear()
+
+            # Get the list of selected Label from the request
+            selected_labels = request.POST.getlist('checklist_label')
+            
+            for nma_label in selected_labels:
+                # Get or create the Label instance
+                label, created = DokumenLabel.objects.get_or_create(name=nma_label)
+                document_instance_update.related_label.add(label)
+
+        return redirect(self.request.META.get('HTTP_REFERER'))
+
+class DokumenEnableDisableView(UpdateView):
+
+    def post(self, request, pk):
+        menu_document_instance_update = Dokumen.objects.get(id=pk)
+        opsi_aktivasi = request.POST.get('aktivasi')
+
+        if opsi_aktivasi == "nonaktif":
             menu_document_instance_update.is_active = False
             menu_document_instance_update.save(update_fields=['is_active'])
         else:
@@ -158,58 +202,54 @@ class MenuDokumenEnableDisableView(UpdateView):
         return redirect(self.request.META.get('HTTP_REFERER'))
     
 
-class DokumenListView(ListView):
+class MenuDokumenListView(ListView):
     model = Departemen
-    template_name = 'DMSApp/CrudUploadDokumen/view.html'
-    context_object_name = 'departemen_dokumen_list'
+    template_name = 'DMSApp/CrudArsip/view.html'
+    context_object_name = 'departemen_list'
 
     def get_queryset(self):
         # Get the nama_dept from the request parameters
-        nama_dept = self.request.GET.get('dept')
+        nma_departemen = self.request.GET.get('dept')
 
-        if nama_dept:
+        if nma_departemen:
             # Retrieve the Departemen object with the given department_id
-            departemen = Departemen.objects.get(department=nama_dept)
+            departemen = Departemen.objects.get(department=nma_departemen)
                 
             # Retrieve the related MenuDokumen objects for the Departemen
-            queryset = departemen.menu_dokumen.all().order_by('document')
+            queryset = departemen.related_document.all().order_by('document')
         return queryset
     
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        menu_name = self.request.GET.get('menu')
-        dept_name = self.request.GET.get('dept')
-        if dept_name:
+        nma_dokumen = self.request.GET.get('menu')
+        nma_departemen = self.request.GET.get('dept')
+        if nma_departemen:
             # nm_directory = MenuDokumen.objects.get(sub_directory=menu_name)
-            context['menu_dokumen'] = menu_name
-            context['nm_department'] = dept_name
-            context['menu_dokumen_list'] = MenuDokumen.objects.filter(document=menu_name)
+            context['nm_dokumen'] = nma_dokumen
+            context['nm_departemen'] = nma_departemen
+            # context['menu_dokumen_list'] = Dokumen.objects.filter(document=nma_dokumen)
         return context
-    
-class DokumenCreateView(CreateView):
-    model = Dokumen
-    template_name = 'DMSApp/CrudUploadDokumen/create.html'
-    context_object_name = 'dokumen_list'
-    # paginate_by = 10
-    fields = ['no_form', 'no_dokumen', 'nama_dokumen', 'tanggal_efektif', 'no_revisi', 'tanggal_revisi', 'no_part', 'nama_part','nama_supplier', 'nama_customer']
+
+class ArchiveCreateView(CreateView):
+    model = Arsip
+    template_name = 'DMSApp/CrudArsip/create.html'
+    fields = ['parent_document', 'parent_department']
     success_url = '/document/page'
 
-    '''def get_queryset(self):
-        # Assuming menu_name is available as a variable or passed through the URL
-        menu_name = menu_name = self.request.GET.get('menu')
-        queryset = super().get_queryset()
-        return queryset.filter(document=menu_name)
-'''
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        menu_name = self.request.GET.get('menu')
-        dept_name = self.request.GET.get('dept')
-        if menu_name:
-            context['menu_dokumen'] = menu_name
-            context['nm_department'] = dept_name
-            context['menu_dokumen_list'] = MenuDokumen.objects.filter(document=menu_name)
+        nma_dokumen = self.request.GET.get('menu')
+        nma_departemen = self.request.GET.get('dept')
+        if nma_dokumen:
+            # Retrieve the related MenuDokumen objects for the Departemen
+            nma_label = Dokumen.objects.get(document=nma_dokumen)
+            context['nm_dokumen'] = nma_dokumen
+            context['nm_department'] = nma_departemen
+            context['nm_label'] = nma_label.related_label.all()
+            context['list_label'] = daftar_label
         return context
+
 '''
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -223,4 +263,5 @@ class DokumenCreateView(CreateView):
         # queryset = queryset.filter(menu_dokumen__departemen__department=nama_dept)
         queryset = Departemen.objects.get(menu_dokumen__departemen__department=nama_dept)
         # departemen = Departemen.objects.get(pk=departemen_id)
-        return queryset'''
+        return queryset
+        '''
