@@ -1,3 +1,4 @@
+
 {% load static %}
 {% load custom_filters %}
 
@@ -22,23 +23,10 @@
       </div>
     </div>
 
-    <script>
-      function displayPDF(input) {
-        if (input.files && input.files[0]) {
-          var reader = new FileReader();
-          reader.onload = function(e) {
-            $('.pdf_viewer').attr('src', e.target.result);
-          }
-          reader.readAsDataURL(input.files[0]);
-        }
-      }
-    </script>
-
     <div class="row">
       <div class="col-lg-12 grid-margin stretch-card">
         <div class="card shadow">
           <div class="card-body">
-
             <div class="row">
               <div class="col-8">
                 <h4 class="card-title">Register New Document ({{ nm_dokumen|capfirst }})</h4>
@@ -46,15 +34,8 @@
                   Add class <code>.table-striped</code>{% for u in get_id %}{{ u.name }}{% endfor %}
                 </p>
               </div>
-              <div class="col-4">
-                <div class="justify-content-end d-flex">
-                  <div class="m-3 inputs">
-                    <i class="icon-search"></i>
-                    <input type="text" class="form-control form-control-search" placeholder="Search {{ sub_directory.sub_directory }}">
-                  </div>
-              </div>
-              </div>
             </div>
+
             <div class="row">
               <div class="col-md-6">
                 <form class="forms-sample" method="post" autocomplete="off" enctype="multipart/form-data">
@@ -89,28 +70,52 @@
                   <button type="button" class="btn btn-danger" data-dismiss="modal">Tutup</button>
                 </form>
               </div>
-              <div class="col-md-6">
-                <div class="form-group" >
-                  <label for="pdf_viewer">PDF Viewer</label>
-                  <embed class="pdf_viewer w-100 h-100 d-inline-block" src="" type="application/pdf" />
+              <div class="col-lg-6 grid-margin stretch-card">
+                <div class="form-group">
+                  <label for="pdf-url">PDF URL</label>
+                  <div id="pdf-viewer" class="mt-4">
+                      <canvas id="pdf-canvas"></canvas>
+                  </div>
                 </div>
               </div>
+
+
             </div>
           </div>
         </div>
       </div>
     </div>
-
   </div>
-  <script>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.6.347/pdf.min.js"></script>
+<script>
     function displayPDF(input) {
-      if (input.files && input.files[0]) {
-        var reader = new FileReader();
-        reader.onload = function(e) {
-          $('.pdf_viewer').attr('src', e.target.result);
+        const file = input.files[0];
+        if (file.type === "application/pdf") {
+            const fileReader = new FileReader();
+            fileReader.onload = function() {
+                const pdfData = new Uint8Array(this.result);
+                const loadingTask = pdfjsLib.getDocument({data: pdfData});
+                loadingTask.promise.then(pdf => {
+                    pdf.getPage(1).then(page => {
+                        const viewport = page.getViewport({scale: 1.5});
+                        const canvas = document.getElementById('pdf-canvas');
+                        const context = canvas.getContext('2d');
+                        canvas.height = viewport.height;
+                        canvas.width = viewport.width;
+                        const renderContext = {
+                            canvasContext: context,
+                            viewport: viewport
+                        };
+                        page.render(renderContext);
+                    });
+                });
+            };
+            fileReader.readAsArrayBuffer(file);
+        } else {
+            alert("Please select a valid PDF file.");
         }
-        reader.readAsDataURL(input.files[0]);
-      }
     }
-  </script>
+</script>
 {% include 'DMSApp/Komponen/footer.html' %}

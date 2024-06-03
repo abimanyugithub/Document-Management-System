@@ -110,6 +110,7 @@ class DepartemenEnableDisableView(UpdateView):
 
 daftar_label = [{'form_no': {"label": "Form Number", "type": "text"},
                 'document_no': {"label": "Document Number", "type": "text"},
+                'document_name': {"label": "Document Name", "type": "text"},
                 'effective_date': {"label": "Effective Date", "type": "date"},
                 'revision_no': {"label": "Revision No", "type": "text"},
                 'revision_date': {"label": "Revision Date", "type": "date"},
