@@ -5,6 +5,7 @@ from django.conf import settings
 from urllib.parse import urljoin
 import os
 from django import forms
+from django.core.files.storage import FileSystemStorage
 
 folder_target = 'media/DMSApp/'
 # Create your views here.
@@ -51,6 +52,9 @@ class DepartemenUpdateView(UpdateView):
         nma_departemen = request.POST.get('department')
         # Check if there is an existing Department
         departemen_yang_ada = Departemen.objects.filter(department=nma_departemen).exclude(id=pk).exists()
+
+        # Get the current department name
+        current_department_name = department_instance_update.department
         
         if not departemen_yang_ada:
             # Update other fields if there's no existing Department instance with the same values
@@ -72,6 +76,17 @@ class DepartemenUpdateView(UpdateView):
             # "*" operator is used to unpack the selected_dokumen iterable, which contains instances that need to be added to the related_documents field
             department_instance_update.related_document.add(*selected_dokumen)
 
+            # Rename the directory for each selected document
+            for dokumen in selected_dokumen:
+                old_folder_path = os.path.join(folder_target, dokumen.document, current_department_name)
+                new_folder_path = os.path.join(folder_target, dokumen.document, nma_departemen)
+                
+                # Add error handling for directory existence
+                if os.path.exists(old_folder_path):
+                    os.rename(old_folder_path, new_folder_path)
+                else:
+                    print(f"The directory '{old_folder_path}' does not exist.")
+
         return redirect(self.request.META.get('HTTP_REFERER'))
     
 
@@ -89,24 +104,7 @@ class DepartemenEnableDisableView(UpdateView):
             department_instance_update.save(update_fields=['is_active'])
 
         return redirect(self.request.META.get('HTTP_REFERER'))
-    
 
-'''def add_menu(request):
-    if request.method == 'POST':
-        new_menu_name = request.POST.get('new_menu')
-        add_additional = request.POST.get('additional') == 'on'  # Check if the checkbox is checked
-        if new_menu_name:
-            if not MenuDokumen.objects.filter(document=new_menu_name).exists():
-                MenuDokumen.objects.create(document=new_menu_name, is_additional=add_additional)
-                # Define the directory path
-                directory = folder_target + new_menu_name
-                # Create the directory if it doesn't exist
-                if not os.path.exists(directory):
-                    os.makedirs(directory)
-                # return JsonResponse({'success': True, 'menu_name': menu.name})
-            
-    return redirect(request.META.get('HTTP_REFERER'))
-'''
 
 daftar_label = [{'form_no': {"label": "Form Number", "type": "text"},
                 'document_no': {"label": "Document Number", "type": "text"},
@@ -164,6 +162,9 @@ class DokumenUpdateView(UpdateView):
         nma_dokumen = request.POST.get('document')
         # Check if there is an existing Dokumen
         dokumen_yang_ada = Dokumen.objects.filter(document=nma_dokumen).exclude(id=pk).exists()
+
+        # Get the current name of the document
+        current_document_name = document_instance_update.document
         
         if not dokumen_yang_ada:
             # Update other fields if there's no existing Dokumen instance with the same values
@@ -184,6 +185,11 @@ class DokumenUpdateView(UpdateView):
                 # Get or create the Label instance
                 label, created = DokumenLabel.objects.get_or_create(name=nma_label)
                 document_instance_update.related_label.add(label)
+
+            # Rename the directory
+            old_folder_path = os.path.join(folder_target, current_document_name)
+            new_folder_path = os.path.join(folder_target, nma_dokumen)
+            os.rename(old_folder_path, new_folder_path)
 
         return redirect(self.request.META.get('HTTP_REFERER'))
 
@@ -229,14 +235,64 @@ class MenuDokumenListView(ListView):
             # nm_directory = MenuDokumen.objects.get(sub_directory=menu_name)
             context['nm_dokumen'] = nma_dokumen
             context['nm_departemen'] = nma_departemen
-            # context['menu_dokumen_list'] = Dokumen.objects.filter(document=nma_dokumen)
+            context['data_dokumen_list'] = Dokumen.objects.filter(document=nma_dokumen)
         return context
 
 class ArchiveCreateView(CreateView):
     model = Arsip
     template_name = 'DMSApp/CrudArsip/create.html'
-    fields = ['parent_document', 'parent_department']
-    success_url = '/document/page'
+    fields = []  # Remove fields, as we are handling them manually
+
+    def form_valid(self, form):
+        # Get the values of menu1 and dept1 from the form
+        nm_dokumen = self.request.POST.get('dokumen')
+        nm_departemen = self.request.POST.get('departemen')
+        
+        # Retrieve IDs from the database based on the names
+        dokumen_obj = Dokumen.objects.get(document=nm_dokumen)  
+        departemen_obj = Departemen.objects.get(department=nm_departemen)  
+        
+        # Set the IDs to the form instance before saving
+        form.instance.parent_document = dokumen_obj
+        form.instance.parent_department = departemen_obj
+
+        # Save the form
+        self.object = form.save()
+
+        # Handle saving dynamic fields and files
+        directory = os.path.join(folder_target, nm_dokumen, nm_departemen)
+        
+        # Ensure the directory exists
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+
+        # Save dynamic form fields
+        for label_dict in daftar_label:
+            for key, value in label_dict.items():
+
+                # Check if the field is a file input
+                if value.get('type') == "file":
+
+                    # Handle file upload
+                    file_value = self.request.FILES.get(key)
+                    if file_value:
+                        fs = FileSystemStorage(location=directory)
+                        filename = fs.save(file_value.name, file_value)
+
+                        # Set the file path to the form instance dynamically
+                        setattr(self.object, key, os.path.join(directory, filename))
+                        
+                else:
+
+                    # Get the value of the field from the request
+                    field_value = self.request.POST.get(key)
+                    setattr(self.object, key, field_value)
+        
+        # Now save the instance to the database
+        self.object.save()
+
+        return redirect(self.request.META.get('HTTP_REFERER'))
+        
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -246,10 +302,12 @@ class ArchiveCreateView(CreateView):
             # Retrieve the related MenuDokumen objects for the Departemen
             nma_label = Dokumen.objects.get(document=nma_dokumen)
             context['nm_dokumen'] = nma_dokumen
-            context['nm_department'] = nma_departemen
+            context['nm_departemen'] = nma_departemen
             context['nm_label'] = nma_label.related_label.all()
             context['list_label'] = daftar_label
         return context
+    
+    
 
 '''
     def get_queryset(self):

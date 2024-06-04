@@ -33,8 +33,14 @@
               <div class="form-group">
                 <div class="form-check">
                   <label class="form-check-label">
+                    {% if value.label == "PDF File" or value.label == "Document Number" %}
+                    <input type="hidden" name="checklist_label" value="{{ key }}">
+                    <input type="checkbox" class="form-check-input" name="checklist_label" value="{{ key }}" checked disabled>
+                    {% else %}
                     <input type="checkbox" class="form-check-input" name="checklist_label" value="{{ key }}" 
-                    {% if key in default_checked %} checked {% endif %}>{{ value.label }}
+                    {% if key in default_checked %} checked {% endif %}>
+                    {% endif %}
+                    {{ value.label }}
                   </label>
                 </div>
               </div>
