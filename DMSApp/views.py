@@ -231,13 +231,22 @@ class MenuDokumenListView(ListView):
         context = super().get_context_data(**kwargs)
         nma_dokumen = self.request.GET.get('menu')
         nma_departemen = self.request.GET.get('dept')
-        if nma_departemen:
-            # nm_directory = MenuDokumen.objects.get(sub_directory=menu_name)
-            context['nm_dokumen'] = nma_dokumen
-            context['nm_departemen'] = nma_departemen
-            context['data_dokumen_list'] = Dokumen.objects.filter(document=nma_dokumen)
-        return context
 
+        if nma_departemen:
+            context['nm_departemen'] = nma_departemen
+            if nma_dokumen:
+                context['nm_dokumen'] = nma_dokumen
+                context['data_dokumen_list'] = Dokumen.objects.filter(document=nma_dokumen)
+                nma_label = Dokumen.objects.get(document=nma_dokumen)
+                relasi_label = nma_label.related_label.all()
+                context['nm_label'] = relasi_label
+                context['list_label'] = daftar_label
+                context['arsip_list'] = Arsip.objects.all()
+            
+        return context
+    
+
+# contoh penomoran dokumen => 2. FMS.31.01 REV.02_MEMBUAT TAGIHAN CUSTOMER 8. FMS.31.05.02 REV.02_PPH 21 
 class ArchiveCreateView(CreateView):
     model = Arsip
     template_name = 'DMSApp/CrudArsip/create.html'
@@ -301,26 +310,9 @@ class ArchiveCreateView(CreateView):
         if nma_dokumen:
             # Retrieve the related MenuDokumen objects for the Departemen
             nma_label = Dokumen.objects.get(document=nma_dokumen)
+            relasi_label = nma_label.related_label.all()
             context['nm_dokumen'] = nma_dokumen
             context['nm_departemen'] = nma_departemen
-            context['nm_label'] = nma_label.related_label.all()
+            context['nm_label'] = relasi_label
             context['list_label'] = daftar_label
         return context
-    
-    
-
-'''
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        nama_dept = self.request.GET.get('dept')
-        if nama_dept:
-            queryset = queryset.filter(menu_dokumen__departemen__department=nama_dept).distinct()
-        return queryset
-    
-    def get_queryset(self):
-        nama_dept = self.request.GET.get('dept')
-        # queryset = queryset.filter(menu_dokumen__departemen__department=nama_dept)
-        queryset = Departemen.objects.get(menu_dokumen__departemen__department=nama_dept)
-        # departemen = Departemen.objects.get(pk=departemen_id)
-        return queryset
-        '''
