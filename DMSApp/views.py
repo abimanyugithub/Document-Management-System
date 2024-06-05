@@ -17,7 +17,7 @@ class DepartemenListView(CreateView, ListView):
     model = Departemen
     template_name = 'DMSApp/CrudDepartemen/view.html'
     context_object_name = 'departemen_list'  # For ListView
-    fields = ['department', 'company', 'address']
+    fields = ['department_code','department', 'company', 'address']
     success_url = '/departemen/page'
 
     def get_queryset(self):
@@ -26,15 +26,24 @@ class DepartemenListView(CreateView, ListView):
     
     def form_valid(self, form):
         # Custom form validation
+        kode_departemen = form.cleaned_data['department_code']
         nma_departemen = form.cleaned_data['department']
-        if Departemen.objects.filter(department=nma_departemen).exists():
-            form.add_error('department', "A department with this name already exists.")
+        
+        # Check if a department with the same name already exists
+        if Departemen.objects.filter(department=nma_departemen).exists() or Departemen.objects.filter(department_code=kode_departemen).exists():
+            if Departemen.objects.filter(department=nma_departemen).exists():
+                form.add_error('department', "A department with this name already exists.")
+            if Departemen.objects.filter(department_code=kode_departemen).exists():
+                form.add_error('department_code', "A department with this code already exists.")
             return self.form_invalid(form)
-        else:
-            departemen = form.save()
-            selected_dokumen_ids = self.request.POST.getlist('checklist_dokumen')
-            dokumen = Dokumen.objects.filter(id__in=selected_dokumen_ids)
-            departemen.related_document.set(dokumen)
+        
+        # If validation passes, save the department
+        departemen = form.save()
+        
+        # Handle related documents
+        selected_dokumen_ids = self.request.POST.getlist('checklist_dokumen')
+        dokumen = Dokumen.objects.filter(id__in=selected_dokumen_ids)
+        departemen.related_document.set(dokumen)
 
         return redirect(self.request.META.get('HTTP_REFERER'))
     
@@ -45,47 +54,52 @@ class DepartemenListView(CreateView, ListView):
 
 class DepartemenUpdateView(UpdateView):
     model = Departemen
-    fields = ['department', 'company', 'address']
+    fields = []
     
     def post(self, request, pk):
         department_instance_update = Departemen.objects.get(id=pk)
         nma_departemen = request.POST.get('department')
-        # Check if there is an existing Department
+        kode_departemen = request.POST.get('department_code')
+        
+        # Check if there is an existing Department with the same name, excluding the current department
         departemen_yang_ada = Departemen.objects.filter(department=nma_departemen).exclude(id=pk).exists()
+        
+        # Check if there is an existing Department with the same code, excluding the current department
+        kode_departemen_yang_ada = Departemen.objects.filter(department_code=kode_departemen).exclude(id=pk).exists()
 
         # Get the current department name
         current_department_name = department_instance_update.department
         
-        if not departemen_yang_ada:
-            # Update other fields if there's no existing Department instance with the same values
-            for field in self.fields:
-                if request.POST.get(field):
-                    setattr(department_instance_update, field, request.POST.get(field))
+        # If either department name or code already exists, handle errors
+        if departemen_yang_ada or kode_departemen_yang_ada:
+            # Assuming you have a form instance to pass to the template
+            form = self.get_form()
+            if departemen_yang_ada:
+                form.add_error('department', "A department with this name already exists.")
+            if kode_departemen_yang_ada:
+                form.add_error('department_code', "A department with this code already exists.")
+            return self.form_invalid(form)
 
-            # Save the updated fields
-            department_instance_update.save(update_fields=self.fields)
+        # If no errors, update the department instance
+        department_instance_update.department = nma_departemen
+        department_instance_update.department_code = kode_departemen
+        department_instance_update.save()
 
-            # Clear the existing associations
-            department_instance_update.related_document.clear()
+        # Handle related documents
+        selected_dokumen_ids = request.POST.getlist('checklist_dokumen')
+        dokumen = Dokumen.objects.filter(id__in=selected_dokumen_ids)
+        department_instance_update.related_document.set(dokumen)
 
-            # Get the list of selected Dokumen ids from the request
-            selected_dokumen_ids = request.POST.getlist('checklist_dokumen')
-
-            # Associate the selected Dokumen instances with the Departemen
-            selected_dokumen = Dokumen.objects.filter(id__in=selected_dokumen_ids)
-            # "*" operator is used to unpack the selected_dokumen iterable, which contains instances that need to be added to the related_documents field
-            department_instance_update.related_document.add(*selected_dokumen)
-
-            # Rename the directory for each selected document
-            for dokumen in selected_dokumen:
-                old_folder_path = os.path.join(folder_target, dokumen.document, current_department_name)
-                new_folder_path = os.path.join(folder_target, dokumen.document, nma_departemen)
-                
-                # Add error handling for directory existence
-                if os.path.exists(old_folder_path):
-                    os.rename(old_folder_path, new_folder_path)
-                else:
-                    print(f"The directory '{old_folder_path}' does not exist.")
+        # Rename the directory for each selected document
+        for dokumen in selected_dokumen_ids:
+            old_folder_path = os.path.join(folder_target, dokumen.document, current_department_name)
+            new_folder_path = os.path.join(folder_target, dokumen.document, nma_departemen)
+            
+            # Add error handling for directory existence
+            if os.path.exists(old_folder_path):
+                os.rename(old_folder_path, new_folder_path)
+            else:
+                print(f"The directory '{old_folder_path}' does not exist.")
 
         return redirect(self.request.META.get('HTTP_REFERER'))
     
@@ -125,7 +139,7 @@ class DokumenListView(CreateView, ListView):
     model = Dokumen
     template_name = 'DMSApp/CrudMenuDokumen/view.html'
     context_object_name = 'dokumen_list'  # For ListView
-    fields = ['document']
+    fields = ['document_initial', 'document']
     success_url = '/document/page/'
 
     def get_queryset(self):
@@ -141,25 +155,37 @@ class DokumenListView(CreateView, ListView):
     def form_valid(self, form):
         # Check if a Dokumen with the same document already exists
         nma_dokumen = form.cleaned_data['document']
-        if Dokumen.objects.filter(document=nma_dokumen).exists():
+        init_dokumen = form.cleaned_data['document_initial']
+
+        # Check for duplicates of document name and document initial
+        if Dokumen.objects.filter(document=nma_dokumen).exists() or Dokumen.objects.filter(document_initial=init_dokumen).exists():
+            if Dokumen.objects.filter(document=nma_dokumen).exists():
+                form.add_error('document', "A document with this name already exists.")
+            if Dokumen.objects.filter(document_initial=init_dokumen).exists():
+                form.add_error('document_initial', "A document with this initial already exists.")
             return self.form_invalid(form)
-        else:
-            dokumen = form.save()
-            selected_labels = self.request.POST.getlist('checklist_label')
-            for nma_label in selected_labels:
-                # Get or create the Label instance
-                label, created = DokumenLabel.objects.get_or_create(name=nma_label)
-                dokumen.related_label.add(label)
-            return super().form_valid(form)
+        
+        # If no duplicates, save the document
+        dokumen = form.save()
+        
+        # Handle related labels
+        selected_labels = self.request.POST.getlist('checklist_label')
+        for nma_label in selected_labels:
+            # Get or create the Label instance
+            label, created = DokumenLabel.objects.get_or_create(name=nma_label)
+            dokumen.related_label.add(label)
+        
+        return super().form_valid(form)
             
 
 class DokumenUpdateView(UpdateView):
     model = Dokumen
-    fields = ['document']
+    fields = []
 
     def post(self, request, pk):
         document_instance_update = Dokumen.objects.get(id=pk)
         nma_dokumen = request.POST.get('document')
+        init_dokumen = request.POST.get('document_initial')
         # Check if there is an existing Dokumen
         dokumen_yang_ada = Dokumen.objects.filter(document=nma_dokumen).exclude(id=pk).exists()
 
