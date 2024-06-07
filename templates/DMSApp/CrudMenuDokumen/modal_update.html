@@ -22,7 +22,7 @@
               {% for field in form %}
               <div class="form-group">
                 <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                <input type="text" class="form-control" id="{{ field.id_for_label }}" name="{{ field.name }}" placeholder="{{ field.label }}" value="{{ obj.document }}" required>
+                <input type="text" class="form-control" id="{{ field.id_for_label }}" name="{{ field.name }}" placeholder="{{ field.label }}" value="{{obj|get_field_value:field.name }}" required>
               </div>
               {% endfor %}
             </div>
@@ -75,7 +75,7 @@
       <div class="modal-header">
         <h5 class="modal-title" id="exampleModalLabel" style="display: flex; align-items: center;">
           <i class="mdi mdi-help-circle mdi-24px text-primary mr-2"></i>
-          <b>document {{ obj.document }}</b>
+          <b>{% if obj.is_active %}Deactivate{% else %}Activate{% endif %} document {{ obj.document }}</b>
         </h5>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>

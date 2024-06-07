@@ -80,7 +80,7 @@
       <div class="modal-header">
         <h5 class="modal-title" id="exampleModalLabel" style="display: flex; align-items: center;">
           <i class="mdi mdi-help-circle mdi-24px text-primary mr-2"></i>
-          <b>department {{ obj.department }}</b>
+          <b>{% if obj.is_active %}Deactivate{% else %}Activate{% endif %} department {{ obj.department }}</b>
         </h5>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>

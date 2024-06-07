@@ -6,6 +6,7 @@ from urllib.parse import urljoin
 import os
 from django import forms
 from django.core.files.storage import FileSystemStorage
+from django.core.exceptions import PermissionDenied
 
 folder_target = 'media/DMSApp/'
 # Create your views here.
@@ -22,6 +23,8 @@ class DepartemenListView(CreateView, ListView):
 
     def get_queryset(self):
         queryset = super().get_queryset()
+        # Filter out objects where is_deleted is False
+        #queryset = super().get_queryset().filter(is_deleted=False)
         return queryset.order_by('department')
     
     def form_valid(self, form):
@@ -51,6 +54,7 @@ class DepartemenListView(CreateView, ListView):
         context = super().get_context_data(**kwargs)
         context['list_dokumen'] = Dokumen.objects.filter(is_active=True)
         return context
+
 
 class DepartemenUpdateView(UpdateView):
     model = Departemen
@@ -89,22 +93,26 @@ class DepartemenUpdateView(UpdateView):
         selected_dokumen_ids = request.POST.getlist('checklist_dokumen')
         dokumen = Dokumen.objects.filter(id__in=selected_dokumen_ids)
         department_instance_update.related_document.set(dokumen)
+        # department_instance_update.related_document.add(*dokumen)
 
         # Rename the directory for each selected document
-        for dokumen in selected_dokumen_ids:
-            old_folder_path = os.path.join(folder_target, dokumen.document, current_department_name)
-            new_folder_path = os.path.join(folder_target, dokumen.document, nma_departemen)
-            
-            # Add error handling for directory existence
-            if os.path.exists(old_folder_path):
-                os.rename(old_folder_path, new_folder_path)
-            else:
-                print(f"The directory '{old_folder_path}' does not exist.")
+        for dok_id in selected_dokumen_ids:
+            try:
+                dokumen_instance = Dokumen.objects.get(id=dok_id)
+                old_folder_path = os.path.join(folder_target, dokumen_instance.document, current_department_name)
+                new_folder_path = os.path.join(folder_target, dokumen_instance.document, nma_departemen)
+                
+                if os.path.exists(old_folder_path):
+                    os.rename(old_folder_path, new_folder_path)
+                else:
+                    print(f"The directory '{old_folder_path}' does not exist.")
+            except Dokumen.DoesNotExist:
+                print(f"Dokumen with id {dok_id} does not exist.")
 
         return redirect(self.request.META.get('HTTP_REFERER'))
     
 
-class DepartemenEnableDisableView(UpdateView):
+class DepartemenActivateDeactivateView(UpdateView):
 
     def post(self, request, pk):
         department_instance_update = Departemen.objects.get(id=pk)
@@ -118,8 +126,48 @@ class DepartemenEnableDisableView(UpdateView):
             department_instance_update.save(update_fields=['is_active'])
 
         return redirect(self.request.META.get('HTTP_REFERER'))
+    
 
+class DepartemenDeleteView(DeleteView):
 
+    def post(self, request, pk):
+        department_instance_delete = Departemen.objects.get(id=pk)
+
+        # Check if there are related instances of Arsip with the same parent department
+        if Arsip.objects.filter(parent_department=pk).exists():
+            # If related Arsip instances exist, raise PermissionDenied
+            raise PermissionDenied("Cannot delete this department because related Arsip instances exist.")
+
+        # Iterate over each relasi_departemen instance
+        for relasi_departemen in department_instance_delete.related_document.all():
+            # Construct the path to the directory
+            path = os.path.join(folder_target, relasi_departemen.document, department_instance_delete.department)
+
+            if os.path.exists(path):
+                os.rmdir(path)
+
+            department_instance_delete.delete()
+
+        return redirect(self.request.META.get('HTTP_REFERER'))
+    
+
+# Versi update u/ delete
+'''class DepartemenDeleteView(UpdateView):
+
+    def post(self, request, pk):
+        department_instance_delete = Departemen.objects.get(id=pk)
+
+        # Check if there are related instances of Arsip with the same parent department
+        if Arsip.objects.filter(parent_department=pk).exists():
+            # If related Arsip instances exist, raise PermissionDenied
+            raise PermissionDenied("Cannot delete this department because related Arsip instances exist.")
+
+        # If no related Arsip instances exist, mark the department as deleted
+        department_instance_delete.is_deleted = True
+        department_instance_delete.save(update_fields=['is_deleted'])
+
+        return redirect(self.request.META.get('HTTP_REFERER'))'''
+    
 daftar_label = [{'form_no': {"label": "Form Number", "type": "text"},
                 'document_no': {"label": "Document Number", "type": "text"},
                 'document_name': {"label": "Document Name", "type": "text"},
@@ -189,35 +237,45 @@ class DokumenUpdateView(UpdateView):
         # Check if there is an existing Dokumen
         dokumen_yang_ada = Dokumen.objects.filter(document=nma_dokumen).exclude(id=pk).exists()
 
+        # Check if there is an existing initial dokumen
+        inisial_dokumen_yang_ada = Dokumen.objects.filter(document_initial=init_dokumen).exclude(id=pk).exists()
+
         # Get the current name of the document
         current_document_name = document_instance_update.document
+
+        # Assuming you have a form instance to pass to the template
+        if dokumen_yang_ada or inisial_dokumen_yang_ada:
+            form = self.get_form()
+            if dokumen_yang_ada:
+                form.add_error('department', "A department with this name already exists.")
+            if inisial_dokumen_yang_ada:
+                form.add_error('inisial_dokumen', "A department with this code already exists.")
+            return self.form_invalid(form)
         
-        if not dokumen_yang_ada:
-            # Update other fields if there's no existing Dokumen instance with the same values
-            for field in self.fields:
-                if request.POST.get(field):
-                    setattr(document_instance_update, field, request.POST.get(field))
 
-            # Save the updated fields
-            document_instance_update.save(update_fields=self.fields)
+        # Otherwise, update the Dokumen instance and redirect
+        document_instance_update.document = nma_dokumen
+        document_instance_update.document_initial = init_dokumen
+        document_instance_update.save()
 
-            # Clear the existing associations
-            document_instance_update.related_label.clear()
+        # Clear the existing associations
+        document_instance_update.related_label.clear()
 
-            # Get the list of selected Label from the request
-            selected_labels = request.POST.getlist('checklist_label')
-            
-            for nma_label in selected_labels:
-                # Get or create the Label instance
-                label, created = DokumenLabel.objects.get_or_create(name=nma_label)
-                document_instance_update.related_label.add(label)
+        # Get the list of selected Label from the request
+        selected_labels = request.POST.getlist('checklist_label')
+        
+        for nma_label in selected_labels:
+            # Get or create the Label instance
+            label, created = DokumenLabel.objects.get_or_create(name=nma_label)
+            document_instance_update.related_label.add(label)
 
-            # Rename the directory
-            old_folder_path = os.path.join(folder_target, current_document_name)
-            new_folder_path = os.path.join(folder_target, nma_dokumen)
-            os.rename(old_folder_path, new_folder_path)
+        # Rename the directory
+        old_folder_path = os.path.join(folder_target, current_document_name)
+        new_folder_path = os.path.join(folder_target, nma_dokumen)
+        os.rename(old_folder_path, new_folder_path)
 
         return redirect(self.request.META.get('HTTP_REFERER'))
+
 
 class DokumenEnableDisableView(UpdateView):
 
@@ -315,7 +373,8 @@ class ArchiveCreateView(CreateView):
                         filename = fs.save(file_value.name, file_value)
 
                         # Set the file path to the form instance dynamically
-                        setattr(self.object, key, os.path.join(directory, filename))
+                        # setattr(self.object, key, os.path.join(directory, filename))
+                        setattr(self.object, key, filename)
                         
                 else:
 

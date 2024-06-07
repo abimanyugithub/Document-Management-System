@@ -8,7 +8,8 @@ urlpatterns = [
     path('', views.DashboardView.as_view(), name='view_dash'),
     path('department/page/', views.DepartemenListView.as_view(), name='departemen_view'),
     path('department/update/<str:pk>/', views.DepartemenUpdateView.as_view(), name='departemen_update'),
-    path('department/delete/<str:pk>/', views.DepartemenEnableDisableView.as_view(), name='departemen_is_active'),
+    path('department/activation/<str:pk>/', views.DepartemenActivateDeactivateView.as_view(), name='departemen_is_active'),
+    path('department/delete/<str:pk>/', views.DepartemenDeleteView.as_view(), name='departemen_is_delete'),
 
     path('document/page/', views.DokumenListView.as_view(), name='dokumen_view'),
     path('document/update/<str:pk>/', views.DokumenUpdateView.as_view(), name='dokumen_update'),
