@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 {% load static %}
+{% load custom_filters %}
 <html lang="en">
 
 <head>
@@ -507,7 +508,7 @@
                 <li class="nav-item"> <a class="nav-link" href="{% url 'dokumen_view' %}?menu={{ sub.document }}"> {{ sub.document|capfirst }}</a></li>
                 {% endfor %} -->
                 {% for sub in cp_departemen_list %}
-                <li class="nav-item"> <a class="nav-link" href="{% url 'menu_dokumen_view' %}?dept={{ sub.department }}"> {{ sub.department|capfirst }}</a></li>
+                <li class="nav-item"> <a class="nav-link" href="{% url 'arsip_view' %}?dept={{ sub.department|custom_slugify }}"> {{ sub.department|capfirst }}</a></li>
                 {% endfor %}
               </ul>
             </div>

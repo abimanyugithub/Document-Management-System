@@ -18,16 +18,19 @@
                 <li class="breadcrumb-item active" aria-current="page">{% if nm_dokumen %}<a href='{% url 'arsip_view' %}?dept={{ nm_departemen|custom_slugify }}'>{% endif %}{{ nm_departemen|capfirst }}</a></li>
                 {% endif %}
                 {% if nm_dokumen %}
-                <li class="breadcrumb-item active" aria-current="page">{{ nm_dokumen|capfirst }}</li>
+                <li class="breadcrumb-item active" aria-current="page">{% if nm_arsip %}<a href='{% url 'arsip_view' %}?menu={{ nm_dokumen|custom_slugify }}&dept={{ nm_departemen|custom_slugify }}'>{% endif %}{{ nm_dokumen|capfirst }}</a></li>
+                {% endif %}
+                {% if nm_arsip %}
+                <li class="breadcrumb-item active" aria-current="page">{{ nm_arsip|capfirst }}</li>
                 {% endif %}
               </ol>
             </nav>
           </div>
-          {% if nm_dokumen %}
+          {% if nm_department %}
           <div class="col-12 col-xl-4">
             <div class="justify-content-end d-flex">
               <div class="dropdown flex-md-grow-1 flex-xl-grow-0">
-               <button onclick="window.location.href='{% url 'arsip_create' %}?menu={{ nm_dokumen|custom_slugify }}&dept={{ nm_departemen|custom_slugify }}'" class="btn btn-primary btn-icon-text">
+                <button type="button" class="btn btn-primary btn-icon-text" data-toggle="modal" data-target="#mod1">
                   <i class="ti-plus btn-icon-prepend"></i>
                   Register
                 </button>
@@ -38,23 +41,8 @@
         </div>
       </div>
     </div>
-
-    {% if not nm_dokumen %}
-    <div class="row">
-      {% for dl in departemen_list %}
-      <div class="col-xl-4 mb-4 stretch-card transparent">
-        <button onclick="window.location.href='{% url 'arsip_view' %}?menu={{ dl.document|custom_slugify }}&dept={{ nm_departemen|custom_slugify }}'" 
-        class="card card-dark-blue border-0 shadow">
-            <div class="card-body">
-              <p class="m-1">{{ dl.document|capfirst }}</p>
-            </div>
-          </button>
-      </div>
-      {% endfor %}
-    </div>
-    {% endif %}
-
-    {% if nm_dokumen %}
+    
+    
     <div class="row">
       <div class="col-lg-12 grid-margin stretch-card">
         <div class="card shadow">
@@ -62,7 +50,7 @@
 
             <div class="row">
               <div class="col-8">
-                <h4 class="card-title">List Archives - {{ nm_dokumen }}</h4>
+                <h4 class="card-title">{{ nm_arsip }}</h4>
                 <p class="card-description">
                   Add class <code>.table-striped</code>
                 </p>
@@ -93,11 +81,13 @@
                       {% endfor %}
                     {% endfor %}
                   {% endfor %}
+                    <th>Status</th>
+                    <th>Action</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {% if arsip_list %}
-                    {% for obj in arsip_list %}
+                  {% if archive_list %}
+                    {% for obj in archive_list %}
                     <tr>
                       {% for label_dict in list_label %}
                         {% for key, value in label_dict.items %}
@@ -108,7 +98,7 @@
                               <td>{{ obj|get_field_value:key|date:"d-m-Y" }}</td>
                               {% elif value.type != "file" %}
                                 {% if value.label == "Document Name" %}
-                                <td><a href="{% url 'arsip_detail' %}?menu={{ nm_dokumen|custom_slugify }}&dept={{ nm_departemen|custom_slugify }}&archive={{ obj|get_field_value:key|custom_slugify }}">{{ obj|get_field_value:key }}</a></td>
+                                <td>{{ obj|get_field_value:key }}</td>
                                 {% else %}
                                 <td>{{ obj|get_field_value:key }}</td>
                                 {% endif %}
@@ -117,6 +107,21 @@
                           {% endfor %}
                         {% endfor %}
                       {% endfor %}
+
+                      <td>{% if obj.is_approved %}<div class="badge badge-success">Completed</div>{% else %}<div class="badge badge-warning">Pending</div>{% endif %}</td>
+                      <td>
+                        <div class="d-flex">
+                          <button type="button" class="mr-2 btn btn-primary btn-rounded btn-icon" data-toggle="modal" data-target="#mod0-{{ obj.id }}" {% if not obj.is_active %} disabled {% endif %}>
+                            <i class="ti-pencil-alt"></i>
+                          </button>
+                          <button type="button" class="mr-2 btn btn-rounded btn-icon {% if obj.is_active %}btn-danger{% else %}btn-secondary{% endif %}" data-toggle="modal" data-target="#mod1-{{ obj.id }}">
+                            <i class="ti-check-box"></i>
+                          </button>
+                          <button type="button" class="btn btn-rounded btn-icon btn-danger" data-toggle="modal" data-target="#mod2-{{ obj.id }}" {% if is_approved %} disabled {% endif %}>
+                            <i class="ti-trash"></i>
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                     {% endfor %}
                   {% else %}
@@ -131,9 +136,6 @@
         </div>
       </div>
     </div>
-    {% endif %}
-
   </div>
-
-{% include 'DMSApp/CrudArsip/modal_create.html' %}
+{% include 'DMSApp/CrudArsip/modal_delete.html' %} 
 {% include 'DMSApp/Komponen/footer.html' %}

@@ -1,24 +1,24 @@
 {% load custom_filters %}
 
-<!-- Modal delete departemen -->
-{% for obj in departemen_list %}
+<!-- Modal delete document -->
+{% for obj in dokumen_list %}
 <div class="modal fade" id="mod2-{{ obj.id }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="exampleModalLabel" style="display: flex; align-items: center;">
           <i class="mdi mdi-help-circle mdi-24px text-primary mr-2"></i>
-          <b>delete department {{ obj.department }}</b>
+          <b>delete document {{ obj.document }}</b>
         </h5>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
       <div class="modal-body">
-          Delete this department?
+          Delete this document?
       </div>
       <div class="modal-footer">
-        <form class="forms-sample" method="post" action="{% url 'departemen_is_delete' pk=obj.id %}">
+        <form class="forms-sample" method="post" action="{% url 'dokumen_is_delete' pk=obj.id %}">
           {% csrf_token %}
           <button type="submit" class="btn btn-primary mr-2">Yes</button>
       </form>

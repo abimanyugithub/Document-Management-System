@@ -3,10 +3,11 @@ from django.views.generic import TemplateView, CreateView, ListView, UpdateView,
 from .models import Dokumen, Departemen, DokumenLabel, Arsip
 from django.conf import settings
 from urllib.parse import urljoin
-import os
+import os, shutil
 from django import forms
 from django.core.files.storage import FileSystemStorage
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError
+from django.urls import reverse
 
 folder_target = 'media/DMSApp/'
 # Create your views here.
@@ -106,7 +107,7 @@ class DepartemenUpdateView(UpdateView):
                     os.rename(old_folder_path, new_folder_path)
                 else:
                     print(f"The directory '{old_folder_path}' does not exist.")
-            except Dokumen.DoesNotExist:
+            except:
                 print(f"Dokumen with id {dok_id} does not exist.")
 
         return redirect(self.request.META.get('HTTP_REFERER'))
@@ -247,9 +248,9 @@ class DokumenUpdateView(UpdateView):
         if dokumen_yang_ada or inisial_dokumen_yang_ada:
             form = self.get_form()
             if dokumen_yang_ada:
-                form.add_error('department', "A department with this name already exists.")
+                form.add_error('department', "A dokumen with this name already exists.")
             if inisial_dokumen_yang_ada:
-                form.add_error('inisial_dokumen', "A department with this code already exists.")
+                form.add_error('inisial_dokumen', "A dokumen with this initial already exists.")
             return self.form_invalid(form)
         
 
@@ -270,14 +271,27 @@ class DokumenUpdateView(UpdateView):
             document_instance_update.related_label.add(label)
 
         # Rename the directory
+        try:
+            old_folder_path = os.path.join(folder_target, current_document_name)
+            new_folder_path = os.path.join(folder_target, nma_dokumen)
+            
+            if os.path.exists(old_folder_path):
+                os.rename(old_folder_path, new_folder_path)
+            else:
+                print(f"The directory '{old_folder_path}' does not exist.")
+        except:
+            print(f"Dokumen with id does not exist.")
+
+        return redirect(self.request.META.get('HTTP_REFERER'))
+    '''
         old_folder_path = os.path.join(folder_target, current_document_name)
         new_folder_path = os.path.join(folder_target, nma_dokumen)
         os.rename(old_folder_path, new_folder_path)
 
-        return redirect(self.request.META.get('HTTP_REFERER'))
+        return redirect(self.request.META.get('HTTP_REFERER'))'''
 
 
-class DokumenEnableDisableView(UpdateView):
+class DokumenActivateDeactivateView(UpdateView):
 
     def post(self, request, pk):
         menu_document_instance_update = Dokumen.objects.get(id=pk)
@@ -292,8 +306,28 @@ class DokumenEnableDisableView(UpdateView):
 
         return redirect(self.request.META.get('HTTP_REFERER'))
     
+class DokumenDeleteView(DeleteView):
 
-class MenuDokumenListView(ListView):
+    def post(self, request, pk):
+        dokumen_instance_delete = Dokumen.objects.get(id=pk)
+
+        # Check if there is an existing
+        if Arsip.objects.filter(parent_document=pk).exists():
+            # If related Arsip instances exist, raise PermissionDenied
+            raise PermissionDenied("Cannot delete this document because related Arsip instances exist.")
+
+        # Construct the path to the directory
+        path = os.path.join(folder_target, dokumen_instance_delete.document)
+
+        if os.path.exists(path):
+            shutil.rmtree(path)
+
+        dokumen_instance_delete.delete()
+
+        return redirect(self.request.META.get('HTTP_REFERER'))
+    
+
+class ArsipListView(ListView):
     model = Departemen
     template_name = 'DMSApp/CrudArsip/view.html'
     context_object_name = 'departemen_list'
@@ -308,6 +342,7 @@ class MenuDokumenListView(ListView):
                 
             # Retrieve the related MenuDokumen objects for the Departemen
             queryset = departemen.related_document.all().order_by('document')
+            
         return queryset
     
 
@@ -325,25 +360,38 @@ class MenuDokumenListView(ListView):
                 relasi_label = nma_label.related_label.all()
                 context['nm_label'] = relasi_label
                 context['list_label'] = daftar_label
-                context['arsip_list'] = Arsip.objects.all()
+                context['arsip_list'] = Arsip.objects.filter(parent_document__document=nma_dokumen, parent_department__department=nma_departemen, is_active=True)
             
         return context
     
 
 # contoh penomoran dokumen => 2. FMS.31.01 REV.02_MEMBUAT TAGIHAN CUSTOMER 8. FMS.31.05.02 REV.02_PPH 21 
-class ArchiveCreateView(CreateView):
+class ArsipCreateView(CreateView):
     model = Arsip
     template_name = 'DMSApp/CrudArsip/create.html'
     fields = []  # Remove fields, as we are handling them manually
+    # success_url = '/archive/create/'
 
     def form_valid(self, form):
         # Get the values of menu1 and dept1 from the form
-        nm_dokumen = self.request.POST.get('dokumen')
-        nm_departemen = self.request.POST.get('departemen')
+        nma_dokumen = self.request.POST.get('dokumen')
+        nma_departemen = self.request.POST.get('departemen')
+        nma_arsip = self.request.POST.get('document_name')
+        no_arsip = self.request.POST.get('document_no')
+        no_form = self.request.POST.get('form_no')
         
         # Retrieve IDs from the database based on the names
-        dokumen_obj = Dokumen.objects.get(document=nm_dokumen)  
-        departemen_obj = Departemen.objects.get(department=nm_departemen)  
+        dokumen_obj = Dokumen.objects.get(document=nma_dokumen)  
+        departemen_obj = Departemen.objects.get(department=nma_departemen)
+
+        if no_arsip:
+            # Check if a document name with the same name already exists
+            if Arsip.objects.filter(document_name=nma_arsip).exists() or Arsip.objects.filter(document_no=no_arsip).exists():
+                raise ValidationError('An entry with this document name or document number already exists.')
+        elif no_form:
+            # Check if a document name with the same name already exists
+            if Arsip.objects.filter(document_name=nma_arsip).exists() or Arsip.objects.filter(form_no=no_form).exists():
+                raise ValidationError('An entry with this document name or form number already exists.')
         
         # Set the IDs to the form instance before saving
         form.instance.parent_document = dokumen_obj
@@ -353,7 +401,7 @@ class ArchiveCreateView(CreateView):
         self.object = form.save()
 
         # Handle saving dynamic fields and files
-        directory = os.path.join(folder_target, nm_dokumen, nm_departemen)
+        directory = os.path.join(folder_target, nma_dokumen, nma_departemen)
         
         # Ensure the directory exists
         if not os.path.exists(directory):
@@ -373,8 +421,8 @@ class ArchiveCreateView(CreateView):
                         filename = fs.save(file_value.name, file_value)
 
                         # Set the file path to the form instance dynamically
-                        # setattr(self.object, key, os.path.join(directory, filename))
-                        setattr(self.object, key, filename)
+                        setattr(self.object, key, os.path.join(directory, filename))
+                        # setattr(self.object, key, filename)
                         
                 else:
 
@@ -385,7 +433,11 @@ class ArchiveCreateView(CreateView):
         # Now save the instance to the database
         self.object.save()
 
-        return redirect(self.request.META.get('HTTP_REFERER'))
+        # Construct the success URL dynamically
+        success_url = reverse('arsip_view') + f"?menu={nma_dokumen}&dept={nma_departemen}"
+
+        # Redirect to the success URL
+        return redirect(success_url)
         
 
     def get_context_data(self, **kwargs):
@@ -401,3 +453,62 @@ class ArchiveCreateView(CreateView):
             context['nm_label'] = relasi_label
             context['list_label'] = daftar_label
         return context
+
+class ArsipDetailListView(ListView):
+    model = Arsip
+    template_name = 'DMSApp/CrudArsip/view_detail.html'
+    context_object_name = 'archive_list'
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # Get filter parameters from the GET request
+        nma_dokumen = self.request.GET.get('menu')
+        nma_departemen = self.request.GET.get('dept')
+        nma_arsip = self.request.GET.get('archive')
+
+        # Apply filters if parameters are provided
+        queryset = queryset.filter(document_name=nma_arsip, parent_document__document=nma_dokumen, parent_department__department=nma_departemen)
+        
+        return queryset
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        nma_dokumen = self.request.GET.get('menu')
+        nma_departemen = self.request.GET.get('dept')
+        nma_arsip = self.request.GET.get('archive')
+        if nma_dokumen:
+            # Retrieve the related MenuDokumen objects for the Departemen
+            nma_label = Dokumen.objects.get(document=nma_dokumen)
+            relasi_label = nma_label.related_label.all()
+            context['nm_dokumen'] = nma_dokumen
+            context['nm_departemen'] = nma_departemen
+            context['nm_arsip'] = nma_arsip
+            context['nm_label'] = relasi_label
+            context['list_label'] = daftar_label
+        return context
+
+class ArsipDeleteView(DeleteView):
+
+    def post(self, request, pk):
+        archive_instance_delete = Arsip.objects.get(id=pk)
+        
+        # Delete the model instance
+        archive_instance_delete.delete()
+        
+        fs = FileSystemStorage()
+
+         # List of file fields to check and delete
+        file_fields = ['pdf_file', 'sheet_file', 'other_file']
+
+        # Iterate through each file field and delete if it exists
+        for file_field in file_fields:
+            file = getattr(archive_instance_delete, file_field)
+            if file and file.name:  # Check if the file field has a file
+                file_path = file.path
+                if fs.exists(file_path):
+                    fs.delete(file_path)
+                    print(f"{file_path} has been deleted.")
+                else:
+                    print(f"{file_path} does not exist.")
+
+        return redirect(self.request.META.get('HTTP_REFERER'))
