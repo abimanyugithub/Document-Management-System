@@ -44,6 +44,8 @@ class Arsip(models.Model):
     supplier_name = models.CharField(max_length=100, null=True)
     customer_name = models.CharField(max_length=100, null=True)
     is_approved = models.BooleanField(default=False, null=True)
+    is_inprogress = models.BooleanField(default=False, null=True)
+    is_rejected = models.BooleanField(default=False, null=True)
     is_active = models.BooleanField(default=True)
     pdf_file = models.FileField(null=True, storage=None) 
     sheet_file = models.FileField(null=True, storage=None)

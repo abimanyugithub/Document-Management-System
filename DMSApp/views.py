@@ -452,6 +452,7 @@ class ArsipCreateView(CreateView):
             context['nm_departemen'] = nma_departemen
             context['nm_label'] = relasi_label
             context['list_label'] = daftar_label
+            context['nma_inisial'] = nma_label.document_initial
         return context
 
 class ArsipDetailListView(ListView):
@@ -486,6 +487,29 @@ class ArsipDetailListView(ListView):
             context['nm_label'] = relasi_label
             context['list_label'] = daftar_label
         return context
+    
+
+class ArchiveUpdateStatusView(UpdateView):
+
+    def post(self, request, pk):
+        archive_instance_update = Arsip.objects.get(id=pk)
+        opsi_aktivasi = request.POST.get('status')
+
+        if opsi_aktivasi == "pending":
+            archive_instance_update.is_inprogress = True
+            archive_instance_update.save(update_fields=['is_inprogress'])
+
+        elif opsi_aktivasi == "inprogress":
+            archive_instance_update.is_approved = True
+            archive_instance_update.is_inprogress = False
+            archive_instance_update.save(update_fields=['is_inprogress', 'is_approved'])
+
+        else:
+            archive_instance_update.is_rejected = True
+            archive_instance_update.is_inprogress = False
+            archive_instance_update.save(update_fields=['is_rejected', 'is_inprogress'])
+
+        return redirect(self.request.META.get('HTTP_REFERER'))
 
 class ArsipDeleteView(DeleteView):
 

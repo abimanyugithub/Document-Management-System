@@ -13,9 +13,14 @@
             <h3 class="font-weight-bold">Document Management System</h3>
             <nav aria-label="breadcrumb rounded-0">
               <ol class="breadcrumb">
-                <li class="breadcrumb-item">Register Document</li>
-                <li class="breadcrumb-item active" aria-current="page">{{ nm_dokumen|capfirst }}</a></li>
-                <li class="breadcrumb-item active" aria-current="page">{{ nm_departemen|capfirst }}</li>
+                <li class="breadcrumb-item">Document</li>
+                {% if nm_departemen %}
+                <li class="breadcrumb-item active" aria-current="page">{% if nm_dokumen %}<a href='{% url 'arsip_view' %}?dept={{ nm_departemen|custom_slugify }}'>{% endif %}{{ nm_departemen|capfirst }}</a></li>
+                {% endif %}
+                {% if nm_dokumen %}
+                <li class="breadcrumb-item active" aria-current="page">{% if nm_arsip %}<a href='{% url 'arsip_view' %}?menu={{ nm_dokumen|custom_slugify }}&dept={{ nm_departemen|custom_slugify }}'>{% endif %}{{ nm_dokumen|capfirst }}</a></li>
+                {% endif %}
+                <li class="breadcrumb-item">Archive Register</li>
               </ol>
             </nav>
           </div>
@@ -49,10 +54,11 @@
                     <!-- # Get the names of the related labels -->
                       {% for u in nm_label %}
                         {% if u.name == key %}
-                          {% if not value.type == "file" %}
+                          {% if value.type != "file" %}
                           <div class="form-group">
                             <label for="{{ key }}">{{ value.label }}</label>
-                            <input type="{{ value.type }}" class="form-control" id="{{ key }}" name="{{ key }}" placeholder="{{ value.label }}" required>
+                            <input type="{{ value.type }}" class="form-control" id="{{ key }}" name="{{ key }}" placeholder="{{ value.label }}" required
+                            {% if value.label == "Revision No" %}value="00" readonly {% elif value.label == "Document Number" %} value="{{ nma_inisial|upper }}." {% endif %}>
                           </div>
                           {% else %}
                           <div class="form-group">

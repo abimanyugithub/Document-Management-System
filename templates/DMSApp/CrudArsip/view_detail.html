@@ -26,13 +26,13 @@
               </ol>
             </nav>
           </div>
-          {% if nm_department %}
+          {% if nm_arsip %}
           <div class="col-12 col-xl-4">
             <div class="justify-content-end d-flex">
               <div class="dropdown flex-md-grow-1 flex-xl-grow-0">
                 <button type="button" class="btn btn-primary btn-icon-text" data-toggle="modal" data-target="#mod1">
                   <i class="ti-plus btn-icon-prepend"></i>
-                  Register
+                  Revision
                 </button>
               </div>
             </div>
@@ -74,7 +74,9 @@
                     <!-- # Get the names of the related labels -->
                       {% for u in nm_label %}
                         {% if u.name == key %}
-                          {% if value.type != "file" %}
+                          {% if value.type == "file" %}
+                          <th>{{ value.label }}</th>
+                          {% else %}
                           <th>{{ value.label }}</th>
                           {% endif %}
                         {% endif %}
@@ -96,7 +98,9 @@
                             {% if u.name == key %}
                               {% if value.type == "date" %}
                               <td>{{ obj|get_field_value:key|date:"d-m-Y" }}</td>
-                              {% elif value.type != "file" %}
+                              {% elif value.type == "file" %}
+                              <td><a href="{{ obj|get_field_value:key }}" target="_blank">Check {{ value.label }}</a></td>
+                              {% else %}
                                 {% if value.label == "Document Name" %}
                                 <td>{{ obj|get_field_value:key }}</td>
                                 {% else %}
@@ -108,17 +112,35 @@
                         {% endfor %}
                       {% endfor %}
 
-                      <td>{% if obj.is_approved %}<div class="badge badge-success">Completed</div>{% else %}<div class="badge badge-warning">Pending</div>{% endif %}</td>
+                      <td>
+                        {% if obj.is_approved %}<div class="badge badge-success">Completed</div>
+                        {% elif obj.is_rejected %}<div class="badge badge-danger">Cancelled</div>
+                        {% else %}
+                        <a href="#" class="badge {% if obj.is_inprogress %}badge-info{% else %}badge-warning{% endif %}" data-toggle="modal" data-target="#mod3-{{ obj.id }}">
+                          {% if obj.is_inprogress %}
+                              In progress
+                          {% else %}
+                              Pending
+                          {% endif %}
+                        {% endif %}
+                    </a></td>
                       <td>
                         <div class="d-flex">
-                          <button type="button" class="mr-2 btn btn-primary btn-rounded btn-icon" data-toggle="modal" data-target="#mod0-{{ obj.id }}" {% if not obj.is_active %} disabled {% endif %}>
+                          {% if not obj.is_approved %}
+                          <button type="button" class="mr-2 btn btn-primary btn-rounded btn-icon" data-toggle="modal" data-target="#mod0-{{ obj.id }}" {% if obj.is_inprogress or obj.is_rejected %} disabled {% endif %}>
                             <i class="ti-pencil-alt"></i>
                           </button>
-                          <button type="button" class="mr-2 btn btn-rounded btn-icon {% if obj.is_active %}btn-danger{% else %}btn-secondary{% endif %}" data-toggle="modal" data-target="#mod1-{{ obj.id }}">
+                          {% endif %}
+                          {% if obj.is_approved %}
+                          <button type="button" class="mr-2 btn btn-rounded btn-icon {% if obj.is_active %}btn-success{% else %}btn-secondary{% endif %}" data-toggle="modal" data-target="#mod1-{{ obj.id }}">
                             <i class="ti-check-box"></i>
                           </button>
-                          <button type="button" class="btn btn-rounded btn-icon btn-danger" data-toggle="modal" data-target="#mod2-{{ obj.id }}" {% if is_approved %} disabled {% endif %}>
+                          {% endif %}
+                          <button type="button" class="mr-2 btn btn-rounded btn-icon btn-danger" data-toggle="modal" data-target="#mod2-{{ obj.id }}" {% if obj.is_approved or obj.is_inprogress %} disabled {% endif %}>
                             <i class="ti-trash"></i>
+                          </button>
+                          <button type="button" class="btn btn-rounded btn-icon btn-info" data-toggle="modal" data-target="#mod2-{{ obj.id }}" {% if obj.is_approved or obj.is_inprogress %} disabled {% endif %}>
+                            <i class="ti-light-bulb"></i>
                           </button>
                         </div>
                       </td>
@@ -138,4 +160,5 @@
     </div>
   </div>
 {% include 'DMSApp/CrudArsip/modal_delete.html' %} 
+{% include 'DMSApp/CrudArsip/modal_update.html' %} 
 {% include 'DMSApp/Komponen/footer.html' %}
