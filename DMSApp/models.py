@@ -50,6 +50,8 @@ class Arsip(models.Model):
     pdf_file = models.FileField(null=True, storage=None) 
     sheet_file = models.FileField(null=True, storage=None)
     other_file = models.FileField(null=True, storage=None)
+    created_date = models.DateTimeField(auto_now_add=True, null=True)
+    modified_date = models.DateTimeField(auto_now=True, null=True)
 '''
 class LampiranDokumen(models.Model):
     dokumen = models.ForeignKey(Dokumen, on_delete=models.CASCADE, null=True)

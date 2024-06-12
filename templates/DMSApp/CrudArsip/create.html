@@ -14,13 +14,14 @@
             <nav aria-label="breadcrumb rounded-0">
               <ol class="breadcrumb">
                 <li class="breadcrumb-item">Document</li>
+                <li class="breadcrumb-item">Archive</li>
                 {% if nm_departemen %}
                 <li class="breadcrumb-item active" aria-current="page">{% if nm_dokumen %}<a href='{% url 'arsip_view' %}?dept={{ nm_departemen|custom_slugify }}'>{% endif %}{{ nm_departemen|capfirst }}</a></li>
                 {% endif %}
                 {% if nm_dokumen %}
-                <li class="breadcrumb-item active" aria-current="page">{% if nm_arsip %}<a href='{% url 'arsip_view' %}?menu={{ nm_dokumen|custom_slugify }}&dept={{ nm_departemen|custom_slugify }}'>{% endif %}{{ nm_dokumen|capfirst }}</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{% if nm_dokumen %}<a href='{% url 'arsip_view' %}?menu={{ nm_dokumen|custom_slugify }}&dept={{ nm_departemen|custom_slugify }}'>{% endif %}{{ nm_dokumen|capfirst }}</a></li>
                 {% endif %}
-                <li class="breadcrumb-item">Archive Register</li>
+                <li class="breadcrumb-item">{% if nm_archive %} Revision {% else %} Register {% endif %}</li>
               </ol>
             </nav>
           </div>
@@ -34,7 +35,7 @@
           <div class="card-body">
             <div class="row">
               <div class="col-8">
-                <h4 class="card-title">Register New Document ({{ nm_dokumen|capfirst }})</h4>
+                <h4 class="card-title">{% if nm_archive %} Revision {% else %} Register {% endif %} Document - {{ nm_dokumen|capfirst }}</h4>
                 <p class="card-description">
                   Add class <code>.table-striped</code>{% for u in get_id %}{{ u.name }}{% endfor %}
                 </p>
@@ -57,8 +58,17 @@
                           {% if value.type != "file" %}
                           <div class="form-group">
                             <label for="{{ key }}">{{ value.label }}</label>
-                            <input type="{{ value.type }}" class="form-control" id="{{ key }}" name="{{ key }}" placeholder="{{ value.label }}" required
-                            {% if value.label == "Revision No" %}value="00" readonly {% elif value.label == "Document Number" %} value="{{ nma_inisial|upper }}." {% endif %}>
+                            <input type="{{ value.type }}" class="form-control" id="{{ key }}" name="{{ key }}" placeholder="{{ value.label }}" required 
+                            
+                            {% for obj in nm_archive %}
+                              {% if value.label == "Document Name" %} value="{{ obj|get_field_value:key }}" readonly{% endif %}
+                              {% if value.label == "Document Number" %} value="{{ obj|get_field_value:key }}" readonly{% endif %}
+                            {% endfor %}
+
+                            {% if value.label == "Document Number" %} value="{{ nma_inisial|upper }}." {% endif %}
+                            >
+                            <!-- <input type="{{ value.type }}" class="form-control" id="{{ key }}" name="{{ key }}" placeholder="{{ value.label }}" required
+                            {% if value.label == "Revision No" %}value="00" readonly {% elif value.label == "Document Number" %} value="{{ nma_inisial|upper }}." {% endif %}> -->
                           </div>
                           {% else %}
                           <div class="form-group">

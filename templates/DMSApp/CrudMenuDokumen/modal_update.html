@@ -41,8 +41,7 @@
                       <input type="checkbox" class="form-check-input" name="checklist_label" value="{{ key }}" checked disabled>
                       {% else %}
                       <input type="checkbox" class="form-check-input" name="checklist_label" value="{{ key }}"
-                      {% for u in obj.related_label.all %}{% if u.name == key %}checked{% endif %}{% endfor %}
-                      >
+                      {% for u in obj.related_label.all %}{% if u.name == key %}checked{% endif %}{% endfor %}>
                       {% endif %}
                       {{ value.label }}
                     </label>
@@ -75,7 +74,7 @@
       <div class="modal-header">
         <h5 class="modal-title" id="exampleModalLabel" style="display: flex; align-items: center;">
           <i class="mdi mdi-help-circle mdi-24px text-primary mr-2"></i>
-          <b>{% if obj.is_active %}Deactivate{% else %}Activate{% endif %} document {{ obj.document }}</b>
+          <b>{% if obj.is_active %}Deactivate{% else %}Activate{% endif %} document</b>
         </h5>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
@@ -83,6 +82,13 @@
       </div>
       <div class="modal-body">
           {% if obj.is_active %}Deactivate{% else %}Activate{% endif %} document?
+          <hr>
+          <div class="row">
+            <div class="col-6">
+              <h5>Document Name</h5>
+              <p>{{ obj.document|capfirst }}</p>
+            </div>
+          </div>
       </div>
       <div class="modal-footer">
         <form class="forms-sample" method="post" action="{% url 'dokumen_is_active' pk=obj.id %}">

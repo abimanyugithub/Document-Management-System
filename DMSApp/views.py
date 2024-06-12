@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from django.views.generic import TemplateView, CreateView, ListView, UpdateView, DeleteView
+from django.views.generic import TemplateView, CreateView, ListView, UpdateView, DeleteView, DetailView
 from .models import Dokumen, Departemen, DokumenLabel, Arsip
 from django.conf import settings
 from urllib.parse import urljoin
@@ -360,7 +360,7 @@ class ArsipListView(ListView):
                 relasi_label = nma_label.related_label.all()
                 context['nm_label'] = relasi_label
                 context['list_label'] = daftar_label
-                context['arsip_list'] = Arsip.objects.filter(parent_document__document=nma_dokumen, parent_department__department=nma_departemen, is_active=True)
+                context['arsip_list'] = Arsip.objects.filter(parent_document__document=nma_dokumen, parent_department__department=nma_departemen, is_active=True).order_by('-revision_no')[:1]
             
         return context
     
@@ -370,7 +370,6 @@ class ArsipCreateView(CreateView):
     model = Arsip
     template_name = 'DMSApp/CrudArsip/create.html'
     fields = []  # Remove fields, as we are handling them manually
-    # success_url = '/archive/create/'
 
     def form_valid(self, form):
         # Get the values of menu1 and dept1 from the form
@@ -379,17 +378,26 @@ class ArsipCreateView(CreateView):
         nma_arsip = self.request.POST.get('document_name')
         no_arsip = self.request.POST.get('document_no')
         no_form = self.request.POST.get('form_no')
+        no_revisi = self.request.POST.get('revision_no')
         
         # Retrieve IDs from the database based on the names
         dokumen_obj = Dokumen.objects.get(document=nma_dokumen)  
         departemen_obj = Departemen.objects.get(department=nma_departemen)
 
-        if no_arsip:
-            # Check if a document name with the same name already exists
+        # Get the values revision
+        nma_arsip = self.request.GET.get('archive')
+
+        if nma_arsip:
+            # Check if a document name and revision no with the same name already exists
+            if Arsip.objects.filter(document_name=nma_arsip, revision_no=no_revisi).exists():
+                raise ValidationError('An entry with this revision number already exists.')
+        elif no_arsip:
+            # Check if a document name or document no with the same name already exists
             if Arsip.objects.filter(document_name=nma_arsip).exists() or Arsip.objects.filter(document_no=no_arsip).exists():
                 raise ValidationError('An entry with this document name or document number already exists.')
+            
         elif no_form:
-            # Check if a document name with the same name already exists
+            # Check if a document name or form no with the same name already exists
             if Arsip.objects.filter(document_name=nma_arsip).exists() or Arsip.objects.filter(form_no=no_form).exists():
                 raise ValidationError('An entry with this document name or form number already exists.')
         
@@ -444,6 +452,10 @@ class ArsipCreateView(CreateView):
         context = super().get_context_data(**kwargs)
         nma_dokumen = self.request.GET.get('menu')
         nma_departemen = self.request.GET.get('dept')
+
+        # get_context_data revision
+        nma_arsip = self.request.GET.get('archive')
+
         if nma_dokumen:
             # Retrieve the related MenuDokumen objects for the Departemen
             nma_label = Dokumen.objects.get(document=nma_dokumen)
@@ -453,6 +465,11 @@ class ArsipCreateView(CreateView):
             context['nm_label'] = relasi_label
             context['list_label'] = daftar_label
             context['nma_inisial'] = nma_label.document_initial
+
+            # get_context_data revision
+            if nma_arsip:
+                context['nm_archive'] = Arsip.objects.filter(document_name=nma_arsip)
+
         return context
 
 class ArsipDetailListView(ListView):
@@ -486,6 +503,13 @@ class ArsipDetailListView(ListView):
             context['nm_arsip'] = nma_arsip
             context['nm_label'] = relasi_label
             context['list_label'] = daftar_label
+
+            context['is_unapproved_instances'] = Arsip.objects.filter(
+                document_name=nma_arsip,
+                parent_document__document=nma_dokumen,
+                parent_department__department=nma_departemen,
+                is_approved=False
+            ).exists()
         return context
     
 
@@ -536,3 +560,25 @@ class ArsipDeleteView(DeleteView):
                     print(f"{file_path} does not exist.")
 
         return redirect(self.request.META.get('HTTP_REFERER'))
+    
+
+class ArsipDetailView(DetailView):
+    model = Arsip
+    template_name = 'DMSApp/CrudArsip/detail.html'  # You can customize the template name if needed
+    context_object_name = 'archive_detail'  # Specify the name of the variable to be used in the template
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        nma_dokumen = self.request.GET.get('menu')
+        nma_departemen = self.request.GET.get('dept')
+        nma_arsip = self.request.GET.get('archive')
+        if nma_dokumen:
+            # Retrieve the related MenuDokumen objects for the Departemen
+            nma_label = Dokumen.objects.get(document=nma_dokumen)
+            relasi_label = nma_label.related_label.all()
+            context['nm_dokumen'] = nma_dokumen
+            context['nm_departemen'] = nma_departemen
+            context['nm_arsip'] = nma_arsip
+            context['nm_label'] = relasi_label
+            context['list_label'] = daftar_label
+        return context

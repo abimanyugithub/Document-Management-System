@@ -15,7 +15,21 @@
         </button>
       </div>
       <div class="modal-body">
-          Delete this document <strong>{{ obj.document_name }}</strong> revision {{ obj.revision_no }}?
+        <span class="text-danger">Delete</span> this document?
+        <hr>
+        <div class="row">
+          <div class="col-6">
+            <h5>Document Name</h5>
+            <p>{{ obj.document_name }}</p>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-6 mt-2">
+            <h5>Revision No.</h5>
+            <p>{{ obj.revision_no }}</p>
+          </div>
+        </div>
+
       </div>
       <div class="modal-footer">
         <form class="forms-sample" method="post" action="{% url 'arsip_is_delete' pk=obj.id %}">

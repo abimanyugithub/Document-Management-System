@@ -26,11 +26,11 @@
               </ol>
             </nav>
           </div>
-          {% if nm_arsip %}
+          {% if not is_unapproved_instances %}
           <div class="col-12 col-xl-4">
             <div class="justify-content-end d-flex">
               <div class="dropdown flex-md-grow-1 flex-xl-grow-0">
-                <button type="button" class="btn btn-primary btn-icon-text" data-toggle="modal" data-target="#mod1">
+                <button type="button" onclick="window.location.href='{% url 'arsip_create' %}?menu={{ nm_dokumen|custom_slugify }}&dept={{ nm_departemen|custom_slugify }}&archive={{ nm_arsip|custom_slugify }}'" class="btn btn-primary btn-icon-text" data-toggle="modal" data-target="#mod1">
                   <i class="ti-plus btn-icon-prepend"></i>
                   Revision
                 </button>
@@ -74,9 +74,7 @@
                     <!-- # Get the names of the related labels -->
                       {% for u in nm_label %}
                         {% if u.name == key %}
-                          {% if value.type == "file" %}
-                          <th>{{ value.label }}</th>
-                          {% else %}
+                          {% if value.type != "file" %}
                           <th>{{ value.label }}</th>
                           {% endif %}
                         {% endif %}
@@ -98,14 +96,8 @@
                             {% if u.name == key %}
                               {% if value.type == "date" %}
                               <td>{{ obj|get_field_value:key|date:"d-m-Y" }}</td>
-                              {% elif value.type == "file" %}
-                              <td><a href="{{ obj|get_field_value:key }}" target="_blank">Check {{ value.label }}</a></td>
-                              {% else %}
-                                {% if value.label == "Document Name" %}
-                                <td>{{ obj|get_field_value:key }}</td>
-                                {% else %}
-                                <td>{{ obj|get_field_value:key }}</td>
-                                {% endif %}
+                              {% elif value.type != "file" %}
+                              <td>{{ obj|get_field_value:key }}</td>
                               {% endif %}
                             {% endif %}
                           {% endfor %}
@@ -115,13 +107,8 @@
                       <td>
                         {% if obj.is_approved %}<div class="badge badge-success">Completed</div>
                         {% elif obj.is_rejected %}<div class="badge badge-danger">Cancelled</div>
-                        {% else %}
-                        <a href="#" class="badge {% if obj.is_inprogress %}badge-info{% else %}badge-warning{% endif %}" data-toggle="modal" data-target="#mod3-{{ obj.id }}">
-                          {% if obj.is_inprogress %}
-                              In progress
-                          {% else %}
-                              Pending
-                          {% endif %}
+                        {% elif obj.is_inprogress %}<div class="badge badge-info">In Progress</div>
+                        {% else %}<div class="badge badge-warning">Pending</div>
                         {% endif %}
                     </a></td>
                       <td>
@@ -139,7 +126,7 @@
                           <button type="button" class="mr-2 btn btn-rounded btn-icon btn-danger" data-toggle="modal" data-target="#mod2-{{ obj.id }}" {% if obj.is_approved or obj.is_inprogress %} disabled {% endif %}>
                             <i class="ti-trash"></i>
                           </button>
-                          <button type="button" class="btn btn-rounded btn-icon btn-info" data-toggle="modal" data-target="#mod2-{{ obj.id }}" {% if obj.is_approved or obj.is_inprogress %} disabled {% endif %}>
+                          <button type="button" onclick="window.location.href='{% url 'arsip_detail' pk=obj.id %}?menu={{ nm_dokumen|custom_slugify }}&dept={{ nm_departemen|custom_slugify }}&archive={{ obj.document_name|custom_slugify }}'" class="btn btn-rounded btn-icon btn-info">
                             <i class="ti-light-bulb"></i>
                           </button>
                         </div>
@@ -159,6 +146,6 @@
       </div>
     </div>
   </div>
-{% include 'DMSApp/CrudArsip/modal_delete.html' %} 
-{% include 'DMSApp/CrudArsip/modal_update.html' %} 
+{% include 'DMSApp/CrudArsip/modal_delete.html' %}
+{% include 'DMSApp/CrudArsip/modal_update.html' %}
 {% include 'DMSApp/Komponen/footer.html' %}

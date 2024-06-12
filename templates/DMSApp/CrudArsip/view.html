@@ -108,7 +108,7 @@
                               <td>{{ obj|get_field_value:key|date:"d-m-Y" }}</td>
                               {% elif value.type != "file" %}
                                 {% if value.label == "Document Name" %}
-                                <td><a href="{% url 'arsip_detail' %}?menu={{ nm_dokumen|custom_slugify }}&dept={{ nm_departemen|custom_slugify }}&archive={{ obj|get_field_value:key|custom_slugify }}">{{ obj|get_field_value:key }}</a></td>
+                                <td><a href="{% url 'arsip_list_detail' %}?menu={{ nm_dokumen|custom_slugify }}&dept={{ nm_departemen|custom_slugify }}&archive={{ obj|get_field_value:key|custom_slugify }}">{{ obj|get_field_value:key }}</a></td>
                                 {% else %}
                                 <td>{{ obj|get_field_value:key }}</td>
                                 {% endif %}
@@ -134,6 +134,4 @@
     {% endif %}
 
   </div>
-
-{% include 'DMSApp/CrudArsip/modal_create.html' %}
 {% include 'DMSApp/Komponen/footer.html' %}

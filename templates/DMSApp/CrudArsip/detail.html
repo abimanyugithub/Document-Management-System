@@ -1,0 +1,142 @@
+
+{% load static %}
+{% load custom_filters %}
+
+{% include 'DMSApp/Komponen/navbar.html' %}
+<!-- partial -->
+<div class="main-panel">
+  <div class="content-wrapper">
+    <div class="row">
+      <div class="col-md-12 grid-margin">
+        <div class="row">
+          <div class="col-12 col-xl-8 mb-4 mb-xl-0">
+            <h3 class="font-weight-bold">Document Management System</h3>
+            <nav aria-label="breadcrumb rounded-0">
+              <ol class="breadcrumb">
+                <li class="breadcrumb-item">Document</li>
+                <li class="breadcrumb-item">Archive</li>
+                {% if nm_departemen %}
+                <li class="breadcrumb-item active" aria-current="page">{% if nm_dokumen %}<a href='{% url 'arsip_view' %}?dept={{ nm_departemen|custom_slugify }}'>{% endif %}{{ nm_departemen|capfirst }}</a></li>
+                {% endif %}
+                {% if nm_dokumen %}
+                <li class="breadcrumb-item active" aria-current="page">{% if nm_dokumen %}<a href='{% url 'arsip_view' %}?menu={{ nm_dokumen|custom_slugify }}&dept={{ nm_departemen|custom_slugify }}'>{% endif %}{{ nm_dokumen|capfirst }}</a></li>
+                {% endif %}
+                {% if nm_arsip %}
+                <li class="breadcrumb-item active" aria-current="page">{% if nm_dokumen %}<a href='{% url 'arsip_list_detail' %}?menu={{ nm_dokumen|custom_slugify }}&dept={{ nm_departemen|custom_slugify }}&archive={{ nm_arsip|custom_slugify }}'>{% endif %}{{ nm_arsip|capfirst }}</a></li>
+                {% endif %}
+                <li class="breadcrumb-item active" aria-current="page">Detail</li>
+              </ol>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-lg-12 grid-margin stretch-card">
+        <div class="card shadow">
+          <div class="card-body">
+
+            <div class="row">
+              <div class="col-8">
+                <h4 class="card-title">{{ nm_arsip }}</h4>
+                <p class="card-description">
+                  Add class <code>.table-striped</code>
+                </p>
+              </div>
+              {% if not archive_detail.is_approved %}
+              <div class="col-4">
+                <div class="justify-content-end d-flex">
+                  <div class="m-3 inputs">
+                    <button type="submit" class="btn btn-primary mr-2" data-toggle="modal" data-target="#mod4">{% if archive_detail.is_inprogress %}Aprrove{% else %}Keep{% endif %}</button>
+                  </div>
+                </div>
+              </div>
+              {% endif %}
+            </div>
+
+            <div class="row">
+              {% for label_dict in list_label %}
+                <div class="card-title col-12">
+                  <h5>status</h5>
+                  <p>
+                    {% if archive_detail.is_approved %}<div class="badge badge-success">Completed</div>
+                    {% elif archive_detail.is_rejected %}<div class="badge badge-danger">Cancelled</div>
+                    {% else %}<a href="#" class="badge {% if archive_detail.is_inprogress %}badge-info{% else %}badge-warning{% endif %}" data-toggle="modal" data-target="#mod4">
+                      {% if archive_detail.is_inprogress %}
+                          In progress
+                      {% else %}
+                          Pending
+                      {% endif %}</a>
+                    {% endif %}
+                  </p>
+                </div>
+                {% for key, value in label_dict.items %}
+                  {% for u in nm_label %}
+                    {% if u.name == key %}
+                      {% if value.type == 'file' %}
+                        <!-- Create new row for file type -->
+                        </div><hr><div class="row">
+                          <div class="col-4">
+                            <h5>{{ value.label }}</h5>
+                            <p><a href="{{ archive_detail|get_field_value:key }}" target="_blank">View {{ value.label }}</a></p>
+                          </div>
+                        </div><div class="row">
+                      {% else %}
+                      <!-- Get the names of the related labels -->
+                      <div class="col-4">
+                        <h5>{{ value.label }}</h5>
+                        {% if value.type == 'date' %}
+                        <p>{{ archive_detail|get_field_value:u.name|date:"d-m-Y" }}</p>
+                        {% else %}
+                        <p>{{ archive_detail|get_field_value:u.name }}</p>
+                        {% endif %}
+                      </div>
+                      {% endif %}
+                    {% endif %}
+                  {% endfor %}
+                {% endfor %}
+              {% endfor %}
+            </div>
+            
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+  </div>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.6.347/pdf.min.js"></script>
+<script>
+    function displayPDF(input) {
+        const file = input.files[0];
+        if (file.type === "application/pdf") {
+            const fileReader = new FileReader();
+            fileReader.onload = function() {
+                const pdfData = new Uint8Array(this.result);
+                const loadingTask = pdfjsLib.getDocument({data: pdfData});
+                loadingTask.promise.then(pdf => {
+                    pdf.getPage(1).then(page => {
+                        const viewport = page.getViewport({scale: 1.5});
+                        const canvas = document.getElementById('pdf-canvas');
+                        const context = canvas.getContext('2d');
+                        canvas.height = viewport.height;
+                        canvas.width = viewport.width;
+                        const renderContext = {
+                            canvasContext: context,
+                            viewport: viewport
+                        };
+                        page.render(renderContext);
+                    });
+                });
+            };
+            fileReader.readAsArrayBuffer(file);
+        } else {
+            alert("Please select a valid PDF file.");
+        }
+    }
+</script>
+{% include 'DMSApp/CrudArsip/modal_update_detail.html' %} 
+{% include 'DMSApp/Komponen/footer.html' %}
