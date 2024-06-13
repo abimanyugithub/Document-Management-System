@@ -44,61 +44,61 @@
                   Add class <code>.table-striped</code>
                 </p>
               </div>
-              {% if not archive_detail.is_approved %}
+              
               <div class="col-4">
                 <div class="justify-content-end d-flex">
                   <div class="m-3 inputs">
-                    <button type="submit" class="btn btn-primary mr-2" data-toggle="modal" data-target="#mod4">{% if archive_detail.is_inprogress %}Aprrove{% else %}Keep{% endif %}</button>
+                    {% if not archive_detail.is_approved %}
+                    <button type="submit" class="btn btn-primary mr-1" data-toggle="modal" data-target="#mod4">{% if archive_detail.is_inprogress %}Aprrove{% else %}Keep{% endif %}</button>
+                    {% endif %}
+                    <button type="button" class="btn btn-facebook" onclick="window.location.href = document.referrer;">Back</button>
                   </div>
                 </div>
               </div>
-              {% endif %}
+              
             </div>
 
             <div class="row">
-              {% for label_dict in list_label %}
-                <div class="card-title col-12">
-                  <h5>status</h5>
-                  <p>
-                    {% if archive_detail.is_approved %}<div class="badge badge-success">Completed</div>
-                    {% elif archive_detail.is_rejected %}<div class="badge badge-danger">Cancelled</div>
-                    {% else %}<a href="#" class="badge {% if archive_detail.is_inprogress %}badge-info{% else %}badge-warning{% endif %}" data-toggle="modal" data-target="#mod4">
-                      {% if archive_detail.is_inprogress %}
-                          In progress
+              <div class="card-title col-12">
+                <h5>status</h5>
+                <p>
+                  {% if archive_detail.is_approved %}<div class="badge badge-success">Completed</div>
+                  {% elif archive_detail.is_rejected %}<div class="badge badge-danger">Cancelled</div>
+                  {% else %}<a href="#" class="badge {% if archive_detail.is_inprogress %}badge-info{% else %}badge-warning{% endif %}" data-toggle="modal" data-target="#mod4">
+                    {% if archive_detail.is_inprogress %}
+                        In progress
+                    {% else %}
+                        Pending
+                    {% endif %}</a>
+                  {% endif %}
+                </p>
+              </div>
+              {% for key, value in list_label.items %}
+                {% for u in nm_label %}
+                  {% if u.name == key %}
+                    {% if value.type == 'file' %}
+                      <!-- Create new row for file type -->
+                      </div><hr><div class="row">
+                        <div class="col-4">
+                          <h5>{{ value.label }}</h5>
+                          <p><a href="{{ archive_detail|get_field_value:key }}" target="_blank">View {{ value.label }}</a></p>
+                        </div>
+                      </div><div class="row">
+                    {% else %}
+                    <!-- Get the names of the related labels -->
+                    <div class="col-4">
+                      <h5>{{ value.label }}</h5>
+                      {% if value.type == 'date' %}
+                      <p>{{ archive_detail|get_field_value:u.name|date:"d-m-Y" }}</p>
                       {% else %}
-                          Pending
-                      {% endif %}</a>
-                    {% endif %}
-                  </p>
-                </div>
-                {% for key, value in label_dict.items %}
-                  {% for u in nm_label %}
-                    {% if u.name == key %}
-                      {% if value.type == 'file' %}
-                        <!-- Create new row for file type -->
-                        </div><hr><div class="row">
-                          <div class="col-4">
-                            <h5>{{ value.label }}</h5>
-                            <p><a href="{{ archive_detail|get_field_value:key }}" target="_blank">View {{ value.label }}</a></p>
-                          </div>
-                        </div><div class="row">
-                      {% else %}
-                      <!-- Get the names of the related labels -->
-                      <div class="col-4">
-                        <h5>{{ value.label }}</h5>
-                        {% if value.type == 'date' %}
-                        <p>{{ archive_detail|get_field_value:u.name|date:"d-m-Y" }}</p>
-                        {% else %}
-                        <p>{{ archive_detail|get_field_value:u.name }}</p>
-                        {% endif %}
-                      </div>
+                      <p>{{ archive_detail|get_field_value:u.name }}</p>
                       {% endif %}
+                    </div>
                     {% endif %}
-                  {% endfor %}
+                  {% endif %}
                 {% endfor %}
               {% endfor %}
             </div>
-            
           </div>
         </div>
       </div>

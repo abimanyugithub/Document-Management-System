@@ -42,18 +42,10 @@
                   Add class <code>.table-striped</code>
                 </p>
               </div>
-              <div class="col-4">
-                <div class="justify-content-end d-flex">
-                  <div class="m-3 inputs">
-                    <i class="icon-search"></i>
-                    <input type="text" class="form-control form-control-search" placeholder="Search {{ sub_directory.sub_directory }}">
-                  </div>
-              </div>
-              </div>
             </div>
 
             <div class="table-responsive">
-              <table class="table table-md table-striped table-hover">
+              <table id="example" class="table table-md table-striped table-hover">
                 <thead>
                   <tr>
                     <th>Document</th>
@@ -70,13 +62,13 @@
                     <td>{{ obj.modified_date|date:"d-m-Y H:i" }}</td>
                     <td>
                       <div class="d-flex">
-                        <button type="button" class="mr-2 btn btn-primary btn-rounded btn-icon" data-toggle="modal" data-target="#mod0-{{ obj.id }}" {% if not obj.is_active %} disabled {% endif %}>
+                        <button type="button" class="mr-2 btn btn-social-icon btn-twitter btn-rounded" data-toggle="modal" data-target="#mod0-{{ obj.id }}" {% if not obj.is_active %} disabled {% endif %}>
                           <i class="ti-pencil-alt"></i>
                         </button>
-                        <button type="button" class="mr-2 btn btn-rounded btn-icon {% if obj.is_active %}btn-success{% else %}btn-secondary{% endif %}" data-toggle="modal" data-target="#mod1-{{ obj.id }}">
+                        <button type="button" class="mr-2 btn btn-social-icon btn-rounded {% if obj.is_active %}btn-facebook{% else %}btn-secondary{% endif %}" data-toggle="modal" data-target="#mod1-{{ obj.id }}">
                           <i class="ti-check-box"></i>
                         </button>
-                        <button type="button" class="btn btn-rounded btn-icon btn-danger" data-toggle="modal" data-target="#mod2-{{ obj.id }}">
+                        <button type="button" class="btn btn-social-icon btn-dribbble btn-rounded" data-toggle="modal" data-target="#mod2-{{ obj.id }}">
                           <i class="ti-trash"></i>
                         </button>
                       </div>

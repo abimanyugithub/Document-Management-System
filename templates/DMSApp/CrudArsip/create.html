@@ -50,43 +50,42 @@
                   <input type="hidden" name="dokumen" value="{{ nm_dokumen }}">
                   <input type="hidden" name="departemen" value="{{ nm_departemen }}">
 
-                  {% for label_dict in list_label %}
-                    {% for key, value in label_dict.items %}
-                    <!-- # Get the names of the related labels -->
-                      {% for u in nm_label %}
-                        {% if u.name == key %}
-                          {% if value.type != "file" %}
-                          <div class="form-group">
-                            <label for="{{ key }}">{{ value.label }}</label>
-                            <input type="{{ value.type }}" class="form-control" id="{{ key }}" name="{{ key }}" placeholder="{{ value.label }}" required 
-                            
-                            {% for obj in nm_archive %}
-                              {% if value.label == "Document Name" %} value="{{ obj|get_field_value:key }}" readonly{% endif %}
-                              {% if value.label == "Document Number" %} value="{{ obj|get_field_value:key }}" readonly{% endif %}
-                            {% endfor %}
+                  {% for key, value in list_label.items %}
+                  <!-- # Get the names of the related labels -->
+                    {% for u in nm_label %}
+                      {% if u.name == key %}
+                        {% if value.type != "file" %}
+                        <div class="form-group">
+                          <label for="{{ key }}">{{ value.label }}</label>
+                          <input type="{{ value.type }}" class="form-control" id="{{ key }}" name="{{ key }}" placeholder="{{ value.label }}" required 
+                          
+                          {% for obj in nm_archive %}
+                            {% if value.label == "Document Name" %} value="{{ obj|get_field_value:key }}" readonly{% endif %}
+                            {% if value.label == "Document Number" %} value="{{ obj|get_field_value:key }}" readonly{% endif %}
+                          {% endfor %}
 
-                            {% if value.label == "Document Number" %} value="{{ nma_inisial|upper }}." {% endif %}
-                            >
-                            <!-- <input type="{{ value.type }}" class="form-control" id="{{ key }}" name="{{ key }}" placeholder="{{ value.label }}" required
-                            {% if value.label == "Revision No" %}value="00" readonly {% elif value.label == "Document Number" %} value="{{ nma_inisial|upper }}." {% endif %}> -->
+                          {% if value.label == "Document Number" %} value="{{ nma_inisial|upper }}." {% endif %}
+                          >
+                          <!-- <input type="{{ value.type }}" class="form-control" id="{{ key }}" name="{{ key }}" placeholder="{{ value.label }}" required
+                          {% if value.label == "Revision No" %}value="00" readonly {% elif value.label == "Document Number" %} value="{{ nma_inisial|upper }}." {% endif %}> -->
+                        </div>
+                        {% else %}
+                        <div class="form-group">
+                          <label>{{ value.label }}</label>
+                          <input type="file" name="{{ key }}" class="file-upload-default" accept="{{ value.extension }}" {% if value.label == "PDF File" %}onchange="displayPDF(this)"{% endif %}>
+                          <div class="input-group col-xs-12">
+                            <input type="text" class="form-control file-upload-info" disabled placeholder="{{ value.label }}">
+                            <span class="input-group-append">
+                              <button class="file-upload-browse btn btn-primary" type="button">Browse</button>
+                            </span>
                           </div>
-                          {% else %}
-                          <div class="form-group">
-                            <label>{{ value.label }}</label>
-                            <input type="file" name="{{ key }}" class="file-upload-default" accept="{{ value.extension }}" {% if value.label == "PDF File" %}onchange="displayPDF(this)"{% endif %}>
-                            <div class="input-group col-xs-12">
-                              <input type="text" class="form-control file-upload-info" disabled placeholder="{{ value.label }}">
-                              <span class="input-group-append">
-                                <button class="file-upload-browse btn btn-primary" type="button">Browse</button>
-                              </span>
-                            </div>
-                          </div>
-                          {% endif %}
+                        </div>
                         {% endif %}
-                      {% endfor %}
+                      {% endif %}
                     {% endfor %}
                   {% endfor %}
-                  <button type="submit" class="btn btn-primary mr-2">Upload</button>
+                  <button type="submit" class="btn btn-twitter mr-1">Upload</button>
+                  <button type="button" class="btn btn-facebook" onclick="window.location.href = document.referrer;">Cancel</button>
                 </form>
               </div>
             </div>

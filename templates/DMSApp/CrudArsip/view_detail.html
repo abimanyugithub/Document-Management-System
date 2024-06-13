@@ -55,22 +55,13 @@
                   Add class <code>.table-striped</code>
                 </p>
               </div>
-              <div class="col-4">
-                <div class="justify-content-end d-flex">
-                  <div class="m-3 inputs">
-                    <i class="icon-search"></i>
-                    <input type="text" class="form-control form-control-search" placeholder="Search {{ sub_directory.sub_directory }}">
-                  </div>
-              </div>
-              </div>
             </div>
 
             <div class="table-responsive">
-              <table class="table table-striped table-hover">
+              <table id="example" class="table table-striped table-hover">
                 <thead>
                   <tr>
-                  {% for label_dict in list_label %}
-                    {% for key, value in label_dict.items %}
+                    {% for key, value in list_label.items %}
                     <!-- # Get the names of the related labels -->
                       {% for u in nm_label %}
                         {% if u.name == key %}
@@ -80,7 +71,6 @@
                         {% endif %}
                       {% endfor %}
                     {% endfor %}
-                  {% endfor %}
                     <th>Status</th>
                     <th>Action</th>
                   </tr>
@@ -89,8 +79,8 @@
                   {% if archive_list %}
                     {% for obj in archive_list %}
                     <tr>
-                      {% for label_dict in list_label %}
-                        {% for key, value in label_dict.items %}
+                      
+                        {% for key, value in list_label.items %}
                         <!-- # Get the names of the related labels -->
                           {% for u in nm_label %}
                             {% if u.name == key %}
@@ -102,7 +92,6 @@
                             {% endif %}
                           {% endfor %}
                         {% endfor %}
-                      {% endfor %}
 
                       <td>
                         {% if obj.is_approved %}<div class="badge badge-success">Completed</div>
@@ -114,20 +103,20 @@
                       <td>
                         <div class="d-flex">
                           {% if not obj.is_approved %}
-                          <button type="button" class="mr-2 btn btn-primary btn-rounded btn-icon" data-toggle="modal" data-target="#mod0-{{ obj.id }}" {% if obj.is_inprogress or obj.is_rejected %} disabled {% endif %}>
+                          <button type="button" class="mr-2 btn btn-social-icon btn-twitter btn-rounded" data-toggle="modal" data-target="#mod0-{{ obj.id }}" {% if obj.is_inprogress or obj.is_rejected %} disabled {% endif %}>
                             <i class="ti-pencil-alt"></i>
                           </button>
                           {% endif %}
                           {% if obj.is_approved %}
-                          <button type="button" class="mr-2 btn btn-rounded btn-icon {% if obj.is_active %}btn-success{% else %}btn-secondary{% endif %}" data-toggle="modal" data-target="#mod1-{{ obj.id }}">
+                          <button type="button" class="mr-2 btn btn-social-icon btn-rounded {% if obj.is_active %}btn-facebook{% else %}btn-secondary{% endif %}" data-toggle="modal" data-target="#mod1-{{ obj.id }}">
                             <i class="ti-check-box"></i>
                           </button>
                           {% endif %}
-                          <button type="button" class="mr-2 btn btn-rounded btn-icon btn-danger" data-toggle="modal" data-target="#mod2-{{ obj.id }}" {% if obj.is_approved or obj.is_inprogress %} disabled {% endif %}>
+                          <button type="button" class="mr-2 btn btn-social-icon btn-dribbble btn-rounded" data-toggle="modal" data-target="#mod2-{{ obj.id }}" {% if obj.is_approved or obj.is_inprogress %} disabled {% endif %}>
                             <i class="ti-trash"></i>
                           </button>
-                          <button type="button" onclick="window.location.href='{% url 'arsip_detail' pk=obj.id %}?menu={{ nm_dokumen|custom_slugify }}&dept={{ nm_departemen|custom_slugify }}&archive={{ obj.document_name|custom_slugify }}'" class="btn btn-rounded btn-icon btn-info">
-                            <i class="ti-light-bulb"></i>
+                          <button type="button" onclick="window.location.href='{% url 'arsip_detail' pk=obj.id %}?menu={{ nm_dokumen|custom_slugify }}&dept={{ nm_departemen|custom_slugify }}&archive={{ obj.document_name|custom_slugify }}'" class="btn btn-social-icon btn-linkedin btn-rounded">
+                            <i class="ti-info-alt"></i>
                           </button>
                         </div>
                       </td>

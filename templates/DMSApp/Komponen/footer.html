@@ -1,46 +1,73 @@
 {% load static %}
-        <!-- partial:partials/_footer.html -->
-        <footer class="footer">
-          <div class="d-sm-flex justify-content-center justify-content-sm-between">
-            <span class="text-muted text-center text-sm-left d-block d-sm-inline-block">Copyright © 2021.  Premium <a href="https://www.bootstrapdash.com/" target="_blank">Bootstrap admin template</a> from BootstrapDash. All rights reserved.</span>
-            <span class="float-none float-sm-right d-block mt-1 mt-sm-0 text-center">Hand-crafted & made with <i class="ti-heart text-danger ml-1"></i></span>
-          </div>
-        </footer>
-        <!-- partial -->
-      </div>
-      <!-- main-panel ends -->
+      <!-- partial:partials/_footer.html -->
+      <footer class="footer">
+        <div class="d-sm-flex justify-content-center justify-content-sm-between">
+          <span class="text-muted text-center text-sm-left d-block d-sm-inline-block">Copyright © 2021.  Premium <a href="https://www.bootstrapdash.com/" target="_blank">Bootstrap admin template</a> from BootstrapDash. All rights reserved.</span>
+          <span class="float-none float-sm-right d-block mt-1 mt-sm-0 text-center">Hand-crafted & made with <i class="ti-heart text-danger ml-1"></i></span>
+        </div>
+      </footer>
+      <!-- partial -->
     </div>
-    <!-- page-body-wrapper ends -->
+    <!-- main-panel ends -->
   </div>
-  <!-- container-scroller -->
+  <!-- page-body-wrapper ends -->
+</div>
+<!-- container-scroller -->
 
-  <!-- plugins:js -->
-  <script src="{% static 'DMSApp/vendors/js/vendor.bundle.base.js' %}"></script>
-  <!-- endinject -->
-  <!-- Plugin js for this page -->
-  <script src="{% static 'DMSApp/vendors/chart.js/Chart.min.js' %}"></script>
-  <!-- <script src="{% static 'vendors/datatables.net/jquery.dataTables.js' %}"></script>
-  <script src="{% static 'vendors/datatables.net-bs4/dataTables.bootstrap4.js' %}"></script>
-  <script src="{% static 'js/dataTables.select.min.js' %}"></script> -->
+<!-- plugins:js -->
+<script src="{% static 'DMSApp/vendors/js/vendor.bundle.base.js' %}"></script>
+<!-- endinject -->
+<!-- Plugin js for this page -->
+<script src="{% static 'DMSApp/vendors/chart.js/Chart.min.js' %}"></script>
+<!-- <script src="{% static 'DMSApp/vendors/datatables.net/jquery.dataTables.js' %}"></script> -->
+<!-- <script src="{% static 'DMSApp/vendors/datatables.net-bs4/dataTables.bootstrap4.js' %}"></script> -->
+<!-- <script src="{% static 'DMSApp/js/dataTables.select.min.js' %}"></script> -->
 
-  <!-- End plugin js for this page -->
-  <!-- inject:js -->
-  <script src="{% static 'DMSApp/js/off-canvas.js' %}"></script>
-  <script src="{% static 'DMSApp/js/hoverable-collapse.js' %}"></script>
-  <script src="{% static 'DMSApp/js/template.js' %}"></script>
-  <script src="{% static 'DMSApp/js/settings.js' %}"></script>
-  <script src="{% static 'DMSApp/js/todolist.js' %}"></script>
-  <!-- endinject -->
-  <!-- Custom js for this page-->
-  <script src="{% static 'DMSApp/js/dashboard.js' %}"></script>
-  <script src="{% static 'DMSApp/js/Chart.roundedBarCharts.js' %}"></script>
-  <script src="{% static 'DMSApp/js/file-upload.js' %}"></script>
-  <script>
-    $(window).on('load', function() {
-        $('#loading').fadeOut('slow', function() {
-            $('#content').fadeIn('slow');
-        });
+<!-- End plugin js for this page -->
+<!-- inject:js -->
+<script src="{% static 'DMSApp/js/off-canvas.js' %}"></script>
+<script src="{% static 'DMSApp/js/hoverable-collapse.js' %}"></script>
+<script src="{% static 'DMSApp/js/template.js' %}"></script>
+<script src="{% static 'DMSApp/js/settings.js' %}"></script>
+<script src="{% static 'DMSApp/js/todolist.js' %}"></script>
+<!-- endinject -->
+<!-- Custom js for this page-->
+<script src="{% static 'DMSApp/js/dashboard.js' %}"></script>
+<script src="{% static 'DMSApp/js/Chart.roundedBarCharts.js' %}"></script>
+<script src="{% static 'DMSApp/js/file-upload.js' %}"></script>
+
+<!-- Re-new DataTables bawaan template error -->
+<!-- jQuery -->
+<script src="{% static 'DMSApp/vendors/new-datatables/jquery-3.5.1.min.js' %}"></script>
+
+<!-- DataTables JS -->
+<script type="text/javascript" src="{% static 'DMSApp/vendors/new-datatables/jquery.dataTables.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'DMSApp/vendors/new-datatables/dataTables.bootstrap4.min.js' %}"></script>
+
+<script>
+$(document).ready(function() {
+    // Initialize DataTables
+  $('#example').DataTable({
+    "language": {
+        //"search": "", // Customize the placeholder text here
+        "searchPlaceholder": "Search in table" 
+    }
+  });
+    // Add custom search input
+    // $('.dataTables_filter label').append('<i class="fas fa-search icon-search mr-2"></i>');
+
+    // Add custom class to search input
+    // $('.dataTables_filter label input[type="search"]').addClass('form-control form-control-search').attr('placeholder', 'Search');
+  
+});
+</script>
+
+<script>
+$(window).on('load', function() {
+    $('#loading').fadeOut('slow', function() {
+        $('#content').fadeIn('slow');
     });
-  </script>
+});
+</script>
 </body>
 </html>

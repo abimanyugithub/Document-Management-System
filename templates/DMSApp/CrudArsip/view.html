@@ -67,22 +67,13 @@
                   Add class <code>.table-striped</code>
                 </p>
               </div>
-              <div class="col-4">
-                <div class="justify-content-end d-flex">
-                  <div class="m-3 inputs">
-                    <i class="icon-search"></i>
-                    <input type="text" class="form-control form-control-search" placeholder="Search {{ sub_directory.sub_directory }}">
-                  </div>
-              </div>
-              </div>
             </div>
-
+            
             <div class="table-responsive">
-              <table class="table table-striped table-hover">
+              <table id="example" class="table table-striped table-hover">
                 <thead>
                   <tr>
-                  {% for label_dict in list_label %}
-                    {% for key, value in label_dict.items %}
+                    {% for key, value in list_label.items %}
                     <!-- # Get the names of the related labels -->
                       {% for u in nm_label %}
                         {% if u.name == key %}
@@ -92,38 +83,29 @@
                         {% endif %}
                       {% endfor %}
                     {% endfor %}
-                  {% endfor %}
                   </tr>
                 </thead>
                 <tbody>
-                  {% if arsip_list %}
-                    {% for obj in arsip_list %}
-                    <tr>
-                      {% for label_dict in list_label %}
-                        {% for key, value in label_dict.items %}
-                        <!-- # Get the names of the related labels -->
-                          {% for u in nm_label %}
-                            {% if u.name == key %}
-                              {% if value.type == "date" %}
-                              <td>{{ obj|get_field_value:key|date:"d-m-Y" }}</td>
-                              {% elif value.type != "file" %}
-                                {% if value.label == "Document Name" %}
-                                <td><a href="{% url 'arsip_list_detail' %}?menu={{ nm_dokumen|custom_slugify }}&dept={{ nm_departemen|custom_slugify }}&archive={{ obj|get_field_value:key|custom_slugify }}">{{ obj|get_field_value:key }}</a></td>
-                                {% else %}
-                                <td>{{ obj|get_field_value:key }}</td>
-                                {% endif %}
-                              {% endif %}
-                            {% endif %}
-                          {% endfor %}
-                        {% endfor %}
-                      {% endfor %}
-                    </tr>
-                    {% endfor %}
-                  {% else %}
+                  {% for obj in arsip_list %}
                   <tr>
-                    <td colspan="100%" class="no-data text-center">No data available in the table.</td>
+                    {% for key, value in list_label.items %}
+                    <!-- # Get the names of the related labels -->
+                      {% for u in nm_label %}
+                        {% if u.name == key %}
+                          {% if value.type == "date" %}
+                          <td>{{ obj|get_field_value:key|date:"d-m-Y" }}</td>
+                          {% elif value.type != "file" %}
+                            {% if value.label == "Document Name" %}
+                            <td><a href="{% url 'arsip_list_detail' %}?menu={{ nm_dokumen|custom_slugify }}&dept={{ nm_departemen|custom_slugify }}&archive={{ obj|get_field_value:key|custom_slugify }}">{{ obj|get_field_value:key }}</a></td>
+                            {% else %}
+                            <td>{{ obj|get_field_value:key }}</td>
+                            {% endif %}
+                          {% endif %}
+                        {% endif %}
+                      {% endfor %}
+                    {% endfor %}
                   </tr>
-                  {% endif %}
+                  {% endfor %}
                 </tbody>
               </table>
             </div>

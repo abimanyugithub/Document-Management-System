@@ -34,17 +34,17 @@
         <form class="forms-sample" method="post" action="{% url 'arsip_status_update' pk=archive_detail.id %}">
           {% csrf_token %}
           <input type="hidden" name="status" value={% if archive_detail.is_inprogress %}"inprogress"{% else %}"pending"{% endif %}>
-          <button type="submit" class="btn btn-primary mr-2">Yes</button>
+          <button type="submit" class="btn btn-twitter">Yes</button>
         </form>
         {% if archive_detail.is_inprogress %}
         <form class="forms-sample" method="post" action="{% url 'arsip_status_update' pk=archive_detail.id %}">
           {% csrf_token %}
           <input type="hidden" name="status" value="tolak">
-          <button type="submit" class="btn btn-warning mr-2">Reject</button>
+          <button type="submit" class="btn btn-dribbble">Reject</button>
         </form>
         {% endif %}
         
-          <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-facebook" data-dismiss="modal">Close</button>
       </div>
     </div>
   </div>

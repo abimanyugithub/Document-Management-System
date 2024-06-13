@@ -9,6 +9,9 @@ from django.core.files.storage import FileSystemStorage
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.urls import reverse
 
+from django.db.models import Count
+
+
 folder_target = 'media/DMSApp/'
 # Create your views here.
 class DashboardView(TemplateView):
@@ -198,7 +201,10 @@ class DokumenListView(CreateView, ListView):
         context = super().get_context_data(**kwargs)
         # Specify the fields you want to render as checkboxes dynamically
         context['default_checked'] = ['document_name', 'effective_date', 'revision_no', 'revision_date', 'pdf_file', 'sheet_file']
-        context['list_label'] = daftar_label
+
+        for label_dict in daftar_label:
+            context['list_label'] = label_dict
+            
         return context
     
     def form_valid(self, form):
@@ -359,9 +365,24 @@ class ArsipListView(ListView):
                 nma_label = Dokumen.objects.get(document=nma_dokumen)
                 relasi_label = nma_label.related_label.all()
                 context['nm_label'] = relasi_label
-                context['list_label'] = daftar_label
-                context['arsip_list'] = Arsip.objects.filter(parent_document__document=nma_dokumen, parent_department__department=nma_departemen, is_active=True).order_by('-revision_no')[:1]
-            
+                
+                # context['arsip_listx'] = Arsip.objects.filter(parent_document__document=nma_dokumen, parent_department__department=nma_departemen, is_active=True).values('document_no').distinct()
+                
+                # Fetch the queryset
+                arsip_list = Arsip.objects.filter(parent_document__document=nma_dokumen, parent_department__department=nma_departemen, is_active=True).order_by('document_no', '-revision_no')
+
+                # Use Python to filter out duplicates based on document_no
+                unique_arsip_list = []
+                seen_document_nos = set()
+                for arsip in arsip_list:
+                    if arsip.document_no not in seen_document_nos:
+                        unique_arsip_list.append(arsip)
+                        seen_document_nos.add(arsip.document_no)
+
+                context['arsip_list'] = unique_arsip_list
+
+                for label_dict in daftar_label:
+                    context['list_label'] = label_dict
         return context
     
 
@@ -453,7 +474,7 @@ class ArsipCreateView(CreateView):
         nma_dokumen = self.request.GET.get('menu')
         nma_departemen = self.request.GET.get('dept')
 
-        # get_context_data revision
+        # get_context_data for revision
         nma_arsip = self.request.GET.get('archive')
 
         if nma_dokumen:
@@ -463,10 +484,13 @@ class ArsipCreateView(CreateView):
             context['nm_dokumen'] = nma_dokumen
             context['nm_departemen'] = nma_departemen
             context['nm_label'] = relasi_label
-            context['list_label'] = daftar_label
+            # context['list_label'] = daftar_label
             context['nma_inisial'] = nma_label.document_initial
 
-            # get_context_data revision
+            for label_dict in daftar_label:
+                context['list_label'] = label_dict
+                
+            # get_context_data for revision
             if nma_arsip:
                 context['nm_archive'] = Arsip.objects.filter(document_name=nma_arsip)
 
@@ -502,7 +526,6 @@ class ArsipDetailListView(ListView):
             context['nm_departemen'] = nma_departemen
             context['nm_arsip'] = nma_arsip
             context['nm_label'] = relasi_label
-            context['list_label'] = daftar_label
 
             context['is_unapproved_instances'] = Arsip.objects.filter(
                 document_name=nma_arsip,
@@ -510,6 +533,10 @@ class ArsipDetailListView(ListView):
                 parent_department__department=nma_departemen,
                 is_approved=False
             ).exists()
+
+        for label_dict in daftar_label:
+            context['list_label'] = label_dict
+
         return context
     
 
@@ -580,5 +607,7 @@ class ArsipDetailView(DetailView):
             context['nm_departemen'] = nma_departemen
             context['nm_arsip'] = nma_arsip
             context['nm_label'] = relasi_label
-            context['list_label'] = daftar_label
+
+            for label_dict in daftar_label:
+                context['list_label'] = label_dict
         return context

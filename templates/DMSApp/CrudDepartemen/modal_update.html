@@ -60,8 +60,8 @@
 
           </div>
 
-          <button type="submit" class="btn btn-primary mr-2">Submit</button>
-          <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+          <button type="submit" class="btn btn-twitter mr-1">Update</button>
+          <button type="button" class="btn btn-facebook" data-dismiss="modal">Close</button>
         </form>
       </div>
       <div class="modal-footer">
@@ -100,9 +100,9 @@
         <form class="forms-sample" method="post" action="{% url 'departemen_is_active' pk=obj.id %}">
           {% csrf_token %}
           <input type="hidden" name="aktivasi" {% if obj.is_active %}value="nonaktif"{% endif %}>
-        <button type="submit" class="btn btn-primary mr-2">Yes</button>
+        <button type="submit" class="btn btn-twitter">Yes</button>
       </form>
-        <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-facebook" data-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
