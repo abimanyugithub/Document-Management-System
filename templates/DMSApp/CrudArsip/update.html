@@ -24,7 +24,7 @@
                 {% if nm_arsip %}
                 <li class="breadcrumb-item active" aria-current="page">{% if nm_dokumen %}<a href='{% url 'arsip_list_detail' %}?menu={{ nm_dokumen|custom_slugify }}&dept={{ nm_departemen|custom_slugify }}&archive={{ nm_arsip|custom_slugify }}'>{% endif %}{{ nm_arsip|capfirst }}</a></li>
                 {% endif %}
-                <li class="breadcrumb-item">{% if nm_arsip %} Revision {% else %} Register {% endif %}</li>
+                <li class="breadcrumb-item active" aria-current="page">Update</li>
               </ol>
             </nav>
           </div>
@@ -32,62 +32,60 @@
       </div>
     </div>
 
+    
     <div class="row">
+      
       <div class="col-lg-8 grid-margin stretch-card">
         <div class="card shadow">
           <div class="card-body">
             <div class="row">
               <div class="col-8">
-                <h4 class="card-title">{% if nm_arsip %} Revision {% else %} Register {% endif %} Document - {{ nm_dokumen|capfirst }}</h4>
+                <h4 class="card-title">{% if nm_archive %} Revision {% else %} Register {% endif %} Document - {{ nm_dokumen|capfirst }}</h4>
                 <p class="card-description">
                   Add class <code>.table-striped</code>{% for u in get_id %}{{ u.name }}{% endfor %}
                 </p>
               </div>
             </div>
 
+            
             <div class="row">
               <div class="col-md-12">
                 <form class="forms-sample mb-3" method="post" autocomplete="off" enctype="multipart/form-data">
                   {% csrf_token %}
-
-                  <input type="hidden" name="dokumen" value="{{ nm_dokumen }}">
-                  <input type="hidden" name="departemen" value="{{ nm_departemen }}">
-
+                  
                   {% for key, value in list_label.items %}
                   <!-- # Get the names of the related labels -->
                     {% for u in nm_label %}
                       {% if u.name == key %}
-                        {% if value.type != "file" %}
+                        {% if value.type == "date" %}
                         <div class="form-group">
                           <label for="{{ key }}">{{ value.label }}</label>
-                          <input type="{{ value.type }}" class="form-control" id="{{ key }}" name="{{ key }}" placeholder="{{ value.label }}" required 
-                          
-                          {% for obj in archive_list %}
-                            {% if value.label == "Document Name" %} value="{{ obj|get_field_value:key }}" readonly{% endif %}
-                            {% if value.label == "Document Number" %} value="{{ obj|get_field_value:key }}" readonly{% endif %}
-                          {% endfor %}
-
-                          {% if value.label == "Document Number" %} value="{{ nma_inisial|upper }}." {% endif %}
-                          >
-                          <!-- <input type="{{ value.type }}" class="form-control" id="{{ key }}" name="{{ key }}" placeholder="{{ value.label }}" required
-                          {% if value.label == "Revision No" %}value="00" readonly {% elif value.label == "Document Number" %} value="{{ nma_inisial|upper }}." {% endif %}> -->
+                          {% with archive_detail|get_field_value:key as date_value %}
+                            <input type="{{ value.type }}" class="form-control" id="{{ key }}" name="{{ key }}" placeholder="{{ value.label }}" value="{{ date_value|date:"Y-m-d" }}" required>
+                          {% endwith %}
+                        </div>
+                        {% elif value.type != "file" %}
+                        <div class="form-group">
+                          <label for="{{ key }}">{{ value.label }}</label>
+                          <input type="{{ value.type }}" class="form-control" id="{{ key }}" name="{{ key }}" placeholder="{{ value.label }}" value="{{ archive_detail|get_field_value:key }}" required>
                         </div>
                         {% else %}
                         <div class="form-group">
                           <label>{{ value.label }}</label>
                           <input type="file" name="{{ key }}" class="file-upload-default" accept="{{ value.extension }}" {% if value.label == "PDF File" %}onchange="displayPDF(this)"{% endif %}>
                           <div class="input-group col-xs-12">
-                            <input type="text" class="form-control file-upload-info" disabled placeholder="{{ value.label }}">
+                            <input type="text" class="form-control file-upload-info" disabled placeholder="{{ value.label }}" value="{{ archive_detail|get_field_value:key }}">
                             <span class="input-group-append">
                               <button class="file-upload-browse btn btn-primary" type="button">Browse</button>
                             </span>
                           </div>
                         </div>
                         {% endif %}
+                        
                       {% endif %}
                     {% endfor %}
                   {% endfor %}
-                  <button type="submit" class="btn btn-twitter mr-1">Upload</button>
+                  <button type="submit" class="btn btn-twitter mr-1">Update</button>
                   <button type="button" class="btn btn-facebook" onclick="window.location.href = document.referrer;">Cancel</button>
                 </form>
               </div>
@@ -103,7 +101,7 @@
           </div>
           <div class="card-body d-flex justify-content-center align-items-center">
             <div id="pdf-viewer">
-              <canvas id="pdf-canvas" alt="pdf"></canvas>
+              <canvas id="pdf-canvas" src="{{ archive_detail.pdf_file.url }}" alt="pdf"></canvas>
             </div>
           </div>
         </div>
@@ -115,32 +113,62 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.6.347/pdf.min.js"></script>
 <script>
-    function displayPDF(input) {
-        const file = input.files[0];
-        if (file.type === "application/pdf") {
-            const fileReader = new FileReader();
-            fileReader.onload = function() {
-                const pdfData = new Uint8Array(this.result);
-                const loadingTask = pdfjsLib.getDocument({data: pdfData});
-                loadingTask.promise.then(pdf => {
-                    pdf.getPage(1).then(page => {
-                        const viewport = page.getViewport({scale: 1.5});
-                        const canvas = document.getElementById('pdf-canvas');
-                        const context = canvas.getContext('2d');
-                        canvas.height = viewport.height;
-                        canvas.width = viewport.width;
-                        const renderContext = {
-                            canvasContext: context,
-                            viewport: viewport
-                        };
-                        page.render(renderContext);
-                    });
-                });
+  // Load PDF when the page loads
+  document.addEventListener("DOMContentLoaded", function() {
+    const pdfUrl = "{{ archive_detail.pdf_file.url }}"; // Django template syntax
+    fetch(pdfUrl)
+      .then(response => response.arrayBuffer())
+      .then(arrayBuffer => {
+        const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+        loadingTask.promise.then(pdf => {
+          pdf.getPage(1).then(page => {
+            const viewport = page.getViewport({ scale: 1.5 });
+            const canvas = document.getElementById('pdf-canvas');
+            const context = canvas.getContext('2d');
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+            const renderContext = {
+              canvasContext: context,
+              viewport: viewport
             };
-            fileReader.readAsArrayBuffer(file);
-        } else {
-            alert("Please select a valid PDF file.");
-        }
-    }
+            page.render(renderContext);
+          });
+        });
+      })
+      .catch(error => {
+        console.error('Error loading PDF:', error);
+        alert("Failed to load PDF. Please try again.");
+      });
+  });
+</script>
+
+<script>
+  function displayPDF(input) {
+      const file = input.files[0];
+      if (file.type === "application/pdf") {
+          const fileReader = new FileReader();
+          fileReader.onload = function() {
+              const pdfData = new Uint8Array(this.result);
+              const loadingTask = pdfjsLib.getDocument({data: pdfData});
+              loadingTask.promise.then(pdf => {
+                  pdf.getPage(1).then(page => {
+                      const viewport = page.getViewport({scale: 1.5});
+                      const canvas = document.getElementById('pdf-canvas');
+                      const context = canvas.getContext('2d');
+                      canvas.height = viewport.height;
+                      canvas.width = viewport.width;
+                      const renderContext = {
+                          canvasContext: context,
+                          viewport: viewport
+                      };
+                      page.render(renderContext);
+                  });
+              });
+          };
+          fileReader.readAsArrayBuffer(file);
+      } else {
+          alert("Please select a valid PDF file.");
+      }
+  }
 </script>
 {% include 'DMSApp/Komponen/footer.html' %}

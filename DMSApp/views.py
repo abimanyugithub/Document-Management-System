@@ -18,12 +18,12 @@ class DashboardView(TemplateView):
     template_name = 'DMSApp/Komponen/dashboard.html'
 
 
-class DepartemenListView(CreateView, ListView):
+class DepartemenListView(CreateView, ListView): # CreateView show in modal
     model = Departemen
     template_name = 'DMSApp/CrudDepartemen/view.html'
     context_object_name = 'departemen_list'  # For ListView
     fields = ['department_code','department', 'company', 'address']
-    success_url = '/departemen/page'
+    success_url = '/department/page'
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -60,7 +60,7 @@ class DepartemenListView(CreateView, ListView):
         return context
 
 
-class DepartemenUpdateView(UpdateView):
+class DepartemenUpdateView(UpdateView): # Show in modal
     model = Departemen
     fields = []
     
@@ -116,7 +116,7 @@ class DepartemenUpdateView(UpdateView):
         return redirect(self.request.META.get('HTTP_REFERER'))
     
 
-class DepartemenActivateDeactivateView(UpdateView):
+class DepartemenActivateDeactivateView(UpdateView): # Show in modal
 
     def post(self, request, pk):
         department_instance_update = Departemen.objects.get(id=pk)
@@ -132,7 +132,7 @@ class DepartemenActivateDeactivateView(UpdateView):
         return redirect(self.request.META.get('HTTP_REFERER'))
     
 
-class DepartemenDeleteView(DeleteView):
+class DepartemenDeleteView(DeleteView): # Show in modal
 
     def post(self, request, pk):
         department_instance_delete = Departemen.objects.get(id=pk)
@@ -187,7 +187,7 @@ daftar_label = [{'form_no': {"label": "Form Number", "type": "text"},
                 'other_file': {"label": "Additional File", "type": "file"}
                 }]
 
-class DokumenListView(CreateView, ListView):
+class DokumenListView(CreateView, ListView): # CreateView show in modal
     model = Dokumen
     template_name = 'DMSApp/CrudMenuDokumen/view.html'
     context_object_name = 'dokumen_list'  # For ListView
@@ -233,7 +233,7 @@ class DokumenListView(CreateView, ListView):
         return super().form_valid(form)
             
 
-class DokumenUpdateView(UpdateView):
+class DokumenUpdateView(UpdateView): # Show in modal
     model = Dokumen
     fields = []
 
@@ -297,7 +297,7 @@ class DokumenUpdateView(UpdateView):
         return redirect(self.request.META.get('HTTP_REFERER'))'''
 
 
-class DokumenActivateDeactivateView(UpdateView):
+class DokumenActivateDeactivateView(UpdateView): # Show in modal
 
     def post(self, request, pk):
         menu_document_instance_update = Dokumen.objects.get(id=pk)
@@ -312,7 +312,7 @@ class DokumenActivateDeactivateView(UpdateView):
 
         return redirect(self.request.META.get('HTTP_REFERER'))
     
-class DokumenDeleteView(DeleteView):
+class DokumenDeleteView(DeleteView): # Show in modal
 
     def post(self, request, pk):
         dokumen_instance_delete = Dokumen.objects.get(id=pk)
@@ -483,6 +483,7 @@ class ArsipCreateView(CreateView):
             relasi_label = nma_label.related_label.all()
             context['nm_dokumen'] = nma_dokumen
             context['nm_departemen'] = nma_departemen
+            context['nm_arsip'] = nma_arsip
             context['nm_label'] = relasi_label
             # context['list_label'] = daftar_label
             context['nma_inisial'] = nma_label.document_initial
@@ -492,9 +493,108 @@ class ArsipCreateView(CreateView):
                 
             # get_context_data for revision
             if nma_arsip:
-                context['nm_archive'] = Arsip.objects.filter(document_name=nma_arsip)
+                context['archive_list'] = Arsip.objects.filter(parent_document__document=nma_dokumen, parent_department__department=nma_departemen, document_name=nma_arsip)
 
         return context
+    
+
+class ArsipUpdateView(UpdateView):
+    model = Arsip
+    template_name = 'DMSApp/CrudArsip/update.html'
+    fields = []  # Remove fields, as we are handling them manually
+    success_url = '/department/page/'
+
+    def post(self, request, *args, **kwargs):
+        # Retrieve the Arsip instance to update
+        archive_instance = self.get_object()
+
+        # Iterate over the form data
+        for key, value in request.POST.items():
+            # Check if the field exists in the Arsip model
+            if hasattr(archive_instance, key):
+                # Update the field value dynamically
+                setattr(archive_instance, key, value)
+
+        # Save the updated Arsip instance
+        archive_instance.save()
+        return redirect(self.request.META.get('HTTP_REFERER'))
+
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        nma_dokumen = self.request.GET.get('menu')
+        nma_departemen = self.request.GET.get('dept')
+
+        # get_context_data for update
+        nma_arsip = self.request.GET.get('archive')
+
+        # Retrieve the related MenuDokumen objects for the Departemen
+        nma_label = Dokumen.objects.get(document=nma_dokumen)
+        relasi_label = nma_label.related_label.all()
+        context['nm_dokumen'] = nma_dokumen
+        context['nm_departemen'] = nma_departemen
+        context['nm_arsip'] = nma_arsip
+        context['nm_label'] = relasi_label
+
+        for label_dict in daftar_label:
+            context['list_label'] = label_dict
+            
+        # get_context_data for update
+        context['archive_detail'] = self.object
+
+        return context
+
+
+class ArsipDetailView(DetailView): 
+    model = Arsip
+    template_name = 'DMSApp/CrudArsip/detail.html'  # You can customize the template name if needed
+    context_object_name = 'archive_detail'  # Specify the name of the variable to be used in the template
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        nma_dokumen = self.request.GET.get('menu')
+        nma_departemen = self.request.GET.get('dept')
+        nma_arsip = self.request.GET.get('archive')
+        if nma_dokumen:
+            # Retrieve the related MenuDokumen objects for the Departemen
+            nma_label = Dokumen.objects.get(document=nma_dokumen)
+            relasi_label = nma_label.related_label.all()
+            context['nm_dokumen'] = nma_dokumen
+            context['nm_departemen'] = nma_departemen
+            context['nm_arsip'] = nma_arsip
+            context['nm_label'] = relasi_label
+
+            for label_dict in daftar_label:
+                context['list_label'] = label_dict
+        return context
+    
+    
+class ArsipDeleteView(DeleteView): # show in modal
+
+    def post(self, request, pk):
+        archive_instance_delete = Arsip.objects.get(id=pk)
+        
+        # Delete the model instance
+        archive_instance_delete.delete()
+        
+        fs = FileSystemStorage()
+
+         # List of file fields to check and delete
+        file_fields = ['pdf_file', 'sheet_file', 'other_file']
+
+        # Iterate through each file field and delete if it exists
+        for file_field in file_fields:
+            file = getattr(archive_instance_delete, file_field)
+            if file and file.name:  # Check if the file field has a file
+                file_path = file.path
+                if fs.exists(file_path):
+                    fs.delete(file_path)
+                    print(f"{file_path} has been deleted.")
+                else:
+                    print(f"{file_path} does not exist.")
+
+        return redirect(self.request.META.get('HTTP_REFERER'))
+
 
 class ArsipDetailListView(ListView):
     model = Arsip
@@ -540,7 +640,7 @@ class ArsipDetailListView(ListView):
         return context
     
 
-class ArchiveUpdateStatusView(UpdateView):
+class ArchiveUpdateStatusView(UpdateView): # Show in modal
 
     def post(self, request, pk):
         archive_instance_update = Arsip.objects.get(id=pk)
@@ -562,52 +662,3 @@ class ArchiveUpdateStatusView(UpdateView):
 
         return redirect(self.request.META.get('HTTP_REFERER'))
 
-class ArsipDeleteView(DeleteView):
-
-    def post(self, request, pk):
-        archive_instance_delete = Arsip.objects.get(id=pk)
-        
-        # Delete the model instance
-        archive_instance_delete.delete()
-        
-        fs = FileSystemStorage()
-
-         # List of file fields to check and delete
-        file_fields = ['pdf_file', 'sheet_file', 'other_file']
-
-        # Iterate through each file field and delete if it exists
-        for file_field in file_fields:
-            file = getattr(archive_instance_delete, file_field)
-            if file and file.name:  # Check if the file field has a file
-                file_path = file.path
-                if fs.exists(file_path):
-                    fs.delete(file_path)
-                    print(f"{file_path} has been deleted.")
-                else:
-                    print(f"{file_path} does not exist.")
-
-        return redirect(self.request.META.get('HTTP_REFERER'))
-    
-
-class ArsipDetailView(DetailView):
-    model = Arsip
-    template_name = 'DMSApp/CrudArsip/detail.html'  # You can customize the template name if needed
-    context_object_name = 'archive_detail'  # Specify the name of the variable to be used in the template
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        nma_dokumen = self.request.GET.get('menu')
-        nma_departemen = self.request.GET.get('dept')
-        nma_arsip = self.request.GET.get('archive')
-        if nma_dokumen:
-            # Retrieve the related MenuDokumen objects for the Departemen
-            nma_label = Dokumen.objects.get(document=nma_dokumen)
-            relasi_label = nma_label.related_label.all()
-            context['nm_dokumen'] = nma_dokumen
-            context['nm_departemen'] = nma_departemen
-            context['nm_arsip'] = nma_arsip
-            context['nm_label'] = relasi_label
-
-            for label_dict in daftar_label:
-                context['list_label'] = label_dict
-        return context

@@ -103,7 +103,7 @@
                       <td>
                         <div class="d-flex">
                           {% if not obj.is_approved %}
-                          <button type="button" class="mr-2 btn btn-social-icon btn-twitter btn-rounded" data-toggle="modal" data-target="#mod0-{{ obj.id }}" {% if obj.is_inprogress or obj.is_rejected %} disabled {% endif %}>
+                          <button type="button" onclick="window.location.href='{% url 'arsip_update' pk=obj.id %}?menu={{ nm_dokumen|custom_slugify }}&dept={{ nm_departemen|custom_slugify }}&archive={{ obj.document_name|custom_slugify }}'" class="mr-2 btn btn-social-icon btn-twitter btn-rounded" data-toggle="modal" data-target="#mod0-{{ obj.id }}" {% if obj.is_inprogress or obj.is_rejected %} disabled {% endif %}>
                             <i class="ti-pencil-alt"></i>
                           </button>
                           {% endif %}

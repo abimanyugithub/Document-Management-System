@@ -51,7 +51,7 @@
                     {% if not archive_detail.is_approved %}
                     <button type="submit" class="btn btn-primary mr-1" data-toggle="modal" data-target="#mod4">{% if archive_detail.is_inprogress %}Aprrove{% else %}Keep{% endif %}</button>
                     {% endif %}
-                    <button type="button" class="btn btn-facebook" onclick="window.location.href = document.referrer;">Back</button>
+                    <button type="button" class="btn btn-facebook" onclick="window.location.href='{% url 'arsip_list_detail' %}?menu={{ nm_dokumen|custom_slugify }}&dept={{ nm_departemen|custom_slugify }}&archive={{ nm_arsip|custom_slugify }}'">Back</button>
                   </div>
                 </div>
               </div>

@@ -18,11 +18,12 @@ urlpatterns = [
 
     path('archive/view/', views.ArsipListView.as_view(), name='arsip_view'),
     path('archive/create/', views.ArsipCreateView.as_view(), name='arsip_create'),
-    path('archive/detail-list/', views.ArsipDetailListView.as_view(), name='arsip_list_detail'),
-    path('archive/update/<str:pk>/', views.ArchiveUpdateStatusView.as_view(), name='arsip_status_update'),
+    path('archive/update/<str:pk>/', views.ArsipUpdateView.as_view(), name='arsip_update'),
     path('archive/delete/<str:pk>/', views.ArsipDeleteView.as_view(), name='arsip_is_delete'),
     path('archive/detail/<str:pk>/', views.ArsipDetailView.as_view(), name='arsip_detail'),
-
+    path('archive/detail-list/', views.ArsipDetailListView.as_view(), name='arsip_list_detail'),
+    path('archive/update-status/<str:pk>/', views.ArchiveUpdateStatusView.as_view(), name='arsip_status_update'),
+    
     #path('document/update/<str:pk>/', views.DokumenUpdateView.as_view(), name='dokumen_update'),
     #path('document/delete/<str:pk>/', views.DokumenDeleteView.as_view(), name='dokumen_delete'),
 ]
