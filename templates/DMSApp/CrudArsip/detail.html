@@ -60,18 +60,29 @@
 
             <div class="row">
               <div class="card-title col-12">
-                <h5>status</h5>
-                <p>
-                  {% if archive_detail.is_approved %}<div class="badge badge-success">Completed</div>
-                  {% elif archive_detail.is_rejected %}<div class="badge badge-danger">Cancelled</div>
-                  {% else %}<a href="#" class="badge {% if archive_detail.is_inprogress %}badge-info{% else %}badge-warning{% endif %}" data-toggle="modal" data-target="#mod4">
-                    {% if archive_detail.is_inprogress %}
-                        In progress
-                    {% else %}
-                        Pending
-                    {% endif %}</a>
-                  {% endif %}
-                </p>
+                <div class="row">
+                  <div class="col-4">
+                    <label>status</label>
+                    <p>{% if archive_detail.is_approved %}<div class="badge {% if not archive_detail.is_active %}badge-secondary{% else %}badge-success{% endif %}">{% if not archive_detail.is_active %}Obsolete{% else %}Completed{% endif %}</div>
+                      {% elif archive_detail.is_rejected %}<div class="badge badge-danger">Cancelled</div>
+                      {% else %}<a href="#" class="badge {% if archive_detail.is_inprogress %}badge-info{% else %}badge-warning{% endif %}" data-toggle="modal" data-target="#mod4">
+                        {% if archive_detail.is_inprogress %}
+                            In progress
+                        {% else %}
+                            Pending
+                        {% endif %}</a>
+                      {% endif %}
+                    </p>
+                  </div>
+                  <div class="col-4">
+                    <label>created date</label>
+                    <p>{{ archive_detail.created_date|date:"d-m-Y" }}</p>
+                  </div>
+                  <div class="col-4">
+                    <label>department</label>
+                    <p>{{ archive_detail.parent_department.department }}</p>
+                  </div>
+                </div>
               </div>
               {% for key, value in list_label.items %}
                 {% for u in nm_label %}
@@ -138,5 +149,5 @@
         }
     }
 </script>
-{% include 'DMSApp/CrudArsip/modal_update_detail.html' %} 
+{% include 'DMSApp/CrudArsip/modal_update.html' %} 
 {% include 'DMSApp/Komponen/footer.html' %}

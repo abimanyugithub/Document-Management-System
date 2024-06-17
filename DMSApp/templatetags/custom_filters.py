@@ -14,3 +14,7 @@ def get_field_value(obj, attr_name):
 @register.filter
 def custom_slugify(value):
     return quote_plus(value)
+
+@register.filter
+def get_field_value_exclude_url(obj, attr_name):
+    return getattr(obj, attr_name, None)

@@ -63,11 +63,11 @@
                           <input type="{{ value.type }}" class="form-control" id="{{ key }}" name="{{ key }}" placeholder="{{ value.label }}" required 
                           
                           {% for obj in archive_list %}
-                            {% if value.label == "Document Name" %} value="{{ obj|get_field_value:key }}" readonly{% endif %}
-                            {% if value.label == "Document Number" %} value="{{ obj|get_field_value:key }}" readonly{% endif %}
+                            {% if value.label == "Document Title" %} value="{{ obj|get_field_value:key }}" readonly{% endif %}
+                            {% if value.label == "Document ID" %} value="{{ obj|get_field_value:key }}" readonly{% endif %}
                           {% endfor %}
 
-                          {% if value.label == "Document Number" %} value="{{ nma_inisial|upper }}." {% endif %}
+                          {% if value.label == "Document ID" %} value="{{ nma_inisial|upper }}." {% endif %}
                           >
                           <!-- <input type="{{ value.type }}" class="form-control" id="{{ key }}" name="{{ key }}" placeholder="{{ value.label }}" required
                           {% if value.label == "Revision No" %}value="00" readonly {% elif value.label == "Document Number" %} value="{{ nma_inisial|upper }}." {% endif %}> -->

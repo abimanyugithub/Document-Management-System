@@ -1,3 +1,4 @@
+from itertools import chain
 from django.shortcuts import render, redirect
 from django.views.generic import TemplateView, CreateView, ListView, UpdateView, DeleteView, DetailView
 from .models import Dokumen, Departemen, DokumenLabel, Arsip
@@ -13,9 +14,33 @@ from django.db.models import Count
 
 
 folder_target = 'media/DMSApp/'
+
+daftar_label = [{'form_no': {"label": "Form Number", "type": "text"},
+                'document_no': {"label": "Document ID", "type": "text"},
+                'document_name': {"label": "Document Title", "type": "text"},
+                'effective_date': {"label": "Effective Date", "type": "date"},
+                'revision_no': {"label": "Revision No", "type": "text"},
+                'revision_date': {"label": "Revision Date", "type": "date"},
+                'part_no': {"label": "Part Number", "type": "text"},
+                'part_name': {"label": "Part Name", "type": "text"},
+                'supplier_name': {"label": "Supplier Name", "type": "text"},
+                'customer_name': {"label": "Customer Name", "type": "text"},
+                'pdf_file': {"label": "PDF File", "type": "file", "extension": ".pdf"},
+                'sheet_file': {"label": "Sheet File", "type": "file", "extension": ".ods, .xlsx"},
+                'other_file': {"label": "Additional File", "type": "file"}
+                }]
+
 # Create your views here.
 class DashboardView(TemplateView):
     template_name = 'DMSApp/Komponen/dashboard.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        for label_dict in daftar_label:
+            context['list_label'] = label_dict
+        context['list_arsip'] = Arsip.objects.filter(is_active=True, is_approved=True)
+        return context
 
 
 class DepartemenListView(CreateView, ListView): # CreateView show in modal
@@ -172,20 +197,7 @@ class DepartemenDeleteView(DeleteView): # Show in modal
 
         return redirect(self.request.META.get('HTTP_REFERER'))'''
     
-daftar_label = [{'form_no': {"label": "Form Number", "type": "text"},
-                'document_no': {"label": "Document Number", "type": "text"},
-                'document_name': {"label": "Document Name", "type": "text"},
-                'effective_date': {"label": "Effective Date", "type": "date"},
-                'revision_no': {"label": "Revision No", "type": "text"},
-                'revision_date': {"label": "Revision Date", "type": "date"},
-                'part_no': {"label": "Part Number", "type": "text"},
-                'part_name': {"label": "Part Name", "type": "text"},
-                'supplier_name': {"label": "Supplier Name", "type": "text"},
-                'customer_name': {"label": "Customer Name", "type": "text"},
-                'pdf_file': {"label": "PDF File", "type": "file", "extension": ".pdf"},
-                'sheet_file': {"label": "Sheet File", "type": "file", "extension": ".ods, .xlsx"},
-                'other_file': {"label": "Additional File", "type": "file"}
-                }]
+
 
 class DokumenListView(CreateView, ListView): # CreateView show in modal
     model = Dokumen
@@ -504,19 +516,48 @@ class ArsipUpdateView(UpdateView):
     fields = []  # Remove fields, as we are handling them manually
     success_url = '/department/page/'
 
-    def post(self, request, *args, **kwargs):
+    def post(self, request, pk):
         # Retrieve the Arsip instance to update
-        archive_instance = self.get_object()
+        archive_instance_update = Arsip.objects.get(id=pk)
+        directory = os.path.join(
+            folder_target,
+            archive_instance_update.parent_document.document,
+            archive_instance_update.parent_department.department
+        )
+        
+        # Check and handle pdf_file
+        if 'pdf_file' in request.FILES:
+            # archive_instance_update.pdf_file = request.FILES['pdf_file']
+            if archive_instance_update.pdf_file:
+                os.remove(archive_instance_update.pdf_file.path)
+            file_pdf = request.FILES['pdf_file']
+            archive_instance_update.pdf_file.save(os.path.join(directory, file_pdf.name), file_pdf, save=False)
 
-        # Iterate over the form data
+        # Check and handle sheet_file
+        if 'sheet_file' in request.FILES:
+            # archive_instance_update.sheet_file = request.FILES['sheet_file']
+            if archive_instance_update.sheet_file:
+                os.remove(archive_instance_update.sheet_file.path)
+            file_sheet = request.FILES['sheet_file']
+            archive_instance_update.sheet_file.save(os.path.join(directory, file_sheet.name), file_sheet, save=False)
+
+
+        # Check and handle other_file
+        if 'other_file' in request.FILES:
+            # archive_instance_update.other_file = request.FILES['other_file']
+            if archive_instance_update.other_file:
+                os.remove(archive_instance_update.other_file.path)
+            file_other = request.FILES['other_file']
+            archive_instance_update.other_file.save(os.path.join(directory, file_other.name), file_other, save=False)
+
+        # Iterate over POST data
         for key, value in request.POST.items():
-            # Check if the field exists in the Arsip model
-            if hasattr(archive_instance, key):
-                # Update the field value dynamically
-                setattr(archive_instance, key, value)
+            if key not in ['pdf_file', 'sheet_file', 'add_file'] and hasattr(archive_instance_update, key):
+                setattr(archive_instance_update, key, value)
 
         # Save the updated Arsip instance
-        archive_instance.save()
+        archive_instance_update.save()
+
         return redirect(self.request.META.get('HTTP_REFERER'))
 
 
@@ -579,7 +620,7 @@ class ArsipDeleteView(DeleteView): # show in modal
         
         fs = FileSystemStorage()
 
-         # List of file fields to check and delete
+        # List of file fields to check and delete
         file_fields = ['pdf_file', 'sheet_file', 'other_file']
 
         # Iterate through each file field and delete if it exists
@@ -609,7 +650,7 @@ class ArsipDetailListView(ListView):
         nma_arsip = self.request.GET.get('archive')
 
         # Apply filters if parameters are provided
-        queryset = queryset.filter(document_name=nma_arsip, parent_document__document=nma_dokumen, parent_department__department=nma_departemen)
+        queryset = queryset.filter(document_name=nma_arsip, parent_document__document=nma_dokumen, parent_department__department=nma_departemen).order_by('-revision_no')
         
         return queryset
     
@@ -659,6 +700,22 @@ class ArchiveUpdateStatusView(UpdateView): # Show in modal
             archive_instance_update.is_rejected = True
             archive_instance_update.is_inprogress = False
             archive_instance_update.save(update_fields=['is_rejected', 'is_inprogress'])
+
+        return redirect(self.request.META.get('HTTP_REFERER'))
+
+
+class ArsipActivateDeactivateView(UpdateView): # Show in modal
+
+    def post(self, request, pk):
+        menu_archive_instance_update = Arsip.objects.get(id=pk)
+        opsi_aktivasi = request.POST.get('aktivasi')
+
+        if opsi_aktivasi == "nonaktif":
+            menu_archive_instance_update.is_active = False
+            menu_archive_instance_update.save(update_fields=['is_active'])
+        else:
+            menu_archive_instance_update.is_active = True
+            menu_archive_instance_update.save(update_fields=['is_active'])
 
         return redirect(self.request.META.get('HTTP_REFERER'))
 

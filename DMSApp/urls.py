@@ -5,7 +5,7 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     # Your URL patterns
-    path('', views.DashboardView.as_view(), name='view_dash'),
+    path('', views.DashboardView.as_view(), name='dashboard_view'),
     path('department/page/', views.DepartemenListView.as_view(), name='departemen_view'),
     path('department/update/<str:pk>/', views.DepartemenUpdateView.as_view(), name='departemen_update'),
     path('department/activation/<str:pk>/', views.DepartemenActivateDeactivateView.as_view(), name='departemen_is_active'),
@@ -23,6 +23,7 @@ urlpatterns = [
     path('archive/detail/<str:pk>/', views.ArsipDetailView.as_view(), name='arsip_detail'),
     path('archive/detail-list/', views.ArsipDetailListView.as_view(), name='arsip_list_detail'),
     path('archive/update-status/<str:pk>/', views.ArchiveUpdateStatusView.as_view(), name='arsip_status_update'),
+    path('archive/activation/<str:pk>/', views.ArsipActivateDeactivateView.as_view(), name='arsip_is_active'),
     
     #path('document/update/<str:pk>/', views.DokumenUpdateView.as_view(), name='dokumen_update'),
     #path('document/delete/<str:pk>/', views.DokumenDeleteView.as_view(), name='dokumen_delete'),
