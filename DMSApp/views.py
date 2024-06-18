@@ -39,7 +39,17 @@ class DashboardView(TemplateView):
 
         for label_dict in daftar_label:
             context['list_label'] = label_dict
-        context['list_arsip'] = Arsip.objects.filter(is_active=True, is_approved=True)
+        arsip_list = Arsip.objects.filter(is_active=True, is_approved=True).order_by('document_no','-revision_no')
+
+        # Use Python to filter out duplicates based on document_no
+        unique_arsip_list = []
+        seen_document_nos = set()
+        for arsip in arsip_list:
+            if arsip.document_no not in seen_document_nos:
+                unique_arsip_list.append(arsip)
+                seen_document_nos.add(arsip.document_no)
+
+        context['arsip_list'] = unique_arsip_list
         return context
 
 
@@ -47,13 +57,11 @@ class DepartemenListView(CreateView, ListView): # CreateView show in modal
     model = Departemen
     template_name = 'DMSApp/CrudDepartemen/view.html'
     context_object_name = 'departemen_list'  # For ListView
-    fields = ['department_code','department', 'company', 'address']
+    fields = ['department', 'department_code', 'company', 'address']
     success_url = '/department/page'
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        # Filter out objects where is_deleted is False
-        #queryset = super().get_queryset().filter(is_deleted=False)
         return queryset.order_by('department')
     
     def form_valid(self, form):
@@ -61,12 +69,12 @@ class DepartemenListView(CreateView, ListView): # CreateView show in modal
         kode_departemen = form.cleaned_data['department_code']
         nma_departemen = form.cleaned_data['department']
         
-        # Check if a department with the same name already exists
-        if Departemen.objects.filter(department=nma_departemen).exists() or Departemen.objects.filter(department_code=kode_departemen).exists():
-            if Departemen.objects.filter(department=nma_departemen).exists():
-                form.add_error('department', "A department with this name already exists.")
-            if Departemen.objects.filter(department_code=kode_departemen).exists():
-                form.add_error('department_code', "A department with this code already exists.")
+        if Departemen.objects.filter(department=nma_departemen).exists():
+            form.add_error('department', "A department with this name already exists.")
+            return self.form_invalid(form)
+
+        if Departemen.objects.filter(department_code=kode_departemen).exists():
+            form.add_error('department_code', "A department with this code already exists.")
             return self.form_invalid(form)
         
         # If validation passes, save the department
@@ -78,6 +86,22 @@ class DepartemenListView(CreateView, ListView): # CreateView show in modal
         departemen.related_document.set(dokumen)
 
         return redirect(self.request.META.get('HTTP_REFERER'))
+
+    '''def form_valid(self, form):
+        # Validate 'department' field manually
+        if form.cleaned_data['department'] == '':
+            form.add_error('department', 'Department field cannot be empty.')
+            return super().form_invalid(form)
+
+        # Optionally, you can set default values for optional fields if not provided
+        if form.cleaned_data['department_code'] == '':
+            form.cleaned_data['department_code'] = None
+        if form.cleaned_data['company'] == '':
+            form.cleaned_data['company'] = None
+        if form.cleaned_data['address'] == '':
+            form.cleaned_data['address'] = None
+
+        return super().form_valid(form)'''
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -175,7 +199,7 @@ class DepartemenDeleteView(DeleteView): # Show in modal
             if os.path.exists(path):
                 os.rmdir(path)
 
-            department_instance_delete.delete()
+        department_instance_delete.delete()
 
         return redirect(self.request.META.get('HTTP_REFERER'))
     
@@ -381,7 +405,7 @@ class ArsipListView(ListView):
                 # context['arsip_listx'] = Arsip.objects.filter(parent_document__document=nma_dokumen, parent_department__department=nma_departemen, is_active=True).values('document_no').distinct()
                 
                 # Fetch the queryset
-                arsip_list = Arsip.objects.filter(parent_document__document=nma_dokumen, parent_department__department=nma_departemen, is_active=True).order_by('document_no', '-revision_no')
+                arsip_list = Arsip.objects.filter(parent_document__document=nma_dokumen, parent_department__department=nma_departemen).order_by('document_no', '-revision_no')
 
                 # Use Python to filter out duplicates based on document_no
                 unique_arsip_list = []
@@ -399,7 +423,7 @@ class ArsipListView(ListView):
     
 
 # contoh penomoran dokumen => 2. FMS.31.01 REV.02_MEMBUAT TAGIHAN CUSTOMER 8. FMS.31.05.02 REV.02_PPH 21 
-class ArsipCreateView(CreateView):
+class ArsipCreateView(CreateView): # Revision juga menggunakan class ini
     model = Arsip
     template_name = 'DMSApp/CrudArsip/create.html'
     fields = []  # Remove fields, as we are handling them manually
@@ -442,6 +466,7 @@ class ArsipCreateView(CreateView):
         self.object = form.save()
 
         # Handle saving dynamic fields and files
+        # directory = os.path.join(folder_target, 'temporary', nma_dokumen, nma_departemen)
         directory = os.path.join(folder_target, nma_dokumen, nma_departemen)
         
         # Ensure the directory exists
@@ -496,6 +521,9 @@ class ArsipCreateView(CreateView):
             context['nm_dokumen'] = nma_dokumen
             context['nm_departemen'] = nma_departemen
             context['nm_arsip'] = nma_arsip
+            kode_arsip = Arsip.objects.filter(document_name=nma_arsip, is_active=True)
+            for i in kode_arsip:
+                context['kode_arsip'] = i.document_no +' REV. '+ i.revision_no
             context['nm_label'] = relasi_label
             # context['list_label'] = daftar_label
             context['nma_inisial'] = nma_label.document_initial
@@ -692,6 +720,9 @@ class ArchiveUpdateStatusView(UpdateView): # Show in modal
             archive_instance_update.save(update_fields=['is_inprogress'])
 
         elif opsi_aktivasi == "inprogress":
+            # Update other instances where is_active is True to False
+            Arsip.objects.exclude(id=pk).filter(is_active=True, document_no=archive_instance_update.document_no).update(is_active=False)
+
             archive_instance_update.is_approved = True
             archive_instance_update.is_inprogress = False
             archive_instance_update.save(update_fields=['is_inprogress', 'is_approved'])
@@ -707,15 +738,18 @@ class ArchiveUpdateStatusView(UpdateView): # Show in modal
 class ArsipActivateDeactivateView(UpdateView): # Show in modal
 
     def post(self, request, pk):
-        menu_archive_instance_update = Arsip.objects.get(id=pk)
+        archive_instance_update = Arsip.objects.get(id=pk)
         opsi_aktivasi = request.POST.get('aktivasi')
 
         if opsi_aktivasi == "nonaktif":
-            menu_archive_instance_update.is_active = False
-            menu_archive_instance_update.save(update_fields=['is_active'])
+            archive_instance_update.is_active = False
+            archive_instance_update.save(update_fields=['is_active'])
         else:
-            menu_archive_instance_update.is_active = True
-            menu_archive_instance_update.save(update_fields=['is_active'])
+            # Update other instances where is_active is True to False
+            Arsip.objects.exclude(id=pk).filter(is_active=True, document_no=archive_instance_update.document_no).update(is_active=False)
+
+            archive_instance_update.is_active = True
+            archive_instance_update.save(update_fields=['is_active'])
 
         return redirect(self.request.META.get('HTTP_REFERER'))
 

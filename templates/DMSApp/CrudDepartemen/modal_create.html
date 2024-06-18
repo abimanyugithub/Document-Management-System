@@ -18,11 +18,11 @@
             <div class="col">
               {% for field in form %}
               <div class="form-group">
-                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>{% if field.name == 'department' %}<span class="text-danger"> *</span>{% endif %}
                 {% if field.name == 'address' %}
-                <textarea class="form-control" id="{{ field.id_for_label }}" name="{{ field.name }}" placeholder="{{ field.label }}" required></textarea>
+                <textarea class="form-control" id="{{ field.id_for_label }}" name="{{ field.name }}" placeholder="{{ field.label }}"></textarea>
                 {% else %}
-                <input type="text" class="form-control" id="{{ field.id_for_label }}" name="{{ field.name }}" placeholder="{{ field.label }}" required>
+                <input type="text" class="form-control" id="{{ field.id_for_label }}" name="{{ field.name }}" placeholder="{{ field.label }}" {% if field.name == 'department' %}required{% endif %}>
                 {% endif %}
               </div>
               {% endfor %}

@@ -13,10 +13,10 @@
             <nav aria-label="breadcrumb rounded-0">
               <ol class="breadcrumb">
                 <li class="breadcrumb-item">Document</li>
-                <li class="breadcrumb-item">Archive</li>
                 {% if nm_departemen %}
-                <li class="breadcrumb-item active" aria-current="page">{% if nm_dokumen %}<a href='{% url 'arsip_view' %}?dept={{ nm_departemen|custom_slugify }}'>{% endif %}{{ nm_departemen|capfirst }}</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ nm_departemen|capfirst }}</li>
                 {% endif %}
+                <li class="breadcrumb-item active" aria-current="page">{% if nm_dokumen %}<a href='{% url 'arsip_view' %}?dept={{ nm_departemen|custom_slugify }}'>{% endif %}Category</a></li>
                 {% if nm_dokumen %}
                 <li class="breadcrumb-item active" aria-current="page">{% if nm_arsip %}<a href='{% url 'arsip_view' %}?menu={{ nm_dokumen|custom_slugify }}&dept={{ nm_departemen|custom_slugify }}'>{% endif %}{{ nm_dokumen|capfirst }}</a></li>
                 {% endif %}
@@ -94,9 +94,9 @@
                         {% endfor %}
 
                       <td>
-                        {% if obj.is_approved %}<div class="badge {% if not obj.is_active %}badge-secondary{% else %}badge-success{% endif %}">{% if not obj.is_active %}Obsolete{% else %}Completed{% endif %}</div>
+                        {% if obj.is_approved %}<div class="badge {% if not obj.is_active %}badge-secondary{% else %}badge-success{% endif %}">{% if not obj.is_active %}Obsolete{% else %}Approved{% endif %}</div>
                         {% elif obj.is_rejected %}<div class="badge badge-danger">Cancelled</div>
-                        {% elif obj.is_inprogress %}<div class="badge badge-info">In Progress</div>
+                        {% elif obj.is_inprogress %}<div class="badge badge-info">In Review</div>
                         {% else %}<div class="badge badge-warning">Pending</div>
                         {% endif %}
                     </a></td>

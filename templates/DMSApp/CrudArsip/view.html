@@ -13,10 +13,10 @@
             <nav aria-label="breadcrumb rounded-0">
               <ol class="breadcrumb">
                 <li class="breadcrumb-item">Document</li>
-                <li class="breadcrumb-item">Archive</li>
                 {% if nm_departemen %}
-                <li class="breadcrumb-item active" aria-current="page">{% if nm_dokumen %}<a href='{% url 'arsip_view' %}?dept={{ nm_departemen|custom_slugify }}'>{% endif %}{{ nm_departemen|capfirst }}</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ nm_departemen|capfirst }}</li>
                 {% endif %}
+                <li class="breadcrumb-item active" aria-current="page">{% if nm_dokumen %}<a href='{% url 'arsip_view' %}?dept={{ nm_departemen|custom_slugify }}'>{% endif %}Category</a></li>
                 {% if nm_dokumen %}
                 <li class="breadcrumb-item active" aria-current="page">{{ nm_dokumen|capfirst }}</li>
                 {% endif %}
@@ -62,7 +62,7 @@
 
             <div class="row">
               <div class="col-8">
-                <h4 class="card-title">List Archives - {{ nm_dokumen }}</h4>
+                <h4 class="card-title">List - {{ nm_dokumen }}</h4>
                 <p class="card-description">
                   Add class <code>.table-striped</code>
                 </p>

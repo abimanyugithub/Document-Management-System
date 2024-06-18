@@ -6,7 +6,7 @@ class Departemen(models.Model):
     department = models.CharField(max_length=100, null=True)
     department_code = models.CharField(max_length=10, null=True)
     company = models.CharField(max_length=100, null=True)
-    address = models.TextField()
+    address = models.TextField(null=True)
     is_active = models.BooleanField(default=True)
     # is_deleted = models.BooleanField(default=False)
     created_date = models.DateTimeField(auto_now_add=True)
