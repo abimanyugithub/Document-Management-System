@@ -9,7 +9,6 @@ from django import forms
 from django.core.files.storage import FileSystemStorage
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.urls import reverse
-
 from django.db.models import Count
 
 
@@ -66,8 +65,8 @@ class DepartemenListView(CreateView, ListView): # CreateView show in modal
     
     def form_valid(self, form):
         # Custom form validation
-        kode_departemen = form.cleaned_data['department_code']
         nma_departemen = form.cleaned_data['department']
+        kode_departemen = form.cleaned_data['department_code']
         
         if Departemen.objects.filter(department=nma_departemen).exists():
             form.add_error('department', "A department with this name already exists.")
@@ -78,7 +77,8 @@ class DepartemenListView(CreateView, ListView): # CreateView show in modal
             return self.form_invalid(form)
         
         # If validation passes, save the department
-        departemen = form.save()
+        departemen = form.save(commit=False)
+        departemen.save()
         
         # Handle related documents
         selected_dokumen_ids = self.request.POST.getlist('checklist_dokumen')
@@ -86,26 +86,13 @@ class DepartemenListView(CreateView, ListView): # CreateView show in modal
         departemen.related_document.set(dokumen)
 
         return redirect(self.request.META.get('HTTP_REFERER'))
-
-    '''def form_valid(self, form):
-        # Validate 'department' field manually
-        if form.cleaned_data['department'] == '':
-            form.add_error('department', 'Department field cannot be empty.')
-            return super().form_invalid(form)
-
-        # Optionally, you can set default values for optional fields if not provided
-        if form.cleaned_data['department_code'] == '':
-            form.cleaned_data['department_code'] = None
-        if form.cleaned_data['company'] == '':
-            form.cleaned_data['company'] = None
-        if form.cleaned_data['address'] == '':
-            form.cleaned_data['address'] = None
-
-        return super().form_valid(form)'''
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['list_dokumen'] = Dokumen.objects.filter(is_active=True)
+        fields = ['department', 'department_code', 'company', 'address', 'created_date', 'modified_date']  # Fields to display
+        context['fields'] = fields
+        # context['fields'] = [field.name for field in self.model._meta.get_fields()]
         return context
 
 
