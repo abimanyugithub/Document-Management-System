@@ -84,10 +84,8 @@
                         <!-- # Get the names of the related labels -->
                           {% for u in nm_label %}
                             {% if u.name == key %}
-                              {% if value.type == "date" %}
-                              <td>{{ obj|get_field_value:key|date:"d-m-Y" }}</td>
-                              {% elif value.type != "file" %}
-                              <td>{{ obj|get_field_value:key }}</td>
+                              {% if value.type != "file" %}
+                              <td>{{ obj|get_field_value:key|capfirst }}</td>
                               {% endif %}
                             {% endif %}
                           {% endfor %}

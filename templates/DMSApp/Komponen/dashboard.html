@@ -9,7 +9,7 @@
       <div class="col-md-12 grid-margin">
         <div class="row">
           <div class="col-6 col-xl-6 mb-4 mb-xl-0">
-            <h3 class="font-weight-bold">Document Management System</h3>
+            <h3 class="font-weight-bold">Document Management System</h3> {{ username }}
             <nav aria-label="breadcrumb rounded-0">
               <ol class="breadcrumb">
                 <li class="breadcrumb-item">Dashboard</li>
@@ -19,12 +19,49 @@
         </div>            
       </div>
     </div>
+    
+    <!-- <h1>All LDAP Users</h1>
+    {% if ldap_error %}
+        <p>Error: {{ ldap_error }}</p>
+    {% else %}
+        {% if ldap_results %}
+            <ul>
+                {% for dn, entry in ldap_results %}
+                    <li>
+                        <strong>{{ dn }}</strong>
+                        <ul>
+                            {% for attr, values in entry.items %}
+                                <li>{{ attr }}: {{ values }}</li>
+                            {% endfor %}
+                        </ul>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No results found.</p>
+        {% endif %}
+    {% endif %}-->
+
+    <!-- <h1>All LDAP Users</h1>
+    {% if ldap_error %}
+        <p>Error: {{ ldap_error }}</p>
+    {% else %}
+        {% if account_names %}
+            <ul>
+                {% for account_name in account_names %}
+                    <li>{{ account_name }}</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No results found.</p>
+        {% endif %}
+    {% endif %} -->
 
     <div class="row">
       <div class="col-lg-12 grid-margin stretch-card">
         <div class="card">
           <div class="card-body">
-            <h4 class="card-title">list document files</h4>
+            <h4 class="card-title">list - document files</h4>
             <p class="card-description">
               Add class <code>.table-striped</code>
             </p>
@@ -46,9 +83,7 @@
                     {% for key, value in list_label.items %}
                       <!-- # Get the names of the related labels -->
                       {% if obj|get_field_value:key != None %}
-                        {% if value.type == "date" %}
-                        <td>{{ obj|get_field_value:key|date:"d-m-Y" }}</td>
-                        {% elif value.type != "file" %}
+                        {% if value.type != "file" %}
                         <td>{% if value.label == "Document Title" %}<a href="{% url 'arsip_detail' pk=obj.id %}?menu={{ obj.parent_document.document|custom_slugify }}&dept={{ obj.parent_department.department|custom_slugify }}&archive={{ obj.document_name|custom_slugify }}">{% endif %}{{ obj|get_field_value:key }}</a></td>
                         {% endif %}
                       {% else %}

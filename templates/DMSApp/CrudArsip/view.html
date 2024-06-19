@@ -92,11 +92,9 @@
                     <!-- # Get the names of the related labels -->
                       {% for u in nm_label %}
                         {% if u.name == key %}
-                          {% if value.type == "date" %}
-                          <td>{{ obj|get_field_value:key|date:"d-m-Y" }}</td>
-                          {% elif value.type != "file" %}
+                          {% if value.type != "file" %}
                             {% if value.label == "Document Title" %}
-                            <td><a href="{% url 'arsip_list_detail' %}?menu={{ nm_dokumen|custom_slugify }}&dept={{ nm_departemen|custom_slugify }}&archive={{ obj|get_field_value:key|custom_slugify }}">{{ obj|get_field_value:key }}</a></td>
+                            <td><a href="{% url 'arsip_list_detail' %}?menu={{ nm_dokumen|custom_slugify }}&dept={{ nm_departemen|custom_slugify }}&archive={{ obj|get_field_value:key|custom_slugify }}">{{ obj|get_field_value:key|capfirst }}</a></td>
                             {% else %}
                             <td>{{ obj|get_field_value:key }}</td>
                             {% endif %}

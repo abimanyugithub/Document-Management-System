@@ -13,6 +13,229 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 from pathlib import Path
 import os
 
+# LDAP Configuration
+# import ldap
+# from django_auth_ldap.config import LDAPSearch, GroupOfNamesType
+
+'''# LDAP Configuration
+LDAP_SERVER_URI = "ldap://10.35.1.8:389"
+BIND_DN = "ldap"
+BIND_PASSWORD = "ldapp2p"
+USER_SEARCH_BASE = "ou=Departments,dc=fln,dc=local"
+USERNAME = "abimanyu"
+PASSWORD = "Frina.321"
+
+try:
+    # Connect to LDAP server
+    ldap_connection = ldap.initialize(LDAP_SERVER_URI)
+    ldap_connection.simple_bind_s(BIND_DN, BIND_PASSWORD)
+
+    # Search for the user
+    # search_filter = f"(sAMAccountName={USERNAME})"
+    # ldap_result = ldap_connection.search_s(USER_SEARCH_BASE, ldap.SCOPE_SUBTREE, search_filter)
+
+    # if ldap_result:
+        # print("LDAP connection successful. User found.")
+    if ldap_connection:
+        print("LDAP connection successful. User found.")
+    else:
+        print("LDAP connection successful. User not found or authentication failed.")
+
+except ldap.LDAPError as e:
+    print(f"LDAP connection failed: {e}")
+'''
+
+# LDAP configuration
+'''import ldap
+
+# URI of your LDAP server
+LDAP_SERVER_URI = "ldap://10.35.1.8:389"
+
+# Bind DN (Distinguished Name) and password for authenticating to LDAP server
+# Leave empty if anonymous bind is allowed or configure as needed
+BIND_DN = "ldap"
+BIND_PASSWORD = "ldapp2p"
+
+# Base DN where users are located
+USER_SEARCH_BASE = "ou=Departments,dc=fln,dc=local"
+
+# Authentication Backend for LDAP
+AUTHENTICATION_BACKENDS = [
+    'django_auth_ldap.backend.LDAPBackend',
+    'django.contrib.auth.backends.ModelBackend',  # Optional: fallback to Django's default auth
+]
+
+# Configure LDAP settings
+AUTH_LDAP_SERVER_URI = LDAP_SERVER_URI
+AUTH_LDAP_BIND_DN = BIND_DN
+AUTH_LDAP_BIND_PASSWORD = BIND_PASSWORD
+AUTH_LDAP_USER_SEARCH_BASE = USER_SEARCH_BASE
+
+# Optional: Adjust these settings as per your LDAP configuration
+# AUTH_LDAP_USER_SEARCH_FILTER = "(sAMAccountName=%(user)s)"
+
+# Update this with the attribute from your LDAP server used to identify a user uniquely
+AUTH_LDAP_USER_ATTR_MAP = {
+    "username": "sAMAccountName",  # Adjust 'username' as per your LDAP schema
+    "first_name": "givenName",
+    "last_name": "sn",
+    "email": "mail",
+}
+
+# Configure LDAP connection options (optional)
+AUTH_LDAP_CONNECTION_OPTIONS = {
+    ldap.OPT_REFERRALS: 0
+}'''
+
+
+import ldap
+from django_auth_ldap.config import LDAPSearch, GroupOfNamesType
+
+AUTH_LDAP_SERVER_URI = "ldap://10.35.1.8:389"
+AUTH_LDAP_BIND_DN = "ldap"
+AUTH_LDAP_BIND_PASSWORD = "ldapp2p"
+'''USER_SEARCH_BASE = "ou=Departments,dc=fln,dc=local"
+SEARCH_FILTER = "(uid=abimanyu)"  # Replace testuser with a real username
+
+try:
+    conn = ldap.initialize(AUTH_LDAP_SERVER_URI)
+    conn.simple_bind_s(AUTH_LDAP_BIND_DN, AUTH_LDAP_BIND_PASSWORD)
+    result = conn.search_s(USER_SEARCH_BASE, ldap.SCOPE_SUBTREE, SEARCH_FILTER)
+    print("LDAP connection successful.")
+    print(result)
+except ldap.LDAPError as e:
+    print(f"LDAP connection failed: {e}")
+'''
+
+# User search configuration
+AUTH_LDAP_USER_SEARCH = LDAPSearch(
+    "ou=Departments,dc=fln,dc=local",
+    ldap.SCOPE_SUBTREE,
+    "(sAMAccountName=%(user)s)"  # Filter for sAMAccountName
+)
+
+# User attribute mapping
+AUTH_LDAP_USER_ATTR_MAP = {
+    "username": "sAMAccountName",  # Map sAMAccountName to username
+    "first_name": "givenName",
+    "last_name": "sn",
+    "email": "mail"
+}
+
+# Populate Django user model from LDAP directory
+AUTH_LDAP_ALWAYS_UPDATE_USER = True
+
+# Optionally, define LDAP group settings
+AUTH_LDAP_GROUP_SEARCH = LDAPSearch(
+    "ou=Groups,dc=fln,dc=local",
+    ldap.SCOPE_SUBTREE,
+    "(objectClass=groupOfNames)"
+)
+
+AUTH_LDAP_GROUP_TYPE = GroupOfNamesType()
+
+# Additional settings
+AUTH_LDAP_REQUIRE_GROUP = None
+AUTH_LDAP_DENY_GROUP = None
+
+# Debugging (optional)
+import logging
+logger = logging.getLogger('django_auth_ldap')
+logger.addHandler(logging.StreamHandler())
+logger.setLevel(logging.DEBUG)
+
+# Django authentication backends
+AUTHENTICATION_BACKENDS = [
+    'django_auth_ldap.backend.LDAPBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
+
+# URL settings
+LOGIN_URL = '/login/'  # Set your login URL
+LOGIN_REDIRECT_URL = '/'  # Redirect URL after login
+
+
+# Django settings for authentication backends
+'''AUTHENTICATION_BACKENDS = [
+    'django_auth_ldap.backend.LDAPBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
+
+AUTH_LDAP_DEPARTMENT_SEARCH = LDAPSearch(
+    "ou=Departments,dc=test,dc=local",
+    ldap.SCOPE_SUBTREE,
+    "(uid=%(user)s)"
+)'''
+
+'''
+
+# LDAP server connection details
+AUTH_LDAP_SERVER_URI = "ldap://10.35.1.8:389"
+
+# Bind user details
+AUTH_LDAP_BIND_DN = "ldap"
+AUTH_LDAP_BIND_PASSWORD = "ldapp2p"
+
+# User search configuration
+AUTH_LDAP_USER_SEARCH = LDAPSearch(
+    "ou=Departments,dc=fln,dc=local",
+    ldap.SCOPE_SUBTREE,
+    "(uid=%(user)s)"
+)
+
+# User attribute mapping
+AUTH_LDAP_USER_ATTR_MAP = {
+    "first_name": "givenName",
+    "last_name": "sn",
+    "email": "mail"
+}
+
+# Populate Django user model from LDAP directory
+AUTH_LDAP_ALWAYS_UPDATE_USER = True
+
+# Additional settings
+AUTH_LDAP_REQUIRE_GROUP = None
+AUTH_LDAP_DENY_GROUP = None
+
+# Debugging
+import logging
+logger = logging.getLogger('django_auth_ldap')
+logger.addHandler(logging.StreamHandler())
+logger.setLevel(logging.DEBUG)
+
+# Login URL configuration
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/'
+'''
+
+
+
+
+'''AUTHENTICATION_BACKENDS = [
+  'django_auth_ldap.backend.LDAPBackend',
+  'django.contrib.auth.backends.ModelBackend', # This is required for fallback
+]
+
+# LDAP Server Settings
+AUTH_LDAP_SERVER_URI = "ldap://10.35.1.8:389"
+AUTH_LDAP_BIND_DN = "CN=ldap,OU=Departments,DC=fln,DC=local"
+AUTH_LDAP_BIND_PASSWORD = "ldapp2p"
+# Map LDAP attributes to Django user fields
+AUTH_LDAP_USER_ATTR_MAP = {
+  "username": "sAMAccountName",
+  "first_name": "givenName",
+  "last_name": "sn",
+  "email": "mail",
+}
+
+AUTH_LDAP_FIND_GROUP_PERMS = True
+AUTH_LDAP_MIRROR_GROUPS = True
+AUTH_LDAP_GROUP_SEARCH = LDAPSearch(
+  "OU=Departments,DC=fln,DC=local", # LDAP search base for groups
+  ldap.SCOPE_SUBTREE,
+  "(objectClass=group)",
+)'''
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -33,6 +256,7 @@ ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
     'DMSApp',
+    'django_auth_ldap',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

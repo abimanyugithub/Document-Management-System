@@ -23,8 +23,11 @@
                 {% endif %}
                 {% if nm_arsip %}
                 <li class="breadcrumb-item active" aria-current="page">{% if nm_dokumen %}<a href='{% url 'arsip_list_detail' %}?menu={{ nm_dokumen|custom_slugify }}&dept={{ nm_departemen|custom_slugify }}&archive={{ nm_arsip|custom_slugify }}'>{% endif %}{{ nm_arsip|capfirst }}</a></li>
+                <li class="breadcrumb-item active">{{ kode_arsip }}</li>
+                <li class="breadcrumb-item active">Revision</li>
+                {% else %}
+                <li class="breadcrumb-item active">Register</li> {{ username }}
                 {% endif %}
-                <li class="breadcrumb-item active">{% if nm_arsip %} {{ kode_arsip }} {% else %} Register {% endif %}</li>
               </ol>
             </nav>
           </div>

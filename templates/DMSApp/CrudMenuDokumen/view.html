@@ -48,18 +48,22 @@
               <table id="example" class="table table-md table-striped table-hover">
                 <thead>
                   <tr>
-                    <th>Document</th>
-                    <th>Created Date</th>
-                    <th>Modified Date</th>
+                    {% for key, value in fields.items %}
+                    <th>{{ value|capfirst }}</th>
+                    {% endfor %}
                     <th>Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   {% for obj in dokumen_list %}
                   <tr>
-                    <td>{{ obj.document|capfirst }}</td>
-                    <td>{{ obj.created_date|date:"d-m-Y H:i" }}</td>
-                    <td>{{ obj.modified_date|date:"d-m-Y H:i" }}</td>
+                    {% for field in fields %}
+                      {% if obj|get_field_value:field != None %}
+                      <td>{{ obj|get_field_value:field|capfirst }}</td>
+                      {% else %}
+                      <td>--</td>
+                      {% endif %}
+                    {% endfor %}
                     <td>
                       <div class="d-flex">
                         <button type="button" class="mr-2 btn btn-social-icon btn-twitter btn-rounded" data-toggle="modal" data-target="#mod0-{{ obj.id }}" {% if not obj.is_active %} disabled {% endif %}>

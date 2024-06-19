@@ -1,6 +1,6 @@
 from itertools import chain
 from django.shortcuts import render, redirect
-from django.views.generic import TemplateView, CreateView, ListView, UpdateView, DeleteView, DetailView
+from django.views.generic import TemplateView, CreateView, ListView, UpdateView, DeleteView, DetailView, FormView
 from .models import Dokumen, Departemen, DokumenLabel, Arsip
 from django.conf import settings
 from urllib.parse import urljoin
@@ -10,7 +10,7 @@ from django.core.files.storage import FileSystemStorage
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.urls import reverse
 from django.db.models import Count
-
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 folder_target = 'media/DMSApp/'
 
@@ -28,9 +28,46 @@ daftar_label = [{'form_no': {"label": "Form Number", "type": "text"},
                 'sheet_file': {"label": "Sheet File", "type": "file", "extension": ".ods, .xlsx"},
                 'other_file': {"label": "Additional File", "type": "file"}
                 }]
+    
+'''class LDAPUsernameForm(forms.Form):
+    username = forms.CharField(label='Username', max_length=100)
 
 # Create your views here.
-class DashboardView(TemplateView):
+class LoginView(FormView):
+    template_name = 'DMSApp/Komponen/login.html'
+    form_class = LDAPUsernameForm
+
+    def form_valid(self, form):
+        username = form.cleaned_data['username']
+        
+        # LDAP settings
+        LDAP_SERVER_URI = settings.AUTH_LDAP_SERVER_URI
+        BIND_DN = settings.AUTH_LDAP_BIND_DN
+        BIND_PASSWORD = settings.AUTH_LDAP_BIND_PASSWORD
+        USER_SEARCH_BASE = "ou=Departments,dc=fln,dc=local"
+        SEARCH_FILTER = "(sAMAccountName=%(user)s)"  # Filter for sAMAccountName
+        
+        try:
+            # Initialize LDAP connection
+            conn = ldap.initialize(LDAP_SERVER_URI)
+            conn.simple_bind_s(BIND_DN, BIND_PASSWORD)
+            
+            # Search for the user
+            result = conn.search_s(USER_SEARCH_BASE, ldap.SCOPE_SUBTREE, SEARCH_FILTER % {'user': username})
+            
+            if result:
+                # User found in LDAP
+                return render(self.request, 'DMSApp/Komponen/dashboard.html', {'username': username})
+            else:
+                # User not found in LDAP
+                return render(self.request, 'ldap_username_invalid.html', {'username': username})
+        
+        except ldap.LDAPError as e:
+            # LDAP connection or search error
+            return render(self.request, 'ldap_error.html', {'error_message': f"LDAP search failed: {e}"})
+'''
+
+class DashboardView(LoginRequiredMixin, TemplateView):
     template_name = 'DMSApp/Komponen/dashboard.html'
 
     def get_context_data(self, **kwargs):
@@ -47,8 +84,53 @@ class DashboardView(TemplateView):
             if arsip.document_no not in seen_document_nos:
                 unique_arsip_list.append(arsip)
                 seen_document_nos.add(arsip.document_no)
-
         context['arsip_list'] = unique_arsip_list
+
+        '''# LDAP search details
+        LDAP_SERVER_URI = settings.AUTH_LDAP_SERVER_URI
+        BIND_DN = settings.AUTH_LDAP_BIND_DN
+        BIND_PASSWORD = settings.AUTH_LDAP_BIND_PASSWORD
+        USER_SEARCH_BASE = "ou=Departments,dc=fln,dc=local"
+        SEARCH_FILTER = "(objectClass=person)"  # Fetch all users
+
+        # Perform LDAP search
+        try:
+            conn = ldap.initialize(LDAP_SERVER_URI)
+            conn.simple_bind_s(BIND_DN, BIND_PASSWORD)
+            result = conn.search_s(USER_SEARCH_BASE, ldap.SCOPE_SUBTREE, SEARCH_FILTER)
+            
+            # Pass the search result to the context
+            context['ldap_results'] = result
+        except ldap.LDAPError as e:
+            context['ldap_error'] = f"LDAP search failed: {e}"'''
+        
+        '''# LDAP search details
+        LDAP_SERVER_URI = settings.AUTH_LDAP_SERVER_URI
+        BIND_DN = settings.AUTH_LDAP_BIND_DN
+        BIND_PASSWORD = settings.AUTH_LDAP_BIND_PASSWORD
+        USER_SEARCH_BASE = "ou=Departments,dc=fln,dc=local"
+        SEARCH_FILTER = "(objectClass=user)"  # Filter for user objects
+
+        # Attributes to retrieve
+        ATTRIBUTES = ['sAMAccountName']
+
+        # Perform LDAP search
+        try:
+            conn = ldap.initialize(LDAP_SERVER_URI)
+            conn.simple_bind_s(BIND_DN, BIND_PASSWORD)
+            result = conn.search_s(USER_SEARCH_BASE, ldap.SCOPE_SUBTREE, SEARCH_FILTER, ATTRIBUTES)
+            
+            # Extract sAMAccountName and pass to context
+            account_names = []
+            for dn, entry in result:
+                if 'sAMAccountName' in entry:
+                    account_names.append(entry['sAMAccountName'][0].decode('utf-8'))
+            
+            # Pass the account names to the context
+            context['account_names'] = account_names
+        except ldap.LDAPError as e:
+            context['ldap_error'] = f"LDAP search failed: {e}"'''
+
         return context
 
 
@@ -90,7 +172,7 @@ class DepartemenListView(CreateView, ListView): # CreateView show in modal
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['list_dokumen'] = Dokumen.objects.filter(is_active=True)
-        fields = ['department', 'department_code', 'company', 'address', 'created_date', 'modified_date']  # Fields to display
+        fields = {'department': 'Department', 'department_code': 'Department Code', 'company': 'Company', 'address': 'Address', 'created_date': 'Created Date', 'modified_date': 'Modified Date'} # Fields to display
         context['fields'] = fields
         # context['fields'] = [field.name for field in self.model._meta.get_fields()]
         return context
@@ -224,6 +306,8 @@ class DokumenListView(CreateView, ListView): # CreateView show in modal
         context = super().get_context_data(**kwargs)
         # Specify the fields you want to render as checkboxes dynamically
         context['default_checked'] = ['document_name', 'effective_date', 'revision_no', 'revision_date', 'pdf_file', 'sheet_file']
+        fields = {'document': 'Document', 'document_initial': 'Document Initial', 'created_date': 'Created Date', 'modified_date': 'Modified Date'} # Fields to display
+        context['fields'] = fields
 
         for label_dict in daftar_label:
             context['list_label'] = label_dict
@@ -517,6 +601,9 @@ class ArsipCreateView(CreateView): # Revision juga menggunakan class ini
 
             for label_dict in daftar_label:
                 context['list_label'] = label_dict
+
+            username = self.request.user.username  # Adjust as per your user model or LDAP attribute
+            context['username'] = username
                 
             # get_context_data for revision
             if nma_arsip:
@@ -590,6 +677,9 @@ class ArsipUpdateView(UpdateView):
         context['nm_dokumen'] = nma_dokumen
         context['nm_departemen'] = nma_departemen
         context['nm_arsip'] = nma_arsip
+        kode_arsip = Arsip.objects.filter(document_name=nma_arsip, is_active=True)
+        for i in kode_arsip:
+            context['kode_arsip'] = i.document_no +' REV. '+ i.revision_no
         context['nm_label'] = relasi_label
 
         for label_dict in daftar_label:
@@ -618,6 +708,9 @@ class ArsipDetailView(DetailView):
             context['nm_dokumen'] = nma_dokumen
             context['nm_departemen'] = nma_departemen
             context['nm_arsip'] = nma_arsip
+            kode_arsip = Arsip.objects.filter(document_name=nma_arsip, is_active=True)
+            for i in kode_arsip:
+                context['kode_arsip'] = i.document_no +' REV. '+ i.revision_no
             context['nm_label'] = relasi_label
 
             for label_dict in daftar_label:

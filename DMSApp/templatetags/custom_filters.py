@@ -13,7 +13,7 @@ def get_field_value(obj, attr_name):
     if isinstance(value, FieldFile):
         return value.url
     if isinstance(value, datetime.datetime):
-        return format(value, 'd-m-Y H:i')
+        return format(value, 'd-m-Y')
     return value
 
 @register.filter

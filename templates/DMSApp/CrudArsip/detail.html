@@ -14,15 +14,16 @@
             <nav aria-label="breadcrumb rounded-0">
               <ol class="breadcrumb">
                 <li class="breadcrumb-item">Document</li>
-                <li class="breadcrumb-item">Archive</li>
                 {% if nm_departemen %}
-                <li class="breadcrumb-item active" aria-current="page">{% if nm_dokumen %}<a href='{% url 'arsip_view' %}?dept={{ nm_departemen|custom_slugify }}'>{% endif %}{{ nm_departemen|capfirst }}</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ nm_departemen|capfirst }}</li>
                 {% endif %}
+                <li class="breadcrumb-item active" aria-current="page">{% if nm_dokumen %}<a href='{% url 'arsip_view' %}?dept={{ nm_departemen|custom_slugify }}'>{% endif %}Category</a></li>
                 {% if nm_dokumen %}
                 <li class="breadcrumb-item active" aria-current="page">{% if nm_dokumen %}<a href='{% url 'arsip_view' %}?menu={{ nm_dokumen|custom_slugify }}&dept={{ nm_departemen|custom_slugify }}'>{% endif %}{{ nm_dokumen|capfirst }}</a></li>
                 {% endif %}
                 {% if nm_arsip %}
                 <li class="breadcrumb-item active" aria-current="page">{% if nm_dokumen %}<a href='{% url 'arsip_list_detail' %}?menu={{ nm_dokumen|custom_slugify }}&dept={{ nm_departemen|custom_slugify }}&archive={{ nm_arsip|custom_slugify }}'>{% endif %}{{ nm_arsip|capfirst }}</a></li>
+                <li class="breadcrumb-item active" aria-current="page"> {{ kode_arsip }} </li>
                 {% endif %}
                 <li class="breadcrumb-item active" aria-current="page">Detail</li>
               </ol>
@@ -99,11 +100,7 @@
                     <!-- Get the names of the related labels -->
                     <div class="col-4">
                       <h5>{{ value.label }}</h5>
-                      {% if value.type == 'date' %}
-                      <p>{{ archive_detail|get_field_value:u.name|date:"d-m-Y" }}</p>
-                      {% else %}
                       <p>{{ archive_detail|get_field_value:u.name }}</p>
-                      {% endif %}
                     </div>
                     {% endif %}
                   {% endif %}
