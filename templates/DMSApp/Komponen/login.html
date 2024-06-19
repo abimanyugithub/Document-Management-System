@@ -1,18 +1,46 @@
-
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Login</title>
-</head>
+{% load static %}
+{% include 'DMSApp/Komponen/header.html' %}
+<style>
+.brand-logo {
+    text-align: center; /* Aligns contents center horizontally */
+  }
+  
+  .brand-logo img {
+    max-width: 100%; /* Ensure image does not exceed container width */
+    height: auto; /* Maintain aspect ratio */
+    display: block; /* Removes any default inline behavior */
+    margin: 0 auto; /* Center image horizontally */
+  }
+</style>
 <body>
-    <h1>Login</h1>
-    <form method="post">
-        {% csrf_token %}
-        <label for="id_username">Username:</label>
-        <input type="text" id="id_username" name="username" required><br><br>
-        <label for="id_password">Password:</label>
-        <input type="password" id="id_password" name="password" required><br><br>
-        <button type="submit">Login</button>
-    </form>
-</body>
-</html>
+    <div class="container-scroller">
+        <div class="container-fluid page-body-wrapper full-page-wrapper">
+          <div class="content-wrapper d-flex align-items-center auth px-0">
+            <div class="row w-100 mx-0">
+              <div class="col-lg-4 mx-auto">
+                <div class="auth-form-light text-left py-5 px-4 px-sm-5">
+                  <div class="brand-logo">
+                    <img src="{% static 'DMSApp/images/fln_logo.png' %}" alt="logo">
+                  </div>
+                  <h4>Document Management System</h4>
+                  <h6 class="font-weight-light">Sign in to continue.</h6>
+                  <form method="post" class="pt-3" autocomplete="off">
+                    {% csrf_token %}
+                    <div class="form-group">
+                      <input type="text" class="form-control form-control-lg"  name="username" placeholder="Username">
+                    </div>
+                    <div class="form-group">
+                      <input type="password" class="form-control form-control-lg"  name="password" placeholder="Password">
+                    </div>
+                    <div class="mt-3">
+                      <button class="btn btn-block btn-primary btn-lg font-weight-medium auth-form-btn" type="submit">Login</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+  {% include 'DMSApp/Komponen/footer.html' %}
