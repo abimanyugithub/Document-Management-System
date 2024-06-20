@@ -9,8 +9,10 @@ urlpatterns = [
     path('auth/login/',  views.LoginView.as_view(), name='masuk'),
     path('auth/', LogoutView.as_view(next_page='login/'), name='keluar'),
     # path('login/', LoginView.as_view(template_name='DMSApp/Komponen/login.html'), name='login'),
-
     path('', views.DashboardView.as_view(), name='dashboard_view'),
+
+    path('user/page/', views.UserListView.as_view(), name='user_view'),
+
     path('department/page/', views.DepartemenListView.as_view(), name='departemen_view'),
     path('department/update/<str:pk>/', views.DepartemenUpdateView.as_view(), name='departemen_update'),
     path('department/activation/<str:pk>/', views.DepartemenActivateDeactivateView.as_view(), name='departemen_is_active'),

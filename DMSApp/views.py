@@ -1,7 +1,7 @@
 from itertools import chain
 from django.shortcuts import render, redirect
 from django.views.generic import TemplateView, CreateView, ListView, UpdateView, DeleteView, DetailView, FormView
-from .models import Dokumen, Departemen, DokumenLabel, Arsip
+from .models import Dokumen, Departemen, DokumenLabel, Arsip, UserDetail
 from django.conf import settings
 from urllib.parse import urljoin
 import os, shutil
@@ -12,6 +12,7 @@ from django.urls import reverse
 from django.db.models import Count
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView, LogoutView
+import ldap
 
 folder_target = 'media/DMSApp/'
 
@@ -74,6 +75,7 @@ class LoginView(LoginView):
         if self.request.user.is_authenticated:
             return redirect('/')  # Redirect to the home page if already authenticated
         return super().get(request, *args, **kwargs)
+
     
 class DashboardView(LoginRequiredMixin, TemplateView):
     template_name = 'DMSApp/Komponen/dashboard.html'
@@ -93,8 +95,6 @@ class DashboardView(LoginRequiredMixin, TemplateView):
                 unique_arsip_list.append(arsip)
                 seen_document_nos.add(arsip.document_no)
         context['arsip_list'] = unique_arsip_list
-        context['email'] = self.request.user.email
-        context['username'] = self.request.user.username
 
         '''# LDAP search details
         LDAP_SERVER_URI = settings.AUTH_LDAP_SERVER_URI
@@ -113,8 +113,10 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             context['ldap_results'] = result
         except ldap.LDAPError as e:
             context['ldap_error'] = f"LDAP search failed: {e}"'''
+            
+        '''
         
-        '''# LDAP search details
+        # LDAP search details
         LDAP_SERVER_URI = settings.AUTH_LDAP_SERVER_URI
         BIND_DN = settings.AUTH_LDAP_BIND_DN
         BIND_PASSWORD = settings.AUTH_LDAP_BIND_PASSWORD
@@ -141,6 +143,20 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         except ldap.LDAPError as e:
             context['ldap_error'] = f"LDAP search failed: {e}"'''
 
+        return context
+
+class UserListView(ListView): # CreateView show in modal
+    model = UserDetail
+    template_name = 'DMSApp/CrudUser/view.html'
+    context_object_name = 'user_list'  # For ListView
+    # fields = ['department', 'department_code', 'company', 'address']
+    # success_url = '/department/page'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        fields = {'username': 'Username', 'department': 'Department', 'is_uploader': 'Upload', 'is_releaser': 'release', 'is_approver': 'Approve' } # Fields to display
+        context['fields'] = fields
+        # context['fields'] = [field.name for field in self.model._meta.get_fields()]
         return context
 
 

@@ -1,6 +1,7 @@
+from django.contrib.auth.models import AbstractUser
 from django.db import models
 import os
-
+    
 # Create your models here.
 class Departemen(models.Model):
     department = models.CharField(max_length=100, null=True)
@@ -15,6 +16,15 @@ class Departemen(models.Model):
 
     def __str__(self):
         return self.department
+
+class UserDetail(AbstractUser):
+    parent_department = models.ForeignKey(Departemen, on_delete=models.CASCADE, null=True)
+    is_approver = models.BooleanField(default=False)
+    is_releaser = models.BooleanField(default=False)
+    is_uploader = models.BooleanField(default=False)
+    created_date = models.DateTimeField(auto_now_add=True)
+    modified_date = models.DateTimeField(auto_now=True)
+
     
 class Dokumen(models.Model):
     document = models.CharField(max_length=100, null=True)
@@ -52,9 +62,8 @@ class Arsip(models.Model):
     other_file = models.FileField(null=True, storage=None)
     created_date = models.DateTimeField(auto_now_add=True, null=True)
     modified_date = models.DateTimeField(auto_now=True, null=True)
-'''
-class LampiranDokumen(models.Model):
+
+'''class Notifikasi(models.Model):
     dokumen = models.ForeignKey(Dokumen, on_delete=models.CASCADE, null=True)
     lampiran = models.FileField(null=True, storage=None)
-    is_active = models.BooleanField(default=True)
-'''
+    is_active = models.BooleanField(default=True)'''

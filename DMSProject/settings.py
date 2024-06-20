@@ -123,20 +123,20 @@ AUTH_LDAP_USER_ATTR_MAP = {
 }
 
 # Populate Django user model from LDAP directory
-AUTH_LDAP_ALWAYS_UPDATE_USER = True
+# AUTH_LDAP_ALWAYS_UPDATE_USER = True
 
-# Optionally, define LDAP group settings
+'''# Optionally, define LDAP group settings
 AUTH_LDAP_GROUP_SEARCH = LDAPSearch(
     "ou=Groups,dc=fln,dc=local",
     ldap.SCOPE_SUBTREE,
     "(objectClass=groupOfNames)"
 )
 
-AUTH_LDAP_GROUP_TYPE = GroupOfNamesType()
+AUTH_LDAP_GROUP_TYPE = GroupOfNamesType()'''
 
 # Additional settings
-AUTH_LDAP_REQUIRE_GROUP = None
-AUTH_LDAP_DENY_GROUP = None
+'''AUTH_LDAP_REQUIRE_GROUP = None
+AUTH_LDAP_DENY_GROUP = None'''
 
 # Debugging (optional)
 import logging
@@ -362,3 +362,6 @@ MEDIA_ROOT = BASE_DIR
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Update settings.py to Use Custom User Model
+AUTH_USER_MODEL = 'DMSApp.UserDetail'
