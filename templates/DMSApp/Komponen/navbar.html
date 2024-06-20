@@ -24,6 +24,17 @@
         <button class="navbar-toggler navbar-toggler align-self-center" type="button" data-toggle="minimize">
           <span class="icon-menu"></span>
         </button>
+        <ul class="navbar-nav avbar-nav-left">
+          <li class="nav-item">
+            <div class="input-group">
+              <div class="input-group-prepend hover-cursor" id="navbar-search-icon">
+                <h2 class="input-group-text" id="search">
+                  Hi, {{ username }}
+                </h2>
+              </div>
+            </div>
+          </li>
+        </ul>
         <ul class="navbar-nav navbar-nav-right">
           <li class="nav-item dropdown">
             <a class="nav-link count-indicator dropdown-toggle" id="notificationDropdown" href="#" data-toggle="dropdown">
@@ -78,11 +89,11 @@
               <img src="images/faces/face28.jpg" alt="profile"/>
             </a>
             <div class="dropdown-menu dropdown-menu-right navbar-dropdown" aria-labelledby="profileDropdown">
-              <a class="dropdown-item">
+              <!-- <a class="dropdown-item">
                 <i class="ti-settings text-primary"></i>
                 Settings
-              </a>
-              <a class="dropdown-item">
+              </a> -->
+              <a class="dropdown-item" href="{% url 'keluar' %}">
                 <i class="ti-power-off text-primary"></i>
                 Logout
               </a>

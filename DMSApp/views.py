@@ -11,6 +11,7 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.urls import reverse
 from django.db.models import Count
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.views import LoginView, LogoutView
 
 folder_target = 'media/DMSApp/'
 
@@ -66,7 +67,14 @@ class LoginView(FormView):
             # LDAP connection or search error
             return render(self.request, 'ldap_error.html', {'error_message': f"LDAP search failed: {e}"})
 '''
+class LoginView(LoginView):
+    template_name = 'DMSApp/Komponen/login.html'
 
+    def get(self, request, *args, **kwargs):
+        if self.request.user.is_authenticated:
+            return redirect('/')  # Redirect to the home page if already authenticated
+        return super().get(request, *args, **kwargs)
+    
 class DashboardView(LoginRequiredMixin, TemplateView):
     template_name = 'DMSApp/Komponen/dashboard.html'
 
@@ -85,6 +93,8 @@ class DashboardView(LoginRequiredMixin, TemplateView):
                 unique_arsip_list.append(arsip)
                 seen_document_nos.add(arsip.document_no)
         context['arsip_list'] = unique_arsip_list
+        context['email'] = self.request.user.email
+        context['username'] = self.request.user.username
 
         '''# LDAP search details
         LDAP_SERVER_URI = settings.AUTH_LDAP_SERVER_URI

@@ -2,12 +2,13 @@ from django.urls import path
 from . import views
 from django.conf import settings
 from django.conf.urls.static import static
-from django.contrib.auth.views import LoginView
+from django.contrib.auth.views import LogoutView
 
 urlpatterns = [
     # Your URL patterns
-    # path('login/',  views.LoginView.as_view(), name='login'),
-    path('login/', LoginView.as_view(template_name='DMSApp/Komponen/login.html'), name='login'),
+    path('auth/login/',  views.LoginView.as_view(), name='masuk'),
+    path('auth/', LogoutView.as_view(next_page='login/'), name='keluar'),
+    # path('login/', LoginView.as_view(template_name='DMSApp/Komponen/login.html'), name='login'),
 
     path('', views.DashboardView.as_view(), name='dashboard_view'),
     path('department/page/', views.DepartemenListView.as_view(), name='departemen_view'),

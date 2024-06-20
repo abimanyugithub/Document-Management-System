@@ -8,8 +8,8 @@ db.sqlite3
 media/
 
 # Ignore migrations, as they can be generated locally and might cause conflicts
-**/migrations/*.py
-**/migrations/*.pyc
+# **/migrations/*.py
+# **/migrations/*.pyc
 
 # Pipenv #
 Pipfile
