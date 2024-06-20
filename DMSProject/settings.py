@@ -119,7 +119,8 @@ AUTH_LDAP_USER_ATTR_MAP = {
     "username": "sAMAccountName",  # Map sAMAccountName to username
     "first_name": "givenName",
     "last_name": "sn",
-    "email": "mail"
+    "email": "mail",
+    "distinguishedName" : "distinguishedName" # baris ini ditambahkan karena sudah menggunakan model Custom User
 }
 
 # Populate Django user model from LDAP directory

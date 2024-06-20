@@ -12,6 +12,7 @@ urlpatterns = [
     path('', views.DashboardView.as_view(), name='dashboard_view'),
 
     path('user/page/', views.UserListView.as_view(), name='user_view'),
+    path('user/update/<str:pk>/', views.UserUpdateView.as_view(), name='user_update'),
 
     path('department/page/', views.DepartemenListView.as_view(), name='departemen_view'),
     path('department/update/<str:pk>/', views.DepartemenUpdateView.as_view(), name='departemen_update'),

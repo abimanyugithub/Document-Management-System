@@ -145,22 +145,37 @@ class DashboardView(LoginRequiredMixin, TemplateView):
 
         return context
 
-class UserListView(ListView): # CreateView show in modal
+class UserListView(CreateView, ListView): # CreateView show in modal
     model = UserDetail
     template_name = 'DMSApp/CrudUser/view.html'
     context_object_name = 'user_list'  # For ListView
-    # fields = ['department', 'department_code', 'company', 'address']
-    # success_url = '/department/page'
+    fields = ['is_uploader', 'is_releaser', 'is_approver', 'is_superuser' ]
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        fields = {'username': 'Username', 'department': 'Department', 'is_uploader': 'Upload', 'is_releaser': 'release', 'is_approver': 'Approve' } # Fields to display
+        fields = {'username': 'Username', 'ldap_department': 'Department', 'is_uploader': 'Upload', 'is_releaser': 'release', 'is_approver': 'Approve' } # Fields to display
         context['fields'] = fields
         # context['fields'] = [field.name for field in self.model._meta.get_fields()]
         return context
+    
 
+class UserUpdateView(UpdateView): # Show in modal
+    model = UserDetail
+    fields = []
+    
+    def post(self, request, pk):
+        user_instance_update = UserDetail.objects.get(id=pk)
+        selected_options = request.POST.getlist('checklist_dokumen')
+        
+        form = self.get_form()
+        if form.is_valid():
+            form.instance = user_instance_update  # Associate the form with the fetched instance
+            form.save()
 
-class DepartemenListView(CreateView, ListView): # CreateView show in modal
+        return redirect(self.request.META.get('HTTP_REFERER'))
+
+# jangan dihapus (no ldap)
+'''class DepartemenListView(CreateView, ListView): # CreateView show in modal
     model = Departemen
     template_name = 'DMSApp/CrudDepartemen/view.html'
     context_object_name = 'departemen_list'  # For ListView
@@ -199,6 +214,20 @@ class DepartemenListView(CreateView, ListView): # CreateView show in modal
         context = super().get_context_data(**kwargs)
         context['list_dokumen'] = Dokumen.objects.filter(is_active=True)
         fields = {'department': 'Department', 'department_code': 'Department Code', 'company': 'Company', 'address': 'Address', 'created_date': 'Created Date', 'modified_date': 'Modified Date'} # Fields to display
+        context['fields'] = fields
+        # context['fields'] = [field.name for field in self.model._meta.get_fields()]
+        return context'''
+
+# within ldap
+class DepartemenListView(ListView):
+    model = Departemen
+    template_name = 'DMSApp/CrudDepartemen/view.html'
+    context_object_name = 'departemen_list'  # For ListView
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['list_dokumen'] = Dokumen.objects.filter(is_active=True)
+        fields = {'department': 'Department'} # Fields to display
         context['fields'] = fields
         # context['fields'] = [field.name for field in self.model._meta.get_fields()]
         return context

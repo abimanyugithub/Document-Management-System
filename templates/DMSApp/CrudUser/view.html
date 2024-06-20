@@ -56,11 +56,7 @@
                   {% for obj in object_list %}
                   <tr>
                     {% for field in fields %}
-                      {% if obj|get_field_value:field != None %}
-                      <td>{{ obj|get_field_value:field|capfirst }}</td>
-                      {% else %}
-                      <td>--</td>
-                      {% endif %}
+                      <td>{{ obj|get_field_value:field }}</td>
                     {% endfor %}
                     
                     <td>
@@ -86,4 +82,5 @@
       </div>
     </div>
   </div>
+  {% include 'DMSApp/CrudUser/modal_update.html' %}
 {% include 'DMSApp/Komponen/footer.html' %}

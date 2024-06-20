@@ -37,7 +37,7 @@
 
             <div class="row">
               <div class="col-8">
-                <h4 class="card-title">List - Department</h4>
+                <h4 class="card-title">List - Departments</h4>
                 <p class="card-description">
                   Add class <code>.table-striped</code>
                 </p>
@@ -66,11 +66,7 @@
                   {% for obj in object_list %}
                   <tr>
                     {% for field in fields %}
-                      {% if obj|get_field_value:field != None %}
-                      <td>{{ obj|get_field_value:field|capfirst }}</td>
-                      {% else %}
-                      <td>--</td>
-                      {% endif %}
+                    <td>{{ obj|get_field_value:field }}</td>
                     {% endfor %}
                     
                     <td>

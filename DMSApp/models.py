@@ -5,25 +5,36 @@ import os
 # Create your models here.
 class Departemen(models.Model):
     department = models.CharField(max_length=100, null=True)
-    department_code = models.CharField(max_length=10, null=True, blank=True)
-    company = models.CharField(max_length=100, null=True, blank=True)
-    address = models.TextField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
-    # is_deleted = models.BooleanField(default=False)
-    created_date = models.DateTimeField(auto_now_add=True)
-    modified_date = models.DateTimeField(auto_now=True)
     related_document = models.ManyToManyField('Dokumen')
 
     def __str__(self):
         return self.department
 
 class UserDetail(AbstractUser):
-    parent_department = models.ForeignKey(Departemen, on_delete=models.CASCADE, null=True)
+    # parent_department = models.ForeignKey(Departemen, on_delete=models.CASCADE, null=True)
+    ldap_department = models.CharField(max_length=100, null=True)
     is_approver = models.BooleanField(default=False)
     is_releaser = models.BooleanField(default=False)
     is_uploader = models.BooleanField(default=False)
     created_date = models.DateTimeField(auto_now_add=True)
     modified_date = models.DateTimeField(auto_now=True)
+
+    @staticmethod
+    def extract_ou_from_dn(dn):
+        parts = dn.split(',')
+        for part in parts:
+            if part.startswith('OU='):
+                return part[3:]
+        return None
+
+    def save(self, *args, **kwargs):
+        if self.distinguishedName:
+            department_name = self.extract_ou_from_dn(self.distinguishedName)
+            if department_name:
+                department, created = Departemen.objects.get_or_create(department=department_name)
+                self.parent_department = department
+        super(UserDetail, self).save(*args, **kwargs)
 
     
 class Dokumen(models.Model):

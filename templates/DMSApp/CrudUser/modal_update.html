@@ -1,59 +1,41 @@
 {% load custom_filters %}
 
 <!-- Modal update menu document -->
-{% for obj in dokumen_list %}
+{% for obj in object_list %}
 <div class="modal fade" id="mod0-{{ obj.id }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true" data-backdrop="static">
-  <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+  <div class="modal-dialog modal-dialog-centered modal-md" role="document">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="exampleModalLabel" style="display: flex; align-items: center;">
           <i class="mdi mdi-help-circle mdi-24px text-primary mr-2"></i>
-          update<b>&nbsp;{{ obj.document }}</b>
+          update account
         </h5>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
       <div class="modal-body">
-        <form class="forms-sample" autocomplete="off" method="post" action="{% url 'dokumen_update' pk=obj.id %}" enctype="multipart/form-data">
+        <h3> {{ user.username }}</h3><p>{{ user.ldap_department }}</p><hr>
+        <form class="forms-sample" autocomplete="off" method="post" action="{% url 'user_update' pk=obj.id %}" enctype="multipart/form-data">
           {% csrf_token %}
           <div class="row">
-            <div class="col">
+            <div class="col-6">
               {% for field in form %}
-              <div class="form-group">
-                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                <input type="text" class="form-control" id="{{ field.id_for_label }}" name="{{ field.name }}" placeholder="{{ field.label }}" value="{{ obj|get_field_value:field.name }}" required>
-              </div>
-              {% endfor %}
-            </div>
-          </div>
-
-          <h5>Labels</h5>
-          <div class="row">
-            <div class="col-4">
-            {% for key, value in list_label.items %}
               <div class="form-group">
                 <div class="form-check">
                   <label class="form-check-label">
-                    {% if value.label == "PDF File" or value.label == "Document Name" %}
-                    <input type="hidden" name="checklist_label" value="{{ key }}">
-                    <input type="checkbox" class="form-check-input" name="checklist_label" value="{{ key }}" checked disabled>
-                    {% else %}
-                    <input type="checkbox" class="form-check-input" name="checklist_label" value="{{ key }}"
-                    {% for u in obj.related_label.all %}{% if u.name == key %}checked{% endif %}{% endfor %}>
-                    {% endif %}
-                    {{ value.label }}
+                  <input type="checkbox" class="form-check-input" id="{{ field.id_for_label }}" name="checklist_label" value="{{ key }}" {% if obj|get_field_value:field.name %}checked{% endif %}>
+                  {{ field.label }}
                   </label>
                 </div>
               </div>
-                {% if forloop.counter|divisibleby:5 %}
-            </div><div class="col-4">
-            {% endif %}
+              {% if forloop.counter|divisibleby:3 %}
+              </div><div class="col-6">
+              {% endif %}
             {% endfor %}
             </div>
           </div>
-                
-          <button type="submit" class="btn btn-twitter mr-1">Update</button>
+          <button type="submit" class="btn btn-twitter mr-2">Update</button>
           <button type="button" class="btn btn-facebook" data-dismiss="modal">Close</button>
         </form>
       </div>
@@ -66,7 +48,7 @@
 {% endfor %}
 
 <!-- Modal disable menu document -->
-{% for obj in dokumen_list %}
+<!-- {% for obj in dokumen_list %}
 <div class="modal fade" id="mod1-{{ obj.id }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">
@@ -100,4 +82,4 @@
     </div>
   </div>
 </div>
-{% endfor %}
+{% endfor %}> -->
