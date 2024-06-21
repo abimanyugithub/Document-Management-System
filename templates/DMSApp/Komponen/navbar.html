@@ -79,9 +79,10 @@
             </div>
           </li>
           <li class="nav-item nav-profile dropdown">
-            <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown" id="profileDropdown">
-              <span class="rounded-circle btn-linkedin p-2">{% if user.last_name %}{{ user.first_name|first }}{{ user.last_name|first }}{% else %}{{ user.first_name|slice:"0:2"|upper }}{% endif %}</span>
-            </a>
+            <button type="button" class="nav-link dropdown-toggle btn btn-linkedin btn-rounded btn-icon" data-toggle="dropdown" id="profileDropdown">
+              <span class="text-white">{% if user.last_name %}{{ user.first_name|first|upper }}{{ user.last_name|first|upper }}{% else %}{{ user.first_name|slice:"0:2"|upper|upper }}{% endif %}</span>
+            </button>
+            
             <div class="dropdown-menu dropdown-menu-right navbar-dropdown" aria-labelledby="profileDropdown">
               <div class="card" style="width: 18rem;">
                 <div class="card-body">
@@ -309,8 +310,8 @@
             </a>
             <div class="collapse" id="auth">
               <ul class="nav flex-column sub-menu">
-                <li class="nav-item"> <a class="nav-link" href="{% url 'user_view' %}" > Accounts </a></li>
-                <li class="nav-item"> <a class="nav-link" href="pages/samples/register.html"> Register </a></li>
+                <li class="nav-item"> <a class="nav-link" href="{% url 'account_view' %}"> Accounts </a></li>
+                <li class="nav-item"> <a class="nav-link" href="{% url 'account_regist_view' %}"> Register </a></li>
               </ul>
             </div>
           </li>

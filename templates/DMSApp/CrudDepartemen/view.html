@@ -37,7 +37,7 @@
 
             <div class="row">
               <div class="col-8">
-                <h4 class="card-title">List - Departments</h4>
+                <h4 class="card-title">list department(s)</h4>
                 <p class="card-description">
                   Add class <code>.table-striped</code>
                 </p>
@@ -66,7 +66,11 @@
                   {% for obj in object_list %}
                   <tr>
                     {% for field in fields %}
-                    <td>{{ obj|get_field_value:field }}</td>
+                      {% if obj|get_field_value:field %}
+                        <td>{{ obj|get_field_value:field }}</td>
+                      {% else %}
+                        <td><span class="mdi mdi-minus"></span></td>
+                      {% endif %}
                     {% endfor %}
                     
                     <td>

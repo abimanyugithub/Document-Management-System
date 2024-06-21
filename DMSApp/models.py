@@ -5,21 +5,29 @@ import os
 # Create your models here.
 class Departemen(models.Model):
     department = models.CharField(max_length=100, null=True)
+    department_code = models.CharField(max_length=10, null=True, blank=True)
+    company = models.CharField(max_length=100, null=True, blank=True)
+    address = models.TextField(blank=True)
     is_active = models.BooleanField(default=True)
+    created_date = models.DateTimeField(auto_now_add=True)
+    modified_date = models.DateTimeField(auto_now=True)
     related_document = models.ManyToManyField('Dokumen')
 
     def __str__(self):
         return self.department
 
+
 class UserDetail(AbstractUser):
-    # parent_department = models.ForeignKey(Departemen, on_delete=models.CASCADE, null=True)
-    ldap_department = models.CharField(max_length=100, null=True)
+    user_department = models.ForeignKey(Departemen, on_delete=models.CASCADE, null=True)
+    # ldap_department = models.CharField(max_length=100, null=True)
     is_approver = models.BooleanField(default=False)
     is_releaser = models.BooleanField(default=False)
     is_uploader = models.BooleanField(default=False)
+    is_ldap = models.BooleanField(default=True)
     created_date = models.DateTimeField(auto_now_add=True)
     modified_date = models.DateTimeField(auto_now=True)
 
+    ''' 
     @staticmethod
     def extract_ou_from_dn(dn):
         parts = dn.split(',')
@@ -35,6 +43,7 @@ class UserDetail(AbstractUser):
                 department, created = Departemen.objects.get_or_create(department=department_name)
                 self.parent_department = department
         super(UserDetail, self).save(*args, **kwargs)
+    '''
 
     
 class Dokumen(models.Model):

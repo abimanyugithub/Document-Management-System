@@ -1,0 +1,37 @@
+{% load custom_filters %}
+
+<!-- Modal delete document -->
+{% for obj in object_list %}
+<div class="modal fade" id="mod2-{{ obj.id }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel" style="display: flex; align-items: center;">
+          <i class="mdi mdi-help-circle mdi-24px text-primary mr-2"></i>
+          <b>delete account</b>
+        </h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <span class="text-danger">Delete</span> this account?
+        <hr>
+        <div class="row">
+          <div class="col-6">
+            <h5>Account</h5>
+            <p>{{ obj.username }}</p>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <form class="forms-sample" method="post" action="{% url 'account_is_delete' pk=obj.id %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-dribbble">Delete</button>
+      </form>
+        <button type="button" class="btn btn-facebook" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %}

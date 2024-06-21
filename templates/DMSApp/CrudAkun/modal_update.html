@@ -2,8 +2,8 @@
 
 <!-- Modal update menu document -->
 {% for obj in object_list %}
-<div class="modal fade" id="mod0-{{ obj.id }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true" data-backdrop="static">
-  <div class="modal-dialog modal-dialog-centered modal-md" role="document">
+<div class="modal fade" id="mod0-{{ obj.id }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="exampleModalLabel" style="display: flex; align-items: center;">
@@ -15,28 +15,44 @@
         </button>
       </div>
       <div class="modal-body">
-        <h3> {{ user.username }}</h3><p>{{ user.ldap_department }}</p><hr>
-        <form class="forms-sample" autocomplete="off" method="post" action="{% url 'user_update' pk=obj.id %}" enctype="multipart/form-data">
+        <h3> {{ obj.username }}</h3><hr>
+        <form class="forms-sample" autocomplete="off" method="post" action="{% url 'account_update' pk=obj.id %}" enctype="multipart/form-data">
           {% csrf_token %}
-          <div class="row">
-            <div class="col-6">
-              {% for field in form %}
-              <div class="form-group">
-                <div class="form-check">
-                  <label class="form-check-label">
-                  <input type="checkbox" class="form-check-input" id="{{ field.id_for_label }}" name="checklist_label" value="{{ key }}" {% if obj|get_field_value:field.name %}checked{% endif %}>
-                  {{ field.label }}
-                  </label>
+            {% for field in form %}
+              {% if field.label == "User department" %}
+                <div class="form-group">
+                  <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                  <select class="form-control border-bottom" name="pilih_departemen">
+                    <option value="" disabled {% if not obj|get_field_value:field.name %}selected{% endif %}>Select a department</option>
+                    {% for u in list_department %}
+                      <option value="{{ u.id }}" {% if u.id == obj|get_field_value:field.name %}selected{% endif %}>{{ u.department }}</option>
+                    {% endfor %}
+                  </select>
                 </div>
-              </div>
-              {% if forloop.counter|divisibleby:3 %}
-              </div><div class="col-6">
               {% endif %}
             {% endfor %}
+            <p>Give permission to a user account?</p>
+            <div class="row">
+              <div class="col-3">
+                {% for key, label in fields_boolean.items %}
+                <div class="form-group">
+                  <div class="form-check">
+                    <label class="form-check-label">
+                    <input type="checkbox" class="form-check-input" id="{{ label }}" name="checklist_label" value="{{ key }}" {% if obj|get_field_value:key %}checked{% endif %}>
+                    {{ label}}
+                    </label>
+                  </div>
+                </div>
+                {% if forloop.counter|divisibleby:1 %}
+                </div><div class="col-3">
+                {% endif %}
+              {% endfor %}
+              </div>
             </div>
+          <div class="mt-5">
+            <button type="submit" class="btn btn-twitter mr-2">Update</button>
+            <button type="button" class="btn btn-facebook" data-dismiss="modal">Close</button>
           </div>
-          <button type="submit" class="btn btn-twitter mr-2">Update</button>
-          <button type="button" class="btn btn-facebook" data-dismiss="modal">Close</button>
         </form>
       </div>
       <div class="modal-footer">

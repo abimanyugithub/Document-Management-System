@@ -11,8 +11,10 @@ urlpatterns = [
     # path('login/', LoginView.as_view(template_name='DMSApp/Komponen/login.html'), name='login'),
     path('', views.DashboardView.as_view(), name='dashboard_view'),
 
-    path('user/page/', views.UserListView.as_view(), name='user_view'),
-    path('user/update/<str:pk>/', views.UserUpdateView.as_view(), name='user_update'),
+    path('account/page/', views.AccountListView.as_view(), name='account_view'),
+    path('account/update/<str:pk>/', views.AccountUpdateView.as_view(), name='account_update'),
+    path('account/register/', views.AccountRegisterView.as_view(), name='account_regist_view'),
+    path('account/delete/<str:pk>/', views.AccountDeleteView.as_view(), name='account_is_delete'),
 
     path('department/page/', views.DepartemenListView.as_view(), name='departemen_view'),
     path('department/update/<str:pk>/', views.DepartemenUpdateView.as_view(), name='departemen_update'),
@@ -31,10 +33,7 @@ urlpatterns = [
     path('archive/detail/<str:pk>/', views.ArsipDetailView.as_view(), name='arsip_detail'),
     path('archive/detail-list/', views.ArsipDetailListView.as_view(), name='arsip_list_detail'),
     path('archive/update-status/<str:pk>/', views.ArchiveUpdateStatusView.as_view(), name='arsip_status_update'),
-    path('archive/activation/<str:pk>/', views.ArsipActivateDeactivateView.as_view(), name='arsip_is_active'),
-    
-    #path('document/update/<str:pk>/', views.DokumenUpdateView.as_view(), name='dokumen_update'),
-    #path('document/delete/<str:pk>/', views.DokumenDeleteView.as_view(), name='dokumen_delete'),
+    path('archive/activation/<str:pk>/', views.ArsipActivateDeactivateView.as_view(), name='arsip_is_active')
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

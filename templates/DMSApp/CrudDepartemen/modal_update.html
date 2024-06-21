@@ -8,38 +8,32 @@
       <div class="modal-header">
         <h5 class="modal-title" id="exampleModalLabel" style="display: flex; align-items: center;">
           <i class="mdi mdi-help-circle mdi-24px text-primary mr-2"></i>
-          update<b>&nbsp;{{ obj.department }}</b>
+          update department
         </h5>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
       <div class="modal-body">
+        <h3>{{ obj.department }}</h3><hr>
         <form class="forms-sample" method="post" action="{% url 'departemen_update' pk=obj.id %}" autocomplete="off">
           {% csrf_token %}
           <div class="row">
             <div class="col">
               {% for field in form %}
               <div class="form-group">
-                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                {% if field.name == 'deskripsi' %}
-                <textarea class="form-control" id="{{ field.id_for_label }}" name="{{ field.name }}" placeholder="{{ field.label }}" required>{{ obj|get_field_value:field.name }}</textarea>
-                {% elif field.name == 'is_priority2' %}
-              <div class="form-check form-check-flat form-check-primary">
-                <label class="form-check-label" for="{{ field.id_for_label }}">
-                  <input type="checkbox" class="form-check-input" id="{{ field.id_for_label }}" name="{{ field.name }}" {% if obj.is_priority2 %}checked{% endif %}>
-                  {{ field.label }}
-                </label>
-              </div>
-              {% else %}
-              <input type="text" class="form-control" id="{{ field.id_for_label }}" name="{{ field.name }}" placeholder="{{ field.label }}" value="{{ obj|get_field_value:field.name }}" required>
-              {% endif %}
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>{% if field.name == 'department' %}<span class="text-danger"> *</span>{% endif %}
+                {% if field.name == 'address' %}
+                <textarea class="form-control" id="{{ field.id_for_label }}" name="{{ field.name }}" placeholder="{{ field.label }}">{{ obj|get_field_value:field.name }}</textarea>
+                {% else %}
+                <input type="text" class="form-control" id="{{ field.id_for_label }}" name="{{ field.name }}" placeholder="{{ field.label }}" {% if field.name == 'department' %}required{% endif %} value="{{ obj|get_field_value:field.name }}">
+                {% endif %}
               </div>
               {% endfor %}
             </div>
 
             <div class="col">
-              <p>Allowed Documents</p>
+              <p>Allowed Document(s)</p>
               <div class="row">
                 {% for dokumen in list_dokumen %}
                 <div class="col-md-6 col-lg-4">
@@ -60,8 +54,10 @@
 
           </div>
 
-          <button type="submit" class="btn btn-twitter mr-1">Update</button>
-          <button type="button" class="btn btn-facebook" data-dismiss="modal">Close</button>
+          <div class="mt-5">
+            <button type="submit" class="btn btn-twitter mr-2">Update</button>
+            <button type="button" class="btn btn-facebook" data-dismiss="modal">Close</button>
+          </div>
         </form>
       </div>
       <div class="modal-footer">

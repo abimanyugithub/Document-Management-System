@@ -1,81 +1,43 @@
 {% load static %}
 {% include 'DMSApp/Komponen/header.html' %}
-<style>
-.brand-logo {
-    text-align: center; /* Aligns contents center horizontally */
-  }
-  
-  .brand-logo img {
-    max-width: 100%; /* Ensure image does not exceed container width */
-    height: auto; /* Maintain aspect ratio */
-    display: block; /* Removes any default inline behavior */
-    margin: 0 auto; /* Center image horizontally */
-  }
-</style>
-<body>
-  {% load static %}
-  {% include 'DMSApp/Komponen/header.html' %}
-  <style>
-  .brand-logo {
-      text-align: center; /* Aligns contents center horizontally */
-    }
-    
-    .brand-logo img {
-      max-width: 100%; /* Ensure image does not exceed container width */
-      height: auto; /* Maintain aspect ratio */
-      display: block; /* Removes any default inline behavior */
-      margin: 0 auto; /* Center image horizontally */
-    }
-  </style>
-  <body>
-    <div class="container-scroller">
-      <div class="container-fluid page-body-wrapper full-page-wrapper">
-        <div class="content-wrapper d-flex align-items-center auth px-0">
 
-          <div class="container card shadow">
-            <div class="card-body p-md-5">
-              <div class="row w-100 mx-0">
-                <div class="col">
-                  <div class="auth-form-light text-left py-5 px-4 px-sm-5">
-                    <h6 class="font-weight-light">Sign in to continue.</h6>
-                    <form method="post" class="pt-3" autocomplete="off">
-                      {% csrf_token %}
-                      <div class="form-group">
-                        <input type="text" class="form-control form-control-lg"  name="username" placeholder="Username">
-                      </div>
-                      <div class="form-group">
-                        <input type="password" class="form-control form-control-lg"  name="password" placeholder="Password">
-                      </div>
-                      <div class="mt-3">
-                        <button class="btn btn-block btn-primary btn-lg font-weight-medium auth-form-btn" type="submit">Login</button>
-                      </div>
-                    </form>
-                  </div>
+<body>
+  <div class="container-scroller">
+    <div class="container-fluid page-body-wrapper full-page-wrapper">
+      <div class="content-wrapper d-flex align-items-center auth px-0">
+
+        <div class="container card shadow">
+          <div class="card-body p-md-5">
+            <div class="row w-100 mx-0">
+              <div class="col">
+                <div class="auth-form-light text-left py-5 px-4 px-sm-5">
+                  <h6 class="font-weight-light">Sign in to continue.</h6>
+                  <form method="post" class="pt-3" autocomplete="off">
+                    {% csrf_token %}
+                    <div class="form-group">
+                      <input type="text" class="form-control form-control-lg"  name="username" placeholder="Username">
+                    </div>
+                    <div class="form-group">
+                      <input type="password" class="form-control form-control-lg"  name="password" placeholder="Password">
+                    </div>
+                    <div class="mt-3">
+                      <button class="btn btn-block btn-primary btn-lg font-weight-medium auth-form-btn" type="submit">Login</button>
+                    </div>
+                  </form>
                 </div>
-                
-                <div class="col">
-                  <figure class="figure">
-                  <img src="{% static 'DMSApp/images/fln_logo.png' %}" class="img-fluid " alt="Sample image">
-                      <figcaption class="figure-caption text-center"><h5>Document Management System</h5></figcaption>
-                  </figure>
-                </div>
+              </div>
+              
+              <div class="col">
+                <figure class="figure">
+                <img src="{% static 'DMSApp/images/fln_logo.png' %}" class="img-fluid " alt="Sample image">
+                    <figcaption class="figure-caption text-center"><h5>Document Management System</h5></figcaption>
+                </figure>
               </div>
             </div>
           </div>
-
         </div>
+
       </div>
     </div>
-  </body>
-  <script>
-    // Function to clear browser history
-    function clearBrowserHistory() {
-        window.history.pushState(null, null, window.location.href);
-        window.onpopstate = function() {
-            window.history.go(1);
-        };
-    }
-
-    // Call the function when the page loads
-    window.onload = clearBrowserHistory;
-</script>
+  </div>
+</body>

@@ -72,7 +72,7 @@ class LoginView(LoginView):
     template_name = 'DMSApp/Komponen/login.html'
 
     def get(self, request, *args, **kwargs):
-        if self.request.user.is_authenticated:
+        if self.request.user.is_authenticated and self.request.user.is_active:
             return redirect('/')  # Redirect to the home page if already authenticated
         return super().get(request, *args, **kwargs)
 
@@ -145,62 +145,108 @@ class DashboardView(LoginRequiredMixin, TemplateView):
 
         return context
 
-class UserListView(CreateView, ListView): # CreateView show in modal
+class AccountListView(CreateView, ListView): # CreateView as Update in modal
     model = UserDetail
-    template_name = 'DMSApp/CrudUser/view.html'
+    template_name = 'DMSApp/CrudAkun/view.html'
     context_object_name = 'user_list'  # For ListView
-    fields = ['is_uploader', 'is_releaser', 'is_approver', 'is_superuser' ]
+    fields = ['user_department', 'is_uploader', 'is_releaser', 'is_approver', 'is_superuser' ]
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        fields = {'username': 'Username', 'ldap_department': 'Department', 'is_uploader': 'Upload', 'is_releaser': 'release', 'is_approver': 'Approve' } # Fields to display
+        fields = {'username': 'Username', 'user_department': 'Department', 'is_uploader': 'Upload', 'is_releaser': 'Release', 'is_approver': 'Approve', 'is_superuser':'Superuser' } # Fields to display
         context['fields'] = fields
+        fields_boolean = {'is_uploader': 'Upload', 'is_releaser': 'Release', 'is_approver': 'Approve', 'is_superuser':'Superuser' }
+        context['fields_boolean'] = fields_boolean
+        context['list_department'] = Departemen.objects.all()
         # context['fields'] = [field.name for field in self.model._meta.get_fields()]
         return context
     
+class AccountRegisterView(CreateView):
+    model = UserDetail
+    template_name = 'DMSApp/CrudAkun/register.html'
+    fields = ['username', 'first_name', 'last_name','password']
+    success_url = '/account/page/'
 
-class UserUpdateView(UpdateView): # Show in modal
+    def form_valid(self, form):
+        password = form.cleaned_data['password']
+        confirm_password = self.request.POST.get('password2')
+
+        # Check if passwords match
+        if password == confirm_password:
+            # Hash the password before saving
+            form.instance.set_password(form.cleaned_data['password'])
+            form.instance.is_ldap = False
+        else:
+            return redirect(self.request.META.get('HTTP_REFERER'))
+        
+        return super().form_valid(form)
+
+class AccountUpdateView(UpdateView): # Show in modal
     model = UserDetail
     fields = []
     
     def post(self, request, pk):
         user_instance_update = UserDetail.objects.get(id=pk)
-        selected_options = request.POST.getlist('checklist_dokumen')
+        # Update department (assuming 'pilih_departemen' is a field in your form)
+        id_departemen = request.POST.get('pilih_departemen')
         
-        form = self.get_form()
-        if form.is_valid():
-            form.instance = user_instance_update  # Associate the form with the fetched instance
-            form.save()
+        if id_departemen:
+            
+            # Retrieve the Departemen instance based on id_departemen
+            departemen_instance = Departemen.objects.get(id=id_departemen)
+            
+            # Assign the Departemen instance to user_department
+            user_instance_update.user_department = departemen_instance
+            
+        # Retrieve all possible keys for checkboxes
+        possible_keys = ['is_approver', 'is_releaser', 'is_uploader', 'is_superuser']
 
+        # Iterate over all possible keys
+        for key in possible_keys:
+            # Set attribute to True if key is in request.POST.getlist('checklist_label'), otherwise set to False
+            setattr(user_instance_update, key, key in request.POST.getlist('checklist_label'))
+
+        # Save the updated instance
+        user_instance_update.save()
+
+        return redirect(self.request.META.get('HTTP_REFERER'))
+    
+class AccountDeleteView(DeleteView): # Show in modal
+
+    def post(self, request, pk):
+        user_instance_delete = UserDetail.objects.get(id=pk)
+        user_instance_delete.delete()
         return redirect(self.request.META.get('HTTP_REFERER'))
 
 # jangan dihapus (no ldap)
-'''class DepartemenListView(CreateView, ListView): # CreateView show in modal
+class DepartemenListView(CreateView, ListView): # CreateView show in modal
     model = Departemen
     template_name = 'DMSApp/CrudDepartemen/view.html'
     context_object_name = 'departemen_list'  # For ListView
     fields = ['department', 'department_code', 'company', 'address']
-    success_url = '/department/page'
+    success_url = '/department/page/'
 
     def get_queryset(self):
         queryset = super().get_queryset()
         return queryset.order_by('department')
     
     def form_valid(self, form):
-        # Custom form validation
-        nma_departemen = form.cleaned_data['department']
-        kode_departemen = form.cleaned_data['department_code']
-        
-        if Departemen.objects.filter(department=nma_departemen).exists():
-            form.add_error('department', "A department with this name already exists.")
-            return self.form_invalid(form)
+        # Get the data from the form
+        data = form.cleaned_data
 
-        if Departemen.objects.filter(department_code=kode_departemen).exists():
-            form.add_error('department_code', "A department with this code already exists.")
-            return self.form_invalid(form)
+        # Check if an object with the same data already exists
+        if Departemen.objects.filter(department=data['department']).exists():
+            # If a duplicate is found, add an error to the form
+            # form.add_error(None, 'An entry with this data already exists.')
+            # return self.form_invalid(form)
+            raise PermissionDenied("Cannot create this department because instances exist.")
         
+        # Check if there is an existing Department with the same code, excluding the current department
+        if Departemen.objects.filter(department_code=data['department_code']).exclude(department_code=None).exists():
+            raise PermissionDenied("Cannot update this code department because instances exist.")
+
         # If validation passes, save the department
-        departemen = form.save(commit=False)
+        departemen = form.save()
         departemen.save()
         
         # Handle related documents
@@ -216,10 +262,11 @@ class UserUpdateView(UpdateView): # Show in modal
         fields = {'department': 'Department', 'department_code': 'Department Code', 'company': 'Company', 'address': 'Address', 'created_date': 'Created Date', 'modified_date': 'Modified Date'} # Fields to display
         context['fields'] = fields
         # context['fields'] = [field.name for field in self.model._meta.get_fields()]
-        return context'''
+        return context
 
 # within ldap
-class DepartemenListView(ListView):
+
+'''class DepartemenListView(ListView):
     model = Departemen
     template_name = 'DMSApp/CrudDepartemen/view.html'
     context_object_name = 'departemen_list'  # For ListView
@@ -230,7 +277,7 @@ class DepartemenListView(ListView):
         fields = {'department': 'Department'} # Fields to display
         context['fields'] = fields
         # context['fields'] = [field.name for field in self.model._meta.get_fields()]
-        return context
+        return context'''
 
 
 class DepartemenUpdateView(UpdateView): # Show in modal
@@ -242,28 +289,29 @@ class DepartemenUpdateView(UpdateView): # Show in modal
         nma_departemen = request.POST.get('department')
         kode_departemen = request.POST.get('department_code')
         
+        
         # Check if there is an existing Department with the same name, excluding the current department
-        departemen_yang_ada = Departemen.objects.filter(department=nma_departemen).exclude(id=pk).exists()
+        if Departemen.objects.filter(department=nma_departemen).exclude(id=pk).exists():
+            raise PermissionDenied("Cannot update this department because instances exist.")
         
         # Check if there is an existing Department with the same code, excluding the current department
-        kode_departemen_yang_ada = Departemen.objects.filter(department_code=kode_departemen).exclude(id=pk).exists()
+        if Departemen.objects.filter(department_code=kode_departemen).exclude(id=pk).exists():
+            raise PermissionDenied("Cannot update this code department because instances exist.")
 
         # Get the current department name
         current_department_name = department_instance_update.department
-        
-        # If either department name or code already exists, handle errors
-        if departemen_yang_ada or kode_departemen_yang_ada:
-            # Assuming you have a form instance to pass to the template
-            form = self.get_form()
-            if departemen_yang_ada:
-                form.add_error('department', "A department with this name already exists.")
-            if kode_departemen_yang_ada:
-                form.add_error('department_code', "A department with this code already exists.")
-            return self.form_invalid(form)
 
+        
         # If no errors, update the department instance
-        department_instance_update.department = nma_departemen
-        department_instance_update.department_code = kode_departemen
+        # Retrieve all possible keys
+        possible_keys = ['department', 'department_code', 'company', 'address']
+
+        # Iterate over all possible keys and update the instance
+        for key in possible_keys:
+            if key in request.POST:
+                setattr(department_instance_update, key, request.POST.get(key))
+
+        # Save the updated instance
         department_instance_update.save()
 
         # Handle related documents
@@ -314,6 +362,12 @@ class DepartemenDeleteView(DeleteView): # Show in modal
         if Arsip.objects.filter(parent_department=pk).exists():
             # If related Arsip instances exist, raise PermissionDenied
             raise PermissionDenied("Cannot delete this department because related Arsip instances exist.")
+        
+        # Check if there are related instances of Arsip with the same parent department
+        if UserDetail.objects.filter(user_department=pk).exists():
+            # If related Arsip instances exist, raise PermissionDenied
+            raise PermissionDenied("Cannot delete this department because related UserDetail instances exist.")
+
 
         # Iterate over each relasi_departemen instance
         for relasi_departemen in department_instance_delete.related_document.all():
