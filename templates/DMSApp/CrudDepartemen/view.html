@@ -16,7 +16,7 @@
               </ol>
             </nav>
           </div>
-          <div class="col-12 col-xl-4">
+          <div class="col-12 col-xl-4 auth">
             <div class="justify-content-end d-flex">
               <div class="dropdown flex-md-grow-1 flex-xl-grow-0">
                 <button type="button" class="btn btn-primary btn-icon-text" data-toggle="modal" data-target="#mod1">
@@ -63,7 +63,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  {% for obj in object_list %}
+                  {% for obj in departemen_list %}
                   <tr>
                     {% for field in fields %}
                       {% if obj|get_field_value:field %}

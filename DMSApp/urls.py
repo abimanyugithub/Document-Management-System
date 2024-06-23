@@ -2,19 +2,20 @@ from django.urls import path
 from . import views
 from django.conf import settings
 from django.conf.urls.static import static
-from django.contrib.auth.views import LogoutView
 
 urlpatterns = [
     # Your URL patterns
     path('auth/login/',  views.LoginView.as_view(), name='masuk'),
-    path('auth/', LogoutView.as_view(next_page='login/'), name='keluar'),
+    path('auth/logout/', views.LogoutView.as_view(), name='keluar'),
+    # path('auth/logout/', LogoutView.as_view(), name='keluar'),
     # path('login/', LoginView.as_view(template_name='DMSApp/Komponen/login.html'), name='login'),
     path('', views.DashboardView.as_view(), name='dashboard_view'),
 
-    path('account/page/', views.AccountListView.as_view(), name='account_view'),
-    path('account/update/<str:pk>/', views.AccountUpdateView.as_view(), name='account_update'),
-    path('account/register/', views.AccountRegisterView.as_view(), name='account_regist_view'),
-    path('account/delete/<str:pk>/', views.AccountDeleteView.as_view(), name='account_is_delete'),
+    path('account/page/', views.AkunListView.as_view(), name='akun_view'),
+    path('account/update/<str:pk>/', views.AkunUpdateView.as_view(), name='akun_update'),
+    path('account/register/', views.AkunRegisterView.as_view(), name='akun_regist_view'),
+    path('acount/activation/<str:pk>/', views.AkunActivateDeactivateView.as_view(), name='akun_is_active'),
+    path('account/delete/<str:pk>/', views.AkunDeleteView.as_view(), name='akun_is_delete'),
 
     path('department/page/', views.DepartemenListView.as_view(), name='departemen_view'),
     path('department/update/<str:pk>/', views.DepartemenUpdateView.as_view(), name='departemen_update'),

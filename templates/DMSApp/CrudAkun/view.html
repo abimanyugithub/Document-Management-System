@@ -76,10 +76,12 @@
                         <button type="button" class="mr-2 btn btn-social-icon btn-twitter btn-rounded" data-toggle="modal" data-target="#mod0-{{ obj.id }}" {% if not obj.is_active %} disabled {% endif %}>
                           <i class="ti-pencil-alt"></i>
                         </button>
-                        <button type="button" class="mr-2 btn btn-social-icon btn-rounded {% if obj.is_active %}btn-facebook{% else %}btn-secondary{% endif %}" data-toggle="modal" data-target="#mod1-{{ obj.id }}" disabled>
+                        {% if user.is_superuser %}
+                        <button type="button" class="mr-2 btn btn-social-icon btn-rounded {% if obj.is_active %}btn-facebook{% else %}btn-secondary{% endif %}" data-toggle="modal" data-target="#mod1-{{ obj.id }}" {% if user.username == obj.username %} disabled {% endif %}>
                           <i class="ti-check-box"></i>
                         </button>
-                        <button type="button" class="btn btn-social-icon btn-rounded btn-dribbble" data-toggle="modal" data-target="#mod2-{{ obj.id }}" {% if obj.is_ldap %}disabled{% endif %}>
+                        {% endif %}
+                        <button type="button" class="btn btn-social-icon btn-rounded btn-dribbble" data-toggle="modal" data-target="#mod2-{{ obj.id }}" {% if obj.is_ldap or user.username == obj.username %}disabled{% endif %}>
                           <i class="ti-trash"></i>
                         </button>
                       </div>

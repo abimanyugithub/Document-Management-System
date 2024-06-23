@@ -1,6 +1,6 @@
 {% load custom_filters %}
 
-<!-- Modal update menu document -->
+<!-- Modal update account -->
 {% for obj in object_list %}
 <div class="modal fade" id="mod0-{{ obj.id }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
@@ -16,18 +16,25 @@
       </div>
       <div class="modal-body">
         <h3> {{ obj.username }}</h3><hr>
-        <form class="forms-sample" autocomplete="off" method="post" action="{% url 'account_update' pk=obj.id %}" enctype="multipart/form-data">
+        <form class="forms-sample" autocomplete="off" method="post" action="{% url 'akun_update' pk=obj.id %}" enctype="multipart/form-data">
           {% csrf_token %}
             {% for field in form %}
-              {% if field.label == "User department" %}
+              {% if not field.name in fields_boolean %}
                 <div class="form-group">
+                  {% if field.label == "User department" %}
                   <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                  <select class="form-control border-bottom" name="pilih_departemen">
+                  <select class="form-control border-bottom" name="{{ field.name }}">
                     <option value="" disabled {% if not obj|get_field_value:field.name %}selected{% endif %}>Select a department</option>
                     {% for u in list_department %}
                       <option value="{{ u.id }}" {% if u.id == obj|get_field_value:field.name %}selected{% endif %}>{{ u.department }}</option>
                     {% endfor %}
                   </select>
+                  {% else %}
+                    {% if not obj.is_ldap %}
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    <input type={% if field.label == "Email address" %}"email"{% else %}"text"{% endif %} class="form-control" id="{{ field.id_for_label }}" name="{{ field.name }}" placeholder="{{ field.label }}" {% if field.label != "Last name" %}required{% endif %} value={{ obj|get_field_value:field.name }}>
+                    {% endif %}
+                  {% endif %}
                 </div>
               {% endif %}
             {% endfor %}
@@ -63,8 +70,8 @@
 </div>
 {% endfor %}
 
-<!-- Modal disable menu document -->
-<!-- {% for obj in dokumen_list %}
+<!-- Modal disable account -->
+{% for obj in object_list %}
 <div class="modal fade" id="mod1-{{ obj.id }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">
@@ -78,17 +85,17 @@
         </button>
       </div>
       <div class="modal-body">
-          {% if obj.is_active %}Deactivate{% else %}Activate{% endif %} document?
+          {% if obj.is_active %}Deactivate{% else %}Activate{% endif %} account?
           <hr>
           <div class="row">
             <div class="col-6">
-              <h5>Document Name</h5>
-              <p>{{ obj.document|capfirst }}</p>
+              <h5>Account Name</h5>
+              <p>{{ obj.username }}</p>
             </div>
           </div>
       </div>
       <div class="modal-footer">
-        <form class="forms-sample" method="post" action="{% url 'dokumen_is_active' pk=obj.id %}">
+        <form class="forms-sample" method="post" action="{% url 'akun_is_active' pk=obj.id %}">
           {% csrf_token %}
           <input type="hidden" name="aktivasi" {% if obj.is_active %}value="nonaktif"{% endif %}>
         <button type="submit" class="btn btn-twitter">Save</button>
@@ -98,4 +105,4 @@
     </div>
   </div>
 </div>
-{% endfor %}> -->
+{% endfor %}

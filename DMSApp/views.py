@@ -1,6 +1,6 @@
 from itertools import chain
 from django.shortcuts import render, redirect
-from django.views.generic import TemplateView, CreateView, ListView, UpdateView, DeleteView, DetailView, FormView
+from django.views.generic import TemplateView, CreateView, ListView, UpdateView, DeleteView, DetailView, View
 from .models import Dokumen, Departemen, DokumenLabel, Arsip, UserDetail
 from django.conf import settings
 from urllib.parse import urljoin
@@ -11,8 +11,10 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.urls import reverse
 from django.db.models import Count
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.auth.views import LoginView, LogoutView
+from django.contrib.auth.views import LoginView
+from django.contrib.auth import login, logout, authenticate
 import ldap
+from django_auth_ldap.backend import LDAPBackend
 
 folder_target = 'media/DMSApp/'
 
@@ -76,6 +78,40 @@ class LoginView(LoginView):
             return redirect('/')  # Redirect to the home page if already authenticated
         return super().get(request, *args, **kwargs)
 
+    def form_valid(self, form):
+        # First try LDAP authentication
+        ldap_backend = LDAPBackend()
+        username = form.cleaned_data.get('username')
+        password = form.cleaned_data.get('password')
+
+        user = None
+        try:
+            user = ldap_backend.authenticate(self.request, username=username, password=password)
+        except ldap.LDAPError as e:
+            print(f"LDAP authentication error: {e}")
+            pass
+
+        # If LDAP authentication fails, fall back to the default model backend
+        if user is None:
+            user = authenticate(self.request, username=username, password=password)
+
+        if user is not None:
+            login(self.request, user)
+            return redirect(self.get_success_url())
+        else:
+            # Optionally, you can log the failure reason or take some other action
+            return self.form_invalid(form)
+        
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['superuser_exist'] = UserDetail.objects.filter(is_superuser=True, is_active=True)
+        return context
+        
+class LogoutView(View):
+
+    def get(self, request, *args, **kwargs):
+        logout(request)
+        return redirect(settings.LOGOUT_REDIRECT_URL)
     
 class DashboardView(LoginRequiredMixin, TemplateView):
     template_name = 'DMSApp/Komponen/dashboard.html'
@@ -144,27 +180,11 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             context['ldap_error'] = f"LDAP search failed: {e}"'''
 
         return context
-
-class AccountListView(CreateView, ListView): # CreateView as Update in modal
-    model = UserDetail
-    template_name = 'DMSApp/CrudAkun/view.html'
-    context_object_name = 'user_list'  # For ListView
-    fields = ['user_department', 'is_uploader', 'is_releaser', 'is_approver', 'is_superuser' ]
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        fields = {'username': 'Username', 'user_department': 'Department', 'is_uploader': 'Upload', 'is_releaser': 'Release', 'is_approver': 'Approve', 'is_superuser':'Superuser' } # Fields to display
-        context['fields'] = fields
-        fields_boolean = {'is_uploader': 'Upload', 'is_releaser': 'Release', 'is_approver': 'Approve', 'is_superuser':'Superuser' }
-        context['fields_boolean'] = fields_boolean
-        context['list_department'] = Departemen.objects.all()
-        # context['fields'] = [field.name for field in self.model._meta.get_fields()]
-        return context
     
-class AccountRegisterView(CreateView):
+class AkunRegisterView(CreateView):
     model = UserDetail
     template_name = 'DMSApp/CrudAkun/register.html'
-    fields = ['username', 'first_name', 'last_name','password']
+    fields = ['username', 'first_name', 'last_name', 'email', 'password']
     success_url = '/account/page/'
 
     def form_valid(self, form):
@@ -176,27 +196,84 @@ class AccountRegisterView(CreateView):
             # Hash the password before saving
             form.instance.set_password(form.cleaned_data['password'])
             form.instance.is_ldap = False
+
+            # if superuser not exist
+            if not UserDetail.objects.filter(is_superuser=True, is_active=True):
+                form.instance.is_superuser = True
+                self.object = form.save()
+                # if form.cleaned_data.get('username'):
+                # return redirect('/')self.success_url
+                return redirect(self.success_url)
         else:
             return redirect(self.request.META.get('HTTP_REFERER'))
         
         return super().form_valid(form)
 
-class AccountUpdateView(UpdateView): # Show in modal
+class AkunListView(LoginRequiredMixin, CreateView, ListView): # CreateView as Update in modal
+    model = UserDetail
+    template_name = 'DMSApp/CrudAkun/view.html'
+    context_object_name = 'user_list'  # For ListView
+    fields = ['user_department', 'first_name', 'last_name' , 'email', 'is_uploader', 'is_releaser', 'is_approver', 'is_superuser' ]
+
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        # Check if the user is a superuser
+        if not self.request.user.is_superuser:
+            # List of fields to remove
+            fields_to_remove = ['first_name', 'last_name', 'email', 'is_superuser']
+            for field in fields_to_remove:
+                form.fields.pop(field, None)
+        return form
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # For Fields to display ListView
+        fields_view = {'username': 'Username', 'first_name': 'First Name', 'last_name': 'Last Name', 'email': 'Email', 'user_department': 'Department', 'is_uploader': 'Upload', 'is_releaser': 'Release', 'is_approver': 'Approve', 'is_superuser':'Superuser' } # Fields to display
+        
+        # For Fields Update
+        fields_boolean = {'is_uploader': 'Upload', 'is_releaser': 'Release', 'is_approver': 'Approve', 'is_superuser':'Superuser' }
+        
+        # If list user(s) not a superuser
+        if not self.object_list.filter(is_superuser=True):
+            context['fields_boolean'] = fields_boolean
+            context['fields'] = fields_view
+
+        # Remove 'is_superuser' if the user is not a superuser
+        elif not self.request.user.is_superuser:
+            fields_boolean.pop('is_superuser')
+            fields_view.pop('is_superuser')
+
+        context['fields_boolean'] = fields_boolean
+        context['fields'] = fields_view
+        context['list_department'] = Departemen.objects.all()
+        # context['superuser_exist'] = self.object_list.filter(is_superuser=True, is_active=True)
+        # context['fields'] = [field.name for field in self.model._meta.get_fields()]
+        return context
+
+class AkunUpdateView(UpdateView): # Show in modal
     model = UserDetail
     fields = []
     
     def post(self, request, pk):
         user_instance_update = UserDetail.objects.get(id=pk)
-        # Update department (assuming 'pilih_departemen' is a field in your form)
-        id_departemen = request.POST.get('pilih_departemen')
+        id_departemen = request.POST.get('user_department')
+        nma_depan = request.POST.get('first_name')
+        nma_belakang = request.POST.get('last_name')
+        surel = request.POST.get('email')
+
+        # Retrieve the Departemen instance based on id_departemen
+        # departemen_instance = Departemen.objects.get(id=id_departemen)
         
+        # Assign the Departemen instance to user_department
         if id_departemen:
-            
-            # Retrieve the Departemen instance based on id_departemen
-            departemen_instance = Departemen.objects.get(id=id_departemen)
-            
-            # Assign the Departemen instance to user_department
-            user_instance_update.user_department = departemen_instance
+            user_instance_update.user_department = Departemen.objects.get(id=id_departemen)
+        if nma_depan:
+            user_instance_update.first_name = nma_depan
+        if nma_belakang:
+            user_instance_update.last_name = nma_belakang
+        if surel:
+            user_instance_update.email = surel
             
         # Retrieve all possible keys for checkboxes
         possible_keys = ['is_approver', 'is_releaser', 'is_uploader', 'is_superuser']
@@ -208,15 +285,37 @@ class AccountUpdateView(UpdateView): # Show in modal
 
         # Save the updated instance
         user_instance_update.save()
-
+        
         return redirect(self.request.META.get('HTTP_REFERER'))
-    
-class AccountDeleteView(DeleteView): # Show in modal
+
+class AkunActivateDeactivateView(UpdateView): # Show in modal
 
     def post(self, request, pk):
-        user_instance_delete = UserDetail.objects.get(id=pk)
-        user_instance_delete.delete()
-        return redirect(self.request.META.get('HTTP_REFERER'))
+
+        if self.request.user.is_superuser:
+            account_instance_update = UserDetail.objects.get(id=pk)
+            opsi_aktivasi = request.POST.get('aktivasi')
+            if opsi_aktivasi == "nonaktif":
+                account_instance_update.is_active = False
+                account_instance_update.save(update_fields=['is_active'])
+            else:
+                account_instance_update.is_active = True
+                account_instance_update.save(update_fields=['is_active'])
+            return redirect(self.request.META.get('HTTP_REFERER'))
+        else:
+            raise PermissionDenied("Cannot update this account because it is a superuse.")
+        
+
+class AkunDeleteView(DeleteView): # Show in modal
+
+    def post(self, request, pk):
+        if self.request.user.is_superuser:
+            user_instance_delete = UserDetail.objects.get(id=pk)
+            user_instance_delete.delete()
+            return redirect(self.request.META.get('HTTP_REFERER'))
+        else:
+            raise PermissionDenied("Cannot delete this account because it is a superuse")
+        
 
 # jangan dihapus (no ldap)
 class DepartemenListView(CreateView, ListView): # CreateView show in modal
@@ -232,29 +331,28 @@ class DepartemenListView(CreateView, ListView): # CreateView show in modal
     
     def form_valid(self, form):
         # Get the data from the form
-        data = form.cleaned_data
+        if self.request.user.is_superuser or self.request.user.is_releaser:
+            kode_department = form.cleaned_data['department_code']
 
-        # Check if an object with the same data already exists
-        if Departemen.objects.filter(department=data['department']).exists():
-            # If a duplicate is found, add an error to the form
-            # form.add_error(None, 'An entry with this data already exists.')
-            # return self.form_invalid(form)
-            raise PermissionDenied("Cannot create this department because instances exist.")
-        
-        # Check if there is an existing Department with the same code, excluding the current department
-        if Departemen.objects.filter(department_code=data['department_code']).exclude(department_code=None).exists():
-            raise PermissionDenied("Cannot update this code department because instances exist.")
+            if Departemen.objects.filter(department=form.cleaned_data['department']).exists():
+                # Raise PermissionDenied if a duplicate department is found
+                raise PermissionDenied("Cannot create this department because an instance with the same department already exists.")
+            if kode_department:
+                if Departemen.objects.filter(department_code=form.cleaned_data['department_code']):
+                    raise PermissionDenied("Cannot create this department because an instance with the same department code already exists.")
 
-        # If validation passes, save the department
-        departemen = form.save()
-        departemen.save()
-        
-        # Handle related documents
-        selected_dokumen_ids = self.request.POST.getlist('checklist_dokumen')
-        dokumen = Dokumen.objects.filter(id__in=selected_dokumen_ids)
-        departemen.related_document.set(dokumen)
+            # If validation passes, save the department
+            departemen = form.save()
+            
+            # Handle related documents
+            selected_dokumen_ids = self.request.POST.getlist('checklist_dokumen')
+            dokumen = Dokumen.objects.filter(id__in=selected_dokumen_ids)
+            departemen.related_document.set(dokumen)
 
-        return redirect(self.request.META.get('HTTP_REFERER'))
+            return redirect(self.request.META.get('HTTP_REFERER'))
+        else:
+            raise PermissionDenied("You do not have the necessary permissions.")
+            
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -285,101 +383,107 @@ class DepartemenUpdateView(UpdateView): # Show in modal
     fields = []
     
     def post(self, request, pk):
-        department_instance_update = Departemen.objects.get(id=pk)
-        nma_departemen = request.POST.get('department')
-        kode_departemen = request.POST.get('department_code')
-        
-        
-        # Check if there is an existing Department with the same name, excluding the current department
-        if Departemen.objects.filter(department=nma_departemen).exclude(id=pk).exists():
-            raise PermissionDenied("Cannot update this department because instances exist.")
-        
-        # Check if there is an existing Department with the same code, excluding the current department
-        if Departemen.objects.filter(department_code=kode_departemen).exclude(id=pk).exists():
-            raise PermissionDenied("Cannot update this code department because instances exist.")
+        if self.request.user.is_superuser or self.request.user.is_releaser:
+            department_instance_update = Departemen.objects.get(id=pk)
+            nma_departemen = request.POST.get('department')
+            kode_departemen = request.POST.get('department_code')
 
-        # Get the current department name
-        current_department_name = department_instance_update.department
+            if kode_departemen or kode_departemen.strip():
+                if Departemen.objects.filter(department_code=kode_departemen).exclude(id=pk).exists():
+                    raise PermissionDenied("Cannot update this code department because instances exist.")
+            
+            # Check if there is an existing Department with the same name, excluding the current department
+            if Departemen.objects.filter(department=nma_departemen).exclude(id=pk).exists():
+                raise PermissionDenied("Cannot update this department because instances exist.")
+            
+            # Get the current department name
+            current_department_name = department_instance_update.department
 
-        
-        # If no errors, update the department instance
-        # Retrieve all possible keys
-        possible_keys = ['department', 'department_code', 'company', 'address']
+            # If no errors, update the department instance
+            # Retrieve all possible keys
+            possible_keys = ['department', 'department_code', 'company', 'address']
 
-        # Iterate over all possible keys and update the instance
-        for key in possible_keys:
-            if key in request.POST:
-                setattr(department_instance_update, key, request.POST.get(key))
+            # Iterate over all possible keys and update the instance
+            for key in possible_keys:
+                if key in request.POST:
+                    setattr(department_instance_update, key, request.POST.get(key))
 
-        # Save the updated instance
-        department_instance_update.save()
+            department_instance_update.save()
 
-        # Handle related documents
-        selected_dokumen_ids = request.POST.getlist('checklist_dokumen')
-        dokumen = Dokumen.objects.filter(id__in=selected_dokumen_ids)
-        department_instance_update.related_document.set(dokumen)
-        # department_instance_update.related_document.add(*dokumen)
+            # Handle related documents
+            selected_dokumen_ids = request.POST.getlist('checklist_dokumen')
+            dokumen = Dokumen.objects.filter(id__in=selected_dokumen_ids)
+            department_instance_update.related_document.set(dokumen)
+            # department_instance_update.related_document.add(*dokumen)
 
-        # Rename the directory for each selected document
-        for dok_id in selected_dokumen_ids:
-            try:
-                dokumen_instance = Dokumen.objects.get(id=dok_id)
-                old_folder_path = os.path.join(folder_target, dokumen_instance.document, current_department_name)
-                new_folder_path = os.path.join(folder_target, dokumen_instance.document, nma_departemen)
-                
-                if os.path.exists(old_folder_path):
-                    os.rename(old_folder_path, new_folder_path)
-                else:
-                    print(f"The directory '{old_folder_path}' does not exist.")
-            except:
-                print(f"Dokumen with id {dok_id} does not exist.")
+            # Rename the directory for each selected document
+            for dok_id in selected_dokumen_ids:
+                try:
+                    dokumen_instance = Dokumen.objects.get(id=dok_id)
+                    old_folder_path = os.path.join(folder_target, dokumen_instance.document, current_department_name)
+                    new_folder_path = os.path.join(folder_target, dokumen_instance.document, nma_departemen)
+                    
+                    if os.path.exists(old_folder_path):
+                        os.rename(old_folder_path, new_folder_path)
+                    else:
+                        print(f"The directory '{old_folder_path}' does not exist.")
+                except:
+                    print(f"Dokumen with id {dok_id} does not exist.")
 
-        return redirect(self.request.META.get('HTTP_REFERER'))
-    
+            return redirect(self.request.META.get('HTTP_REFERER'))
+        else:
+            raise PermissionDenied("You do not have the necessary permissions.")
+            
 
 class DepartemenActivateDeactivateView(UpdateView): # Show in modal
 
     def post(self, request, pk):
-        department_instance_update = Departemen.objects.get(id=pk)
-        opsi_aktivasi = request.POST.get('aktivasi')
+        if self.request.user.is_superuser or self.request.user.is_releaser:
+            department_instance_update = Departemen.objects.get(id=pk)
+            opsi_aktivasi = request.POST.get('aktivasi')
 
-        if opsi_aktivasi == "nonaktif":
-            department_instance_update.is_active = False
-            department_instance_update.save(update_fields=['is_active'])
+            if opsi_aktivasi == "nonaktif":
+                department_instance_update.is_active = False
+                department_instance_update.save(update_fields=['is_active'])
+            else:
+                department_instance_update.is_active = True
+                department_instance_update.save(update_fields=['is_active'])
+
+            return redirect(self.request.META.get('HTTP_REFERER'))
         else:
-            department_instance_update.is_active = True
-            department_instance_update.save(update_fields=['is_active'])
-
-        return redirect(self.request.META.get('HTTP_REFERER'))
+            raise PermissionDenied("You do not have the necessary permissions.")
     
 
 class DepartemenDeleteView(DeleteView): # Show in modal
 
     def post(self, request, pk):
-        department_instance_delete = Departemen.objects.get(id=pk)
+        if self.request.user.is_superuser or self.request.user.is_releaser:
+            department_instance_delete = Departemen.objects.get(id=pk)
 
-        # Check if there are related instances of Arsip with the same parent department
-        if Arsip.objects.filter(parent_department=pk).exists():
-            # If related Arsip instances exist, raise PermissionDenied
-            raise PermissionDenied("Cannot delete this department because related Arsip instances exist.")
-        
-        # Check if there are related instances of Arsip with the same parent department
-        if UserDetail.objects.filter(user_department=pk).exists():
-            # If related Arsip instances exist, raise PermissionDenied
-            raise PermissionDenied("Cannot delete this department because related UserDetail instances exist.")
+            # Check if there are related instances of Arsip with the same parent department
+            if Arsip.objects.filter(parent_department=pk).exists():
+                # If related Arsip instances exist, raise PermissionDenied
+                raise PermissionDenied("Cannot delete this department because related Arsip instances exist.")
+            
+            # Check if there are related instances of Arsip with the same parent department
+            if UserDetail.objects.filter(user_department=pk).exists():
+                # If related Arsip instances exist, raise PermissionDenied
+                raise PermissionDenied("Cannot delete this department because related UserDetail instances exist.")
 
 
-        # Iterate over each relasi_departemen instance
-        for relasi_departemen in department_instance_delete.related_document.all():
-            # Construct the path to the directory
-            path = os.path.join(folder_target, relasi_departemen.document, department_instance_delete.department)
+            # Iterate over each relasi_departemen instance
+            for relasi_departemen in department_instance_delete.related_document.all():
+                # Construct the path to the directory
+                path = os.path.join(folder_target, relasi_departemen.document, department_instance_delete.department)
 
-            if os.path.exists(path):
-                os.rmdir(path)
+                if os.path.exists(path):
+                    os.rmdir(path)
 
-        department_instance_delete.delete()
+            department_instance_delete.delete()
 
-        return redirect(self.request.META.get('HTTP_REFERER'))
+            return redirect(self.request.META.get('HTTP_REFERER'))
+        else:
+            raise PermissionDenied("You do not have the necessary permissions.")
     
 
 # Versi update u/ delete

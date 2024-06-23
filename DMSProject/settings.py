@@ -114,6 +114,12 @@ AUTH_LDAP_USER_SEARCH = LDAPSearch(
     "(sAMAccountName=%(user)s)"  # Filter for sAMAccountName
 )
 
+# Connection options
+AUTH_LDAP_CONNECTION_OPTIONS = {
+    ldap.OPT_REFERRALS: 0,
+    ldap.OPT_NETWORK_TIMEOUT: 5  # Timeout in seconds
+}
+
 # User attribute mapping
 AUTH_LDAP_USER_ATTR_MAP = {
     "username": "sAMAccountName",  # Map sAMAccountName to username
@@ -152,8 +158,9 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 # URL settings
-LOGIN_URL = '/login/'  # Set your login URL
+LOGIN_URL = '/auth/login/'  # Set your login URL
 LOGIN_REDIRECT_URL = '/'  # Redirect URL after login
+LOGOUT_REDIRECT_URL = '/' # Redirect to the homepage or another appropriate URL
 
 
 # Django settings for authentication backends

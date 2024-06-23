@@ -5,8 +5,8 @@ import os
 # Create your models here.
 class Departemen(models.Model):
     department = models.CharField(max_length=100, null=True)
-    department_code = models.CharField(max_length=10, null=True, blank=True)
-    company = models.CharField(max_length=100, null=True, blank=True)
+    department_code = models.CharField(max_length=10, blank=True)
+    company = models.CharField(max_length=100, blank=True)
     address = models.TextField(blank=True)
     is_active = models.BooleanField(default=True)
     created_date = models.DateTimeField(auto_now_add=True)
