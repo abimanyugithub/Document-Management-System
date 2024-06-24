@@ -16,6 +16,7 @@
               </ol>
             </nav>
           </div>
+          {% if user.is_superuser or user.is_releaser %}
           <div class="col-12 col-xl-4">
             <div class="justify-content-end d-flex">
               <div class="dropdown flex-md-grow-1 flex-xl-grow-0">
@@ -26,6 +27,7 @@
               </div>
             </div>
           </div>
+          {% endif %}
         </div>
       </div>
     </div>
@@ -59,20 +61,18 @@
                   <tr>
                     {% for field in fields %}
                       {% if obj|get_field_value:field != None %}
-                      <td>{{ obj|get_field_value:field|capfirst }}</td>
-                      {% else %}
-                      <td>--</td>
+                        <td>{{ obj|get_field_value:field|capfirst }}</td>
                       {% endif %}
                     {% endfor %}
                     <td>
                       <div class="d-flex">
-                        <button type="button" class="mr-2 btn btn-social-icon btn-twitter btn-rounded" data-toggle="modal" data-target="#mod0-{{ obj.id }}" {% if not obj.is_active %} disabled {% endif %}>
+                        <button type="button" class="mr-2 btn btn-social-icon btn-twitter btn-rounded" data-toggle="modal" data-target="#mod0-{{ obj.id }}" {% if not user.is_superuser and not user.is_releaser %} disabled {% elif not obj.is_active %} disabled {% endif %}>
                           <i class="ti-pencil-alt"></i>
                         </button>
-                        <button type="button" class="mr-2 btn btn-social-icon btn-rounded {% if obj.is_active %}btn-facebook{% else %}btn-secondary{% endif %}" data-toggle="modal" data-target="#mod1-{{ obj.id }}">
+                        <button type="button" class="mr-2 btn btn-social-icon btn-rounded {% if obj.is_active %}btn-facebook{% else %}btn-secondary{% endif %}" data-toggle="modal" data-target="#mod1-{{ obj.id }}" {% if not user.is_superuser and not user.is_releaser %} disabled {% endif%}>
                           <i class="ti-check-box"></i>
                         </button>
-                        <button type="button" class="btn btn-social-icon btn-dribbble btn-rounded" data-toggle="modal" data-target="#mod2-{{ obj.id }}">
+                        <button type="button" class="btn btn-social-icon btn-dribbble btn-rounded" data-toggle="modal" data-target="#mod2-{{ obj.id }}" {% if not user.is_superuser and not user.is_releaser %} disabled {% endif%}>
                           <i class="ti-trash"></i>
                         </button>
                       </div>
@@ -87,7 +87,7 @@
       </div>
     </div>
   </div>
-{% include 'DMSApp/CrudMenuDokumen/modal_update.html' %}
-{% include 'DMSApp/CrudMenuDokumen/modal_create.html' %}
-{% include 'DMSApp/CrudMenuDokumen/modal_delete.html' %}
+{% include 'DMSApp/CrudKategoriDokumen/modal_update.html' %}
+{% include 'DMSApp/CrudKategoriDokumen/modal_create.html' %}
+{% include 'DMSApp/CrudKategoriDokumen/modal_delete.html' %}
 {% include 'DMSApp/Komponen/footer.html' %}

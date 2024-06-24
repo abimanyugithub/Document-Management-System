@@ -46,7 +46,7 @@ class UserDetail(AbstractUser):
     '''
 
     
-class Dokumen(models.Model):
+class Dokumen(models.Model): # as Document Category 
     document = models.CharField(max_length=100, null=True)
     document_initial = models.CharField(max_length=10, null=True)
     created_date = models.DateTimeField(auto_now_add=True)

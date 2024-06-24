@@ -96,16 +96,11 @@ class LoginView(LoginView):
             user = authenticate(self.request, username=username, password=password)
 
         if user is not None:
-            login(self.request, user)
+            login(self.request, user, backend='django.contrib.auth.backends.ModelBackend')
             return redirect(self.get_success_url())
         else:
             # Optionally, you can log the failure reason or take some other action
             return self.form_invalid(form)
-        
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['superuser_exist'] = UserDetail.objects.filter(is_superuser=True, is_active=True)
-        return context
         
 class LogoutView(View):
 
@@ -188,26 +183,30 @@ class AkunRegisterView(CreateView):
     success_url = '/account/page/'
 
     def form_valid(self, form):
-        password = form.cleaned_data['password']
-        confirm_password = self.request.POST.get('password2')
+        if self.request.user.is_superuser or not UserDetail.objects.filter(is_superuser=True, is_active=True):
+            password = form.cleaned_data['password']
+            confirm_password = self.request.POST.get('password2')
 
-        # Check if passwords match
-        if password == confirm_password:
-            # Hash the password before saving
-            form.instance.set_password(form.cleaned_data['password'])
-            form.instance.is_ldap = False
+            # Check if passwords match
+            if password == confirm_password:
+                # Hash the password before saving
+                form.instance.set_password(form.cleaned_data['password'])
+                form.instance.is_ldap = False
 
-            # if superuser not exist
-            if not UserDetail.objects.filter(is_superuser=True, is_active=True):
-                form.instance.is_superuser = True
-                self.object = form.save()
-                # if form.cleaned_data.get('username'):
-                # return redirect('/')self.success_url
-                return redirect(self.success_url)
+                # if superuser not exist
+                if not UserDetail.objects.filter(is_superuser=True, is_active=True):
+                    form.instance.is_superuser = True
+                    self.object = form.save()
+                    # if form.cleaned_data.get('username'):
+                    # return redirect('/')self.success_url
+                    return redirect(self.success_url)
+            else:
+                return redirect(self.request.META.get('HTTP_REFERER'))
+            
+            return super().form_valid(form)
         else:
-            return redirect(self.request.META.get('HTTP_REFERER'))
+            raise PermissionDenied("Cannot update this account because it is a superuser.")
         
-        return super().form_valid(form)
 
 class AkunListView(LoginRequiredMixin, CreateView, ListView): # CreateView as Update in modal
     model = UserDetail
@@ -235,7 +234,7 @@ class AkunListView(LoginRequiredMixin, CreateView, ListView): # CreateView as Up
         fields_boolean = {'is_uploader': 'Upload', 'is_releaser': 'Release', 'is_approver': 'Approve', 'is_superuser':'Superuser' }
         
         # If list user(s) not a superuser
-        if not self.object_list.filter(is_superuser=True):
+        if not self.object_list.filter(is_superuser=True, is_active=True):
             context['fields_boolean'] = fields_boolean
             context['fields'] = fields_view
 
@@ -256,37 +255,40 @@ class AkunUpdateView(UpdateView): # Show in modal
     fields = []
     
     def post(self, request, pk):
-        user_instance_update = UserDetail.objects.get(id=pk)
-        id_departemen = request.POST.get('user_department')
-        nma_depan = request.POST.get('first_name')
-        nma_belakang = request.POST.get('last_name')
-        surel = request.POST.get('email')
+        if self.request.user.is_superuser or self.request.user.is_releaser or not UserDetail.objects.filter(is_superuser=True, is_active=True):
+            user_instance_update = UserDetail.objects.get(id=pk)
+            id_departemen = request.POST.get('user_department')
+            nma_depan = request.POST.get('first_name')
+            nma_belakang = request.POST.get('last_name')
+            surel = request.POST.get('email')
 
-        # Retrieve the Departemen instance based on id_departemen
-        # departemen_instance = Departemen.objects.get(id=id_departemen)
-        
-        # Assign the Departemen instance to user_department
-        if id_departemen:
-            user_instance_update.user_department = Departemen.objects.get(id=id_departemen)
-        if nma_depan:
-            user_instance_update.first_name = nma_depan
-        if nma_belakang:
-            user_instance_update.last_name = nma_belakang
-        if surel:
-            user_instance_update.email = surel
+            # Retrieve the Departemen instance based on id_departemen
+            # departemen_instance = Departemen.objects.get(id=id_departemen)
             
-        # Retrieve all possible keys for checkboxes
-        possible_keys = ['is_approver', 'is_releaser', 'is_uploader', 'is_superuser']
+            # Assign the Departemen instance to user_department
+            if id_departemen:
+                user_instance_update.user_department = Departemen.objects.get(id=id_departemen)
+            if nma_depan:
+                user_instance_update.first_name = nma_depan
+            if nma_belakang:
+                user_instance_update.last_name = nma_belakang
+            if surel:
+                user_instance_update.email = surel
+                
+            # Retrieve all possible keys for checkboxes
+            possible_keys = ['is_approver', 'is_releaser', 'is_uploader', 'is_superuser']
 
-        # Iterate over all possible keys
-        for key in possible_keys:
-            # Set attribute to True if key is in request.POST.getlist('checklist_label'), otherwise set to False
-            setattr(user_instance_update, key, key in request.POST.getlist('checklist_label'))
+            # Iterate over all possible keys
+            for key in possible_keys:
+                # Set attribute to True if key is in request.POST.getlist('checklist_label'), otherwise set to False
+                setattr(user_instance_update, key, key in request.POST.getlist('checklist_label'))
 
-        # Save the updated instance
-        user_instance_update.save()
-        
-        return redirect(self.request.META.get('HTTP_REFERER'))
+            # Save the updated instance
+            user_instance_update.save()
+            
+            return redirect(self.request.META.get('HTTP_REFERER'))
+        else:
+            raise PermissionDenied("Cannot update this account because it is a superuser.")
 
 class AkunActivateDeactivateView(UpdateView): # Show in modal
 
@@ -303,7 +305,7 @@ class AkunActivateDeactivateView(UpdateView): # Show in modal
                 account_instance_update.save(update_fields=['is_active'])
             return redirect(self.request.META.get('HTTP_REFERER'))
         else:
-            raise PermissionDenied("Cannot update this account because it is a superuse.")
+            raise PermissionDenied("Cannot update this account because it is a superuser.")
         
 
 class AkunDeleteView(DeleteView): # Show in modal
@@ -317,7 +319,6 @@ class AkunDeleteView(DeleteView): # Show in modal
             raise PermissionDenied("Cannot delete this account because it is a superuse")
         
 
-# jangan dihapus (no ldap)
 class DepartemenListView(CreateView, ListView): # CreateView show in modal
     model = Departemen
     template_name = 'DMSApp/CrudDepartemen/view.html'
@@ -362,8 +363,8 @@ class DepartemenListView(CreateView, ListView): # CreateView show in modal
         # context['fields'] = [field.name for field in self.model._meta.get_fields()]
         return context
 
-# within ldap
 
+# within ldap
 '''class DepartemenListView(ListView):
     model = Departemen
     template_name = 'DMSApp/CrudDepartemen/view.html'
@@ -388,7 +389,7 @@ class DepartemenUpdateView(UpdateView): # Show in modal
             nma_departemen = request.POST.get('department')
             kode_departemen = request.POST.get('department_code')
 
-            if kode_departemen or kode_departemen.strip():
+            if kode_departemen:
                 if Departemen.objects.filter(department_code=kode_departemen).exclude(id=pk).exists():
                     raise PermissionDenied("Cannot update this code department because instances exist.")
             
@@ -487,7 +488,8 @@ class DepartemenDeleteView(DeleteView): # Show in modal
     
 
 # Versi update u/ delete
-'''class DepartemenDeleteView(UpdateView):
+'''
+class DepartemenDeleteView(UpdateView):
 
     def post(self, request, pk):
         department_instance_delete = Departemen.objects.get(id=pk)
@@ -501,13 +503,13 @@ class DepartemenDeleteView(DeleteView): # Show in modal
         department_instance_delete.is_deleted = True
         department_instance_delete.save(update_fields=['is_deleted'])
 
-        return redirect(self.request.META.get('HTTP_REFERER'))'''
+        return redirect(self.request.META.get('HTTP_REFERER'))
+'''
     
-
 
 class DokumenListView(CreateView, ListView): # CreateView show in modal
     model = Dokumen
-    template_name = 'DMSApp/CrudMenuDokumen/view.html'
+    template_name = 'DMSApp/CrudKategoriDokumen/view.html'
     context_object_name = 'dokumen_list'  # For ListView
     fields = ['document_initial', 'document']
     success_url = '/document/page/'
@@ -528,29 +530,29 @@ class DokumenListView(CreateView, ListView): # CreateView show in modal
         return context
     
     def form_valid(self, form):
-        # Check if a Dokumen with the same document already exists
-        nma_dokumen = form.cleaned_data['document']
-        init_dokumen = form.cleaned_data['document_initial']
+        if self.request.user.is_superuser or self.request.user.is_releaser:
 
-        # Check for duplicates of document name and document initial
-        if Dokumen.objects.filter(document=nma_dokumen).exists() or Dokumen.objects.filter(document_initial=init_dokumen).exists():
-            if Dokumen.objects.filter(document=nma_dokumen).exists():
-                form.add_error('document', "A document with this name already exists.")
-            if Dokumen.objects.filter(document_initial=init_dokumen).exists():
-                form.add_error('document_initial', "A document with this initial already exists.")
-            return self.form_invalid(form)
-        
-        # If no duplicates, save the document
-        dokumen = form.save()
-        
-        # Handle related labels
-        selected_labels = self.request.POST.getlist('checklist_label')
-        for nma_label in selected_labels:
-            # Get or create the Label instance
-            label, created = DokumenLabel.objects.get_or_create(name=nma_label)
-            dokumen.related_label.add(label)
-        
-        return super().form_valid(form)
+            # Check for duplicates of document name and document initial
+            if Dokumen.objects.filter(document=form.cleaned_data['document']).exists():
+                # Raise PermissionDenied if a duplicate department is found
+                raise PermissionDenied("Cannot create this document because an instance with the same document already exists.")
+            
+            if Dokumen.objects.filter(document_initial=form.cleaned_data['document_initial']):
+                raise PermissionDenied("Cannot create this document because an instance with the same document with this initial code already exists.")
+            
+            # If no duplicates, save the document
+            dokumen = form.save()
+            
+            # Handle related labels
+            selected_labels = self.request.POST.getlist('checklist_label')
+            for nma_label in selected_labels:
+                # Get or create the Label instance
+                label, created = DokumenLabel.objects.get_or_create(name=nma_label)
+                dokumen.related_label.add(label)
+            
+            return super().form_valid(form)
+        else:
+            raise PermissionDenied("You do not have the necessary permissions.")
             
 
 class DokumenUpdateView(UpdateView): # Show in modal
@@ -558,99 +560,103 @@ class DokumenUpdateView(UpdateView): # Show in modal
     fields = []
 
     def post(self, request, pk):
-        document_instance_update = Dokumen.objects.get(id=pk)
-        nma_dokumen = request.POST.get('document')
-        init_dokumen = request.POST.get('document_initial')
-        # Check if there is an existing Dokumen
-        dokumen_yang_ada = Dokumen.objects.filter(document=nma_dokumen).exclude(id=pk).exists()
+        if self.request.user.is_superuser or self.request.user.is_releaser:
+            document_instance_update = Dokumen.objects.get(id=pk)
+            nma_dokumen = request.POST.get('document')
+            init_dokumen = request.POST.get('document_initial')
 
-        # Check if there is an existing initial dokumen
-        inisial_dokumen_yang_ada = Dokumen.objects.filter(document_initial=init_dokumen).exclude(id=pk).exists()
+            # Check if there is an existing Dokumen
+            if Dokumen.objects.filter(document=nma_dokumen).exclude(id=pk).exists():
+                # Raise PermissionDenied if a duplicate department is found
+                raise PermissionDenied("Cannot create this document because an instance with the same document already exists.")
 
-        # Get the current name of the document
-        current_document_name = document_instance_update.document
-
-        # Assuming you have a form instance to pass to the template
-        if dokumen_yang_ada or inisial_dokumen_yang_ada:
-            form = self.get_form()
-            if dokumen_yang_ada:
-                form.add_error('department', "A dokumen with this name already exists.")
-            if inisial_dokumen_yang_ada:
-                form.add_error('inisial_dokumen', "A dokumen with this initial already exists.")
-            return self.form_invalid(form)
-        
-
-        # Otherwise, update the Dokumen instance and redirect
-        document_instance_update.document = nma_dokumen
-        document_instance_update.document_initial = init_dokumen
-        document_instance_update.save()
-
-        # Clear the existing associations
-        document_instance_update.related_label.clear()
-
-        # Get the list of selected Label from the request
-        selected_labels = request.POST.getlist('checklist_label')
-        
-        for nma_label in selected_labels:
-            # Get or create the Label instance
-            label, created = DokumenLabel.objects.get_or_create(name=nma_label)
-            document_instance_update.related_label.add(label)
-
-        # Rename the directory
-        try:
-            old_folder_path = os.path.join(folder_target, current_document_name)
-            new_folder_path = os.path.join(folder_target, nma_dokumen)
+            # Check if there is an existing initial dokumen
+            if Dokumen.objects.filter(document_initial=init_dokumen).exclude(id=pk).exists():
+                raise PermissionDenied("Cannot create this document because an instance with the same document with this initial code already exists.")
             
-            if os.path.exists(old_folder_path):
-                os.rename(old_folder_path, new_folder_path)
-            else:
-                print(f"The directory '{old_folder_path}' does not exist.")
-        except:
-            print(f"Dokumen with id does not exist.")
+            # Get the current name of the document
+            current_document_name = document_instance_update.document            
 
-        return redirect(self.request.META.get('HTTP_REFERER'))
+            # Otherwise, update the Dokumen instance and redirect
+            document_instance_update.document = nma_dokumen
+            document_instance_update.document_initial = init_dokumen
+            document_instance_update.save()
+
+            # Clear the existing associations
+            document_instance_update.related_label.clear()
+
+            # Get the list of selected Label from the request
+            selected_labels = request.POST.getlist('checklist_label')
+            
+            for nma_label in selected_labels:
+                # Get or create the Label instance
+                label, created = DokumenLabel.objects.get_or_create(name=nma_label)
+                document_instance_update.related_label.add(label)
+
+            # Rename the directory
+            try:
+                old_folder_path = os.path.join(folder_target, current_document_name)
+                new_folder_path = os.path.join(folder_target, nma_dokumen)
+                
+                if os.path.exists(old_folder_path):
+                    os.rename(old_folder_path, new_folder_path)
+                else:
+                    print(f"The directory '{old_folder_path}' does not exist.")
+            except:
+                print(f"Dokumen with id does not exist.")
+
+            return redirect(self.request.META.get('HTTP_REFERER'))
+        else:
+            raise PermissionDenied("You do not have the necessary permissions.")
     '''
         old_folder_path = os.path.join(folder_target, current_document_name)
         new_folder_path = os.path.join(folder_target, nma_dokumen)
         os.rename(old_folder_path, new_folder_path)
 
-        return redirect(self.request.META.get('HTTP_REFERER'))'''
+        return redirect(self.request.META.get('HTTP_REFERER'))
+    '''
 
 
 class DokumenActivateDeactivateView(UpdateView): # Show in modal
 
     def post(self, request, pk):
-        menu_document_instance_update = Dokumen.objects.get(id=pk)
-        opsi_aktivasi = request.POST.get('aktivasi')
+        if self.request.user.is_superuser or self.request.user.is_releaser:
+            menu_document_instance_update = Dokumen.objects.get(id=pk)
+            opsi_aktivasi = request.POST.get('aktivasi')
 
-        if opsi_aktivasi == "nonaktif":
-            menu_document_instance_update.is_active = False
-            menu_document_instance_update.save(update_fields=['is_active'])
+            if opsi_aktivasi == "nonaktif":
+                menu_document_instance_update.is_active = False
+                menu_document_instance_update.save(update_fields=['is_active'])
+            else:
+                menu_document_instance_update.is_active = True
+                menu_document_instance_update.save(update_fields=['is_active'])
+
+            return redirect(self.request.META.get('HTTP_REFERER'))
         else:
-            menu_document_instance_update.is_active = True
-            menu_document_instance_update.save(update_fields=['is_active'])
-
-        return redirect(self.request.META.get('HTTP_REFERER'))
+            raise PermissionDenied("You do not have the necessary permissions.")
     
 class DokumenDeleteView(DeleteView): # Show in modal
 
     def post(self, request, pk):
-        dokumen_instance_delete = Dokumen.objects.get(id=pk)
+        if self.request.user.is_superuser or self.request.user.is_releaser:
+            dokumen_instance_delete = Dokumen.objects.get(id=pk)
 
-        # Check if there is an existing
-        if Arsip.objects.filter(parent_document=pk).exists():
-            # If related Arsip instances exist, raise PermissionDenied
-            raise PermissionDenied("Cannot delete this document because related Arsip instances exist.")
+            # Check if there is an existing
+            if Arsip.objects.filter(parent_document=pk).exists():
+                # If related Arsip instances exist, raise PermissionDenied
+                raise PermissionDenied("Cannot delete this document because related Arsip instances exist.")
 
-        # Construct the path to the directory
-        path = os.path.join(folder_target, dokumen_instance_delete.document)
+            # Construct the path to the directory
+            path = os.path.join(folder_target, dokumen_instance_delete.document)
 
-        if os.path.exists(path):
-            shutil.rmtree(path)
+            if os.path.exists(path):
+                shutil.rmtree(path)
 
-        dokumen_instance_delete.delete()
+            dokumen_instance_delete.delete()
 
-        return redirect(self.request.META.get('HTTP_REFERER'))
+            return redirect(self.request.META.get('HTTP_REFERER'))
+        else:
+            raise PermissionDenied("You do not have the necessary permissions.")
     
 
 class ArsipListView(ListView):
