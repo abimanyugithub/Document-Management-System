@@ -78,7 +78,7 @@
                         {% else %}
                         <div class="form-group">
                           <label>{{ value.label }}</label>
-                          <input type="file" name="{{ key }}" class="file-upload-default" accept="{{ value.extension }}" {% if value.label == "PDF File" %}onchange="displayPDF(this)"{% endif %}>
+                          <input type="file" name="{{ key }}" class="file-upload-default" accept="{{ value.extension }}" {% if value.label == "PDF File" %}onchange="displayPDF(this)"{% endif %} required>
                           <div class="input-group col-xs-12">
                             <input type="text" class="form-control file-upload-info" disabled placeholder="{{ value.label }}">
                             <span class="input-group-append">

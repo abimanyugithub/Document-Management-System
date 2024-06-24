@@ -60,7 +60,7 @@ class Dokumen(models.Model): # as Document Category
 class DokumenLabel(models.Model):
     name = models.CharField(max_length=100)
 
-class Arsip(models.Model):
+class Arsip(models.Model): # as Document File 
     parent_document = models.ForeignKey(Dokumen, on_delete=models.CASCADE)
     parent_department = models.ForeignKey(Departemen, on_delete=models.CASCADE)
     form_no = models.CharField(max_length=100, null=True)

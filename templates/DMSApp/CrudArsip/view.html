@@ -42,14 +42,16 @@
     {% if not nm_dokumen %}
     <div class="row">
       {% for dl in departemen_list %}
-      <div class="col-xl-4 mb-4 stretch-card transparent">
-        <button onclick="window.location.href='{% url 'arsip_view' %}?menu={{ dl.document|custom_slugify }}&dept={{ nm_departemen|custom_slugify }}'" 
-        class="card card-dark-blue border-0 shadow">
-            <div class="card-body">
-              <p class="m-1">{{ dl.document|capfirst }}</p>
-            </div>
-          </button>
-      </div>
+        {% if dl.is_active %}
+        <div class="col-xl-4 mb-4 stretch-card transparent">
+          <button onclick="window.location.href='{% url 'arsip_view' %}?menu={{ dl.document|custom_slugify }}&dept={{ nm_departemen|custom_slugify }}'" 
+          class="card card-dark-blue border-0 shadow">
+              <div class="card-body">
+                <p class="m-1">{{ dl.document|capfirst }}</p>
+              </div>
+            </button>
+        </div>
+        {% endif %}
       {% endfor %}
     </div>
     {% endif %}

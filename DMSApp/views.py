@@ -365,7 +365,8 @@ class DepartemenListView(CreateView, ListView): # CreateView show in modal
 
 
 # within ldap
-'''class DepartemenListView(ListView):
+'''
+class DepartemenListView(ListView):
     model = Departemen
     template_name = 'DMSApp/CrudDepartemen/view.html'
     context_object_name = 'departemen_list'  # For ListView
@@ -376,7 +377,8 @@ class DepartemenListView(CreateView, ListView): # CreateView show in modal
         fields = {'department': 'Department'} # Fields to display
         context['fields'] = fields
         # context['fields'] = [field.name for field in self.model._meta.get_fields()]
-        return context'''
+        return context
+'''
 
 
 class DepartemenUpdateView(UpdateView): # Show in modal
@@ -670,7 +672,7 @@ class ArsipListView(ListView):
 
         if nma_departemen:
             # Retrieve the Departemen object with the given department_id
-            departemen = Departemen.objects.get(department=nma_departemen)
+            departemen = Departemen.objects.get(department=nma_departemen, is_active=True)
                 
             # Retrieve the related MenuDokumen objects for the Departemen
             queryset = departemen.related_document.all().order_by('document')
@@ -691,9 +693,7 @@ class ArsipListView(ListView):
                 nma_label = Dokumen.objects.get(document=nma_dokumen)
                 relasi_label = nma_label.related_label.all()
                 context['nm_label'] = relasi_label
-                
-                # context['arsip_listx'] = Arsip.objects.filter(parent_document__document=nma_dokumen, parent_department__department=nma_departemen, is_active=True).values('document_no').distinct()
-                
+
                 # Fetch the queryset
                 arsip_list = Arsip.objects.filter(parent_document__document=nma_dokumen, parent_department__department=nma_departemen).order_by('document_no', '-revision_no')
 
