@@ -11,7 +11,7 @@ class Departemen(models.Model):
     is_active = models.BooleanField(default=True)
     created_date = models.DateTimeField(auto_now_add=True)
     modified_date = models.DateTimeField(auto_now=True)
-    related_document = models.ManyToManyField('Dokumen')
+    related_category = models.ManyToManyField('KategoriDokumen')
 
     def __str__(self):
         return self.department
@@ -46,25 +46,26 @@ class UserDetail(AbstractUser):
     '''
 
     
-class Dokumen(models.Model): # as Document Category 
-    document = models.CharField(max_length=100, null=True)
-    document_initial = models.CharField(max_length=10, null=True)
+class KategoriDokumen(models.Model):
+    category = models.CharField(max_length=100, null=True)
+    category_initial = models.CharField(max_length=10, null=True)
     created_date = models.DateTimeField(auto_now_add=True)
     modified_date = models.DateTimeField(auto_now=True)
     is_active = models.BooleanField(default=True)
-    related_label = models.ManyToManyField('DokumenLabel')
+    related_label = models.ManyToManyField('KategoriDokumenLabel')
 
     def __str__(self):
-        return self.document
+        return self.category
 
-class DokumenLabel(models.Model):
+class KategoriDokumenLabel(models.Model):
     name = models.CharField(max_length=100)
 
-class Arsip(models.Model): # as Document File 
-    parent_document = models.ForeignKey(Dokumen, on_delete=models.CASCADE)
+class Dokumen(models.Model):
+    parent_category = models.ForeignKey(KategoriDokumen, on_delete=models.CASCADE)
     parent_department = models.ForeignKey(Departemen, on_delete=models.CASCADE)
     form_no = models.CharField(max_length=100, null=True)
     document_no = models.CharField(max_length=100, null=True)
+    sub_document_no = models.CharField(max_length=100, null=True)
     document_name = models.CharField(max_length=100, null=True)
     effective_date = models.DateTimeField(null=True)
     revision_no = models.CharField(max_length=100, null=True)

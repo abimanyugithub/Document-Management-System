@@ -297,7 +297,7 @@
             <div class="collapse" id="ui-basic">
               <ul class="nav flex-column sub-menu">
                 <li class="nav-item"> <a class="nav-link" href="{% url 'departemen_view' %}">Departments</a></li>
-                <li class="nav-item"> <a class="nav-link" href="{% url 'dokumen_view' %}">Documents</a></li>
+                <li class="nav-item"> <a class="nav-link" href="{% url 'kategori_dokumen_view' %}">Doc. Categories</a></li>
               </ul>
             </div>
           </li>
@@ -324,11 +324,8 @@
             </a>
             <div class="collapse" id="fms">
               <ul class="nav flex-column sub-menu">
-                <!-- {% for sub in menu_list_dokumen %}
-                <li class="nav-item"> <a class="nav-link" href="{% url 'dokumen_view' %}?menu={{ sub.document }}"> {{ sub.document|capfirst }}</a></li>
-                {% endfor %} -->
                 {% for sub in cp_departemen_list %}
-                <li class="nav-item"> <a class="nav-link" href="{% url 'arsip_view' %}?dept={{ sub.department|custom_slugify }}"> {{ sub.department|capfirst }}</a></li>
+                <li class="nav-item"> <a class="nav-link" href="{% url 'dokumen_view' %}?department={{ sub.department|custom_slugify }}"> {{ sub.department|capfirst }}</a></li>
                 {% endfor %}
               </ul>
             </div>

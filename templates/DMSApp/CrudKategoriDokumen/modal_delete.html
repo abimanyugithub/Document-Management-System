@@ -1,7 +1,7 @@
 {% load custom_filters %}
 
 <!-- Modal delete document -->
-{% for obj in dokumen_list %}
+{% for obj in kategori_list %}
 <div class="modal fade" id="mod2-{{ obj.id }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">
@@ -25,7 +25,7 @@
         </div>
       </div>
       <div class="modal-footer">
-        <form class="forms-sample" method="post" action="{% url 'dokumen_is_delete' pk=obj.id %}">
+        <form class="forms-sample" method="post" action="{% url 'kategori_dokumen_is_delete' pk=obj.id %}">
           {% csrf_token %}
           <button type="submit" class="btn btn-dribbble">Delete</button>
       </form>

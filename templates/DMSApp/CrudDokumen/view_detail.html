@@ -85,7 +85,7 @@
                           {% for u in nm_label %}
                             {% if u.name == key %}
                               {% if value.type != "file" %}
-                              <td>{{ obj|get_field_value:key|capfirst }}</td>
+                              <td>{% if value.label == "Document ID" %}{{ obj.parent_document.document_initial }}.{% endif %}{{ obj|get_field_value:key|capfirst }}</td>
                               {% endif %}
                             {% endif %}
                           {% endfor %}

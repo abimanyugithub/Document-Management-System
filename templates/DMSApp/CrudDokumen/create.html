@@ -26,7 +26,7 @@
                 <li class="breadcrumb-item active">{{ kode_arsip }}</li>
                 <li class="breadcrumb-item active">Revision</li>
                 {% else %}
-                <li class="breadcrumb-item active">Register</li> {{ username }}
+                <li class="breadcrumb-item active">Register</li>
                 {% endif %}
               </ol>
             </nav>
@@ -61,31 +61,40 @@
                     {% for u in nm_label %}
                       {% if u.name == key %}
                         {% if value.type != "file" %}
-                        <div class="form-group">
-                          <label for="{{ key }}">{{ value.label }}</label>
-                          <input type="{{ value.type }}" class="form-control" id="{{ key }}" name="{{ key }}" placeholder="{{ value.label }}" required 
-                          
-                          {% for obj in archive_list %}
-                            {% if value.label == "Document Title" %} value="{{ obj|get_field_value:key }}" readonly{% endif %}
-                            {% if value.label == "Document ID" %} value="{{ obj|get_field_value:key }}" readonly{% endif %}
-                          {% endfor %}
+                          <div class="form-group">
+                            <label for="{{ key }}">{{ value.label }}</label>
 
-                          {% if value.label == "Document ID" %} value="{{ nma_inisial|upper }}." {% endif %}
-                          >
-                          <!-- <input type="{{ value.type }}" class="form-control" id="{{ key }}" name="{{ key }}" placeholder="{{ value.label }}" required
-                          {% if value.label == "Revision No" %}value="00" readonly {% elif value.label == "Document Number" %} value="{{ nma_inisial|upper }}." {% endif %}> -->
-                        </div>
-                        {% else %}
-                        <div class="form-group">
-                          <label>{{ value.label }}</label>
-                          <input type="file" name="{{ key }}" class="file-upload-default" accept="{{ value.extension }}" {% if value.label == "PDF File" %}onchange="displayPDF(this)"{% endif %} required>
-                          <div class="input-group col-xs-12">
-                            <input type="text" class="form-control file-upload-info" disabled placeholder="{{ value.label }}">
-                            <span class="input-group-append">
-                              <button class="file-upload-browse btn btn-primary" type="button">Browse</button>
-                            </span>
+                            {% if value.label == "Document ID" %}
+                              <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text input-group-text text-dark bg-white border-0" id="staticText">{{ nma_inisial|upper }} — </span>
+                                </div>
+                                <input type="{{ value.type }}" class="form-control" id="{{ key }}" name="{{ key }}" placeholder="{{ value.label }}" value="{{ penomeran_dokumen }}" required >
+                                <span class="input-group-text input-group-text text-dark bg-white border-0" id="staticText"> — </span>
+                                <input type="text" class="form-control" name="sub_doc_no" placeholder="Sub {{ value.label }}">
+                              </div>
+                            {% else %}
+
+                            <input type="{{ value.type }}" class="form-control" id="{{ key }}" name="{{ key }}" placeholder="{{ value.label }}" required 
+                            
+                            {% for obj in archive_list %}
+                              {% if value.label == "Document Title" %} value="{{ obj|get_field_value:key }}" readonly{% endif %}
+                              {% if value.label == "Document ID" %} value="{{ obj|get_field_value:key }}" readonly{% endif %}
+                            {% endfor %}>
+                            {% endif %}
+
                           </div>
-                        </div>
+                        {% else %}
+                          <div class="form-group">
+                            <label>{{ value.label }}</label>
+                            <input type="file" name="{{ key }}" class="file-upload-default" accept="{{ value.extension }}" {% if value.label == "PDF File" %}onchange="displayPDF(this)"{% endif %} required>
+                            <div class="input-group col-xs-12">
+                              <input type="text" class="form-control file-upload-info" disabled placeholder="{{ value.label }}">
+                              <span class="input-group-append">
+                                <button class="file-upload-browse btn btn-primary" type="button">Browse</button>
+                              </span>
+                            </div>
+                          </div>
                         {% endif %}
                       {% endif %}
                     {% endfor %}

@@ -1,7 +1,7 @@
 {% load custom_filters %}
 
-<!-- Modal update menu document -->
-{% for obj in dokumen_list %}
+<!-- Modal update kategori dokumen -->
+{% for obj in kategori_list %}
 <div class="modal fade" id="mod0-{{ obj.id }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true" data-backdrop="static">
   <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
     <div class="modal-content">
@@ -15,7 +15,7 @@
         </button>
       </div>
       <div class="modal-body">
-        <form class="forms-sample" autocomplete="off" method="post" action="{% url 'dokumen_update' pk=obj.id %}" enctype="multipart/form-data">
+        <form class="forms-sample" autocomplete="off" method="post" action="{% url 'kategori_dokumen_update' pk=obj.id %}" enctype="multipart/form-data">
           {% csrf_token %}
           <div class="row">
             <div class="col">
@@ -65,8 +65,8 @@
 </div>
 {% endfor %}
 
-<!-- Modal disable menu document -->
-{% for obj in dokumen_list %}
+<!-- Modal disable kategori dokumen -->
+{% for obj in kategori_list %}
 <div class="modal fade" id="mod1-{{ obj.id }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">
@@ -90,7 +90,7 @@
           </div>
       </div>
       <div class="modal-footer">
-        <form class="forms-sample" method="post" action="{% url 'dokumen_is_active' pk=obj.id %}">
+        <form class="forms-sample" method="post" action="{% url 'kategori_dokumen_is_active' pk=obj.id %}">
           {% csrf_token %}
           <input type="hidden" name="aktivasi" {% if obj.is_active %}value="nonaktif"{% endif %}>
         <button type="submit" class="btn btn-twitter">Save</button>

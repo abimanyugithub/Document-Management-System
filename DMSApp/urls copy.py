@@ -22,13 +22,19 @@ urlpatterns = [
     path('department/activation/<str:pk>/', views.DepartemenActivateDeactivateView.as_view(), name='departemen_is_active'),
     path('department/delete/<str:pk>/', views.DepartemenDeleteView.as_view(), name='departemen_is_delete'),
 
-    path('category/page/', views.KategoriDokumenListView.as_view(), name='kategori_dokumen_view'),
-    path('category/update/<str:pk>/', views.KategoriDokumenUpdateView.as_view(), name='kategori_dokumen_update'),
-    path('category/activation/<str:pk>/', views.KategoriDokumenActivateDeactivateView.as_view(), name='kategori_dokumen_is_active'),
-    path('category/delete/<str:pk>/', views.KategoriDokumenDeleteView.as_view(), name='kategori_dokumen_is_delete'),
+    path('document/page/', views.DokumenListView.as_view(), name='dokumen_view'),
+    path('document/update/<str:pk>/', views.DokumenUpdateView.as_view(), name='dokumen_update'),
+    path('document/activation/<str:pk>/', views.DokumenActivateDeactivateView.as_view(), name='dokumen_is_active'),
+    path('document/delete/<str:pk>/', views.DokumenDeleteView.as_view(), name='dokumen_is_delete'),
 
-    path('document/view/', views.DokumenListView.as_view(), name='dokumen_view'),
-    path('document/create/', views.DokumenCreateView.as_view(), name='dokumen_create'),
+    path('archive/view/', views.ArsipListView.as_view(), name='arsip_view'),
+    path('archive/create/', views.ArsipCreateView.as_view(), name='arsip_create'),
+    path('archive/update/<str:pk>/', views.ArsipUpdateView.as_view(), name='arsip_update'),
+    path('archive/delete/<str:pk>/', views.ArsipDeleteView.as_view(), name='arsip_is_delete'),
+    path('archive/detail/<str:pk>/', views.ArsipDetailView.as_view(), name='arsip_detail'),
+    path('archive/detail-list/', views.ArsipDetailListView.as_view(), name='arsip_list_detail'),
+    path('archive/update-status/<str:pk>/', views.ArchiveUpdateStatusView.as_view(), name='arsip_status_update'),
+    path('archive/activation/<str:pk>/', views.ArsipActivateDeactivateView.as_view(), name='arsip_is_active')
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

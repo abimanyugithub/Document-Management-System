@@ -16,38 +16,40 @@
                 {% if nm_departemen %}
                 <li class="breadcrumb-item active" aria-current="page">{{ nm_departemen|capfirst }}</li>
                 {% endif %}
-                <li class="breadcrumb-item active" aria-current="page">{% if nm_dokumen %}<a href='{% url 'arsip_view' %}?dept={{ nm_departemen|custom_slugify }}'>{% endif %}Category</a></li>
-                {% if nm_dokumen %}
-                <li class="breadcrumb-item active" aria-current="page">{{ nm_dokumen|capfirst }}</li>
+                <li class="breadcrumb-item active" aria-current="page">{% if nm_kategori %}<a href='{% url 'dokumen_view' %}?department={{ nm_departemen|custom_slugify }}'>{% endif %}Category</a></li>
+                {% if nm_kategori %}
+                <li class="breadcrumb-item active" aria-current="page">{{ nm_kategori|capfirst }}</li>
                 {% endif %}
               </ol>
             </nav>
           </div>
-          {% if nm_dokumen %}
-          <div class="col-12 col-xl-4">
-            <div class="justify-content-end d-flex">
-              <div class="dropdown flex-md-grow-1 flex-xl-grow-0">
-               <button onclick="window.location.href='{% url 'arsip_create' %}?menu={{ nm_dokumen|custom_slugify }}&dept={{ nm_departemen|custom_slugify }}'" class="btn btn-primary btn-icon-text">
-                  <i class="ti-plus btn-icon-prepend"></i>
-                  Register
-                </button>
+          {% if nm_kategori %}
+            {% if user.is_uploader and nm_departemen == user.user_department.department %}
+            <div class="col-12 col-xl-4">
+              <div class="justify-content-end d-flex">
+                <div class="dropdown flex-md-grow-1 flex-xl-grow-0">
+                <button onclick="window.location.href='{% url 'dokumen_create' %}?category={{ nm_kategori|custom_slugify }}&department={{ nm_departemen|custom_slugify }}'" class="btn btn-primary btn-icon-text">
+                    <i class="ti-plus btn-icon-prepend"></i>
+                    Register
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
+            {% endif %}
           {% endif %}
         </div>
       </div>
     </div>
 
-    {% if not nm_dokumen %}
+    {% if not nm_kategori %}
     <div class="row">
       {% for dl in departemen_list %}
         {% if dl.is_active %}
         <div class="col-xl-4 mb-4 stretch-card transparent">
-          <button onclick="window.location.href='{% url 'arsip_view' %}?menu={{ dl.document|custom_slugify }}&dept={{ nm_departemen|custom_slugify }}'" 
+          <button onclick="window.location.href='{% url 'dokumen_view' %}?category={{ dl.category|custom_slugify }}&department={{ nm_departemen|custom_slugify }}'" 
           class="card card-dark-blue border-0 shadow">
               <div class="card-body">
-                <p class="m-1">{{ dl.document|capfirst }}</p>
+                <p class="m-1">{{ dl.category|capfirst }}</p>
               </div>
             </button>
         </div>
@@ -56,7 +58,7 @@
     </div>
     {% endif %}
 
-    {% if nm_dokumen %}
+    {% if nm_kategori %}
     <div class="row">
       <div class="col-lg-12 grid-margin stretch-card">
         <div class="card shadow">
@@ -64,7 +66,7 @@
 
             <div class="row">
               <div class="col-8">
-                <h4 class="card-title">List - {{ nm_dokumen }}</h4>
+                <h4 class="card-title">List - {{ nm_kategori }}</h4>
                 <p class="card-description">
                   Add class <code>.table-striped</code>
                 </p>
@@ -98,7 +100,7 @@
                             {% if value.label == "Document Title" %}
                             <td><a href="{% url 'arsip_list_detail' %}?menu={{ nm_dokumen|custom_slugify }}&dept={{ nm_departemen|custom_slugify }}&archive={{ obj|get_field_value:key|custom_slugify }}">{{ obj|get_field_value:key|capfirst }}</a></td>
                             {% else %}
-                            <td>{{ obj|get_field_value:key }}</td>
+                            <td>{% if value.label == "Document ID" %}{{ obj.parent_document.document_initial }}.{% endif %}{{ obj|get_field_value:key }}.{% if obj.sub_document_no %}{{ obj.sub_document_no }}{% endif %}</td>
                             {% endif %}
                           {% endif %}
                         {% endif %}
