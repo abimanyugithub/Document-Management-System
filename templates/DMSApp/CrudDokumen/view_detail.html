@@ -123,23 +123,3 @@
 {% include 'DMSApp/CrudDokumen/modal_delete.html' %}
 {% include 'DMSApp/CrudDokumen/modal_update.html' %}
 {% include 'DMSApp/Komponen/footer.html' %}
-
-
-<div class="d-flex">
-  {% if not obj.is_approved %}
-  <button type="button" onclick="window.location.href='{% url 'arsip_update' pk=obj.id %}?menu={{ nm_dokumen|custom_slugify }}&dept={{ nm_departemen|custom_slugify }}&archive={{ obj.document_name|custom_slugify }}'" class="mr-2 btn btn-social-icon btn-twitter btn-rounded" data-toggle="modal" data-target="#mod0-{{ obj.id }}" {% if obj.is_inprogress or obj.is_rejected %} disabled {% endif %}>
-    <i class="ti-pencil-alt"></i>
-  </button>
-  {% endif %}
-  {% if obj.is_approved %}
-  <button type="button" class="mr-2 btn btn-social-icon btn-rounded {% if obj.is_active %}btn-facebook{% else %}btn-secondary{% endif %}" data-toggle="modal" data-target="#mod1-{{ obj.id }}">
-    <i class="ti-check-box"></i>
-  </button>
-  {% endif %}
-  <button type="button" class="mr-2 btn btn-social-icon btn-dribbble btn-rounded" data-toggle="modal" data-target="#mod2-{{ obj.id }}" {% if obj.is_approved or obj.is_inprogress %} disabled {% endif %}>
-    <i class="ti-trash"></i>
-  </button>
-  <button type="button" onclick="window.location.href='{% url 'arsip_detail' pk=obj.id %}?menu={{ nm_dokumen|custom_slugify }}&dept={{ nm_departemen|custom_slugify }}&archive={{ obj.document_name|custom_slugify }}'" class="btn btn-social-icon btn-linkedin btn-rounded">
-    <i class="ti-info-alt"></i>
-  </button>
-</div>

@@ -282,26 +282,14 @@
       <!-- partial:partials/_sidebar.html -->
       <nav class="sidebar sidebar-offcanvas" id="sidebar">
         <ul class="nav">
+          
           <li class="nav-item">
             <a class="nav-link" href="{% url 'dashboard_view' %}">
               <i class="icon-grid menu-icon"></i>
               <span class="menu-title">Dashboard</span>
             </a>
           </li>
-          <li class="nav-item">
-            <a class="nav-link" data-toggle="collapse" href="#ui-basic" aria-expanded="false" aria-controls="ui-basic">
-              <i class="icon-box menu-icon"></i>
-              <span class="menu-title">UI Elements</span>
-              <i class="menu-arrow"></i>
-            </a>
-            <div class="collapse" id="ui-basic">
-              <ul class="nav flex-column sub-menu">
-                <li class="nav-item"> <a class="nav-link" href="{% url 'departemen_view' %}">Departments</a></li>
-                <li class="nav-item"> <a class="nav-link" href="{% url 'kategori_dokumen_view' %}">Doc. Categories</a></li>
-              </ul>
-            </div>
-          </li>
-          
+
           <li class="nav-item">
             <a class="nav-link" data-toggle="collapse" href="#auth" aria-expanded="false" aria-controls="auth">
               <i class="icon-head menu-icon"></i>
@@ -312,6 +300,20 @@
               <ul class="nav flex-column sub-menu">
                 <li class="nav-item"> <a class="nav-link" href="{% url 'akun_view' %}"> Accounts </a></li>
                 {% if not superuser_exist or user.is_superuser %}<li class="nav-item"> <a class="nav-link" href="{% url 'akun_regist_view' %}"> Register </a></li>{% endif %}
+              </ul>
+            </div>
+          </li>
+          
+          <li class="nav-item">
+            <a class="nav-link" data-toggle="collapse" href="#ui-basic" aria-expanded="false" aria-controls="ui-basic">
+              <i class="icon-box menu-icon"></i>
+              <span class="menu-title">UI Elements</span>
+              <i class="menu-arrow"></i>
+            </a>
+            <div class="collapse" id="ui-basic">
+              <ul class="nav flex-column sub-menu">
+                <li class="nav-item"> <a class="nav-link" href="{% url 'departemen_view' %}">Departments</a></li>
+                <li class="nav-item"> <a class="nav-link" href="{% url 'kategori_dokumen_view' %}">Doc. Categories</a></li>
               </ul>
             </div>
           </li>

@@ -730,7 +730,7 @@ class DokumenCreateView(CreateView): # Revision juga menggunakan class ini
     template_name = 'DMSApp/CrudDokumen/create.html'
     fields = []  # Remove fields, as we are handling them manually
 
-    def post(self, request, *args, **kwargs):
+    '''def post(self, request, *args, **kwargs):
         # Get filter parameters from the POST request
         self.nma_kategori = request.POST.get('kategori')  # from get_context_data
         self.nma_departemen = request.POST.get('departemen') # from get_context_data
@@ -741,12 +741,22 @@ class DokumenCreateView(CreateView): # Revision juga menggunakan class ini
         self.no_revisi = request.POST.get('revision_no')
         self.sub_dokumen_no = request.POST.get('sub_doc_no')
         
-        return self.get(request, *args, **kwargs)
+        return self.get(request, *args, **kwargs)'''
 
     def form_valid(self, form):
+        # Get filter parameters from the POST request
+        nma_kategori = self.request.POST.get('kategori')  # from get_context_data
+        nma_departemen = self.request.POST.get('departemen') # from get_context_data
+        # get_context_data for revision
+        nma_dokumen = self.request.POST.get('document_name')
+        no_dokumen = self.request.POST.get('document_no')
+        # no_form = self.request.POST.get('form_no')
+        no_revisi = self.request.POST.get('revision_no')
+        sub_dokumen_no = self.request.POST.get('sub_doc_no')
+
         # Retrieve IDs from the database based on the names
-        kategori_obj = KategoriDokumen.objects.get(category=self.nma_kategori)
-        departemen_obj = Departemen.objects.get(department=self.nma_departemen)
+        kategori_obj = KategoriDokumen.objects.get(category=nma_kategori)
+        departemen_obj = Departemen.objects.get(department=nma_departemen)
 
         if self.request.user.is_uploader and self.request.user.user_department == departemen_obj:
             
@@ -754,8 +764,8 @@ class DokumenCreateView(CreateView): # Revision juga menggunakan class ini
             if Dokumen.objects.filter(document_name=nma_arsip).exists() or Dokumen.objects.filter(document_name=nma_arsip, document_no=self.no_dokumen).exists():
                 raise PermissionDenied('An entry with this document name or document number already exists.')'''
                             
-            if self.sub_dokumen_no:
-                form.instance.sub_document_no=self.sub_dokumen_no
+            if sub_dokumen_no:
+                form.instance.sub_document_no=sub_dokumen_no
                 '''# Check if a document name with sub document number or document no with sub document number already exists
                 if Dokumen.objects.filter(document_name=nma_arsip, sub_document_no=self.sub_dokumen_no).exists() or Dokumen.objects.filter(document_no=self.no_arsip, sub_document_no=self.sub_dokumen_no).exists():
                     raise PermissionDenied('An entry with this document name or document number already exists.')
@@ -792,7 +802,7 @@ class DokumenCreateView(CreateView): # Revision juga menggunakan class ini
             self.object = form.save()
 
             # Handle saving dynamic fields and files
-            directory = os.path.join(folder_target, 'temp_directory', self.nma_kategori, self.nma_departemen)
+            directory = os.path.join(folder_target, 'temp_directory', nma_kategori, nma_departemen)
             # directory = os.path.join(folder_target, nma_dokumen, nma_departemen)
             
             # Ensure the directory exists
@@ -813,7 +823,7 @@ class DokumenCreateView(CreateView): # Revision juga menggunakan class ini
 
                             # Generate a new filename (you can use different logic to generate it)
                             original_filename, file_extension = os.path.splitext(file_value.name)
-                            new_filename = "yes_i_do" + file_extension
+                            new_filename = str(form.instance.parent_category.category_initial) + ("." + str(form.instance.parent_department.department_code ) if form.instance.parent_department and form.instance.parent_department.department_code else "") + "." + str(form.instance.document_no) + ("." + str(form.instance.sub_document_no) if sub_dokumen_no else "") + "_" + str(form.instance.document_name) + file_extension
 
                             # filename = fs.save(file_value.name, file_value)
                             filename = fs.save(new_filename, file_value)
@@ -832,7 +842,7 @@ class DokumenCreateView(CreateView): # Revision juga menggunakan class ini
             self.object.save()
 
             # Construct the success URL dynamically
-            success_url = reverse('dokumen_view') + f"?dept={self.nma_departemen}&cat={self.nma_kategori}"
+            success_url = reverse('dokumen_view') + f"?dept={nma_departemen}&cat={nma_kategori}"
 
             # Redirect to the success URL
             return redirect(success_url)
@@ -868,9 +878,9 @@ class DokumenCreateView(CreateView): # Revision juga menggunakan class ini
             context['penomeran_dokumen'] = formatted_penomeran_dokumen
             context['nm_departemen'] = get_nma_departemen
             context['nm_dokumen'] = get_nma_dokumen
-            nmr_dokumen = Dokumen.objects.filter(document_name=get_nma_dokumen, is_active=True)
+            '''nmr_dokumen = Dokumen.objects.filter(document_name=get_nma_dokumen, is_active=True)
             for i in nmr_dokumen:
-                context['kode_dokumen'] = i.document_no +' REV. '+ i.revision_no
+                context['kode_dokumen'] = i.document_no +' REV. '+ i.revision_no'''
 
             # Note untuk sementara di disable dulu sampai semua dokumen sudah di upload semua
             # remove revision_no jika register. confirm. 25/06/2024
