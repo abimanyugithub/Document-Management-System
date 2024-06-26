@@ -29,6 +29,8 @@ urlpatterns = [
 
     path('document/view/', views.DokumenListView.as_view(), name='dokumen_view'),
     path('document/create/', views.DokumenCreateView.as_view(), name='dokumen_create'),
+    path('document/list-view/', views.DokumenNumberListView.as_view(), name='dokumen_list_view'),
+    path('document/update/<str:pk>/', views.DokumenUpdateView.as_view(), name='dokumen_update'),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

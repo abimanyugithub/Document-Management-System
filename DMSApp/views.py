@@ -675,42 +675,45 @@ class DokumenListView(ListView):
     template_name = 'DMSApp/CrudDokumen/view.html'
     context_object_name = 'departemen_list'
 
-    def get_queryset(self):
-        # Get the departemen from the request parameters
-        nma_departemen = self.request.GET.get('department')
+    def get(self, request, *args, **kwargs):
+        # Get filter parameters from the GET request
+        self.nma_kategori = request.GET.get('cat')
+        self.nma_departemen = request.GET.get('dept')
+        
+        return super().get(request, *args, **kwargs)
 
-        if nma_departemen:
+    def get_queryset(self):
+
+        if self.nma_departemen:
             # Retrieve the Departemen object with the given department_id
-            departemen = Departemen.objects.get(department=nma_departemen, is_active=True)
+            departemen = Departemen.objects.get(department=self.nma_departemen, is_active=True)
                 
             # Retrieve the related MenuDokumen objects for the Departemen
             queryset = departemen.related_category.all().order_by('category')
             
         return queryset
-    
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        nma_kategori = self.request.GET.get('category')
-        nma_departemen = self.request.GET.get('department')
 
-        if nma_departemen:
-            context['nm_departemen'] = nma_departemen
-            if nma_kategori:
-                context['nm_kategori'] = nma_kategori
-                context['data_kategori_list'] = KategoriDokumen.objects.filter(category=nma_kategori)
-                nma_label = KategoriDokumen.objects.get(category=nma_kategori)
+        if self.nma_departemen:
+            context['nm_departemen'] = self.nma_departemen
+            
+            if self.nma_kategori:
+                context['nm_kategori'] = self.nma_kategori
+                context['data_kategori_list'] = KategoriDokumen.objects.filter(category=self.nma_kategori)
+                nma_label = KategoriDokumen.objects.get(category=self.nma_kategori)
                 relasi_label = nma_label.related_label.all()
                 context['nm_label'] = relasi_label
 
                 # Fetch the queryset
-                dokumen_list = Dokumen.objects.filter(parent_category__category=nma_kategori, parent_department__department=nma_departemen).order_by('document_no', '-revision_no')
+                dokumen_list = Dokumen.objects.filter(parent_category__category=self.nma_kategori, parent_department__department=self.nma_departemen).order_by('document_no', '-revision_no')
 
                 # Use Python to filter out duplicates based on document_no
                 unique_dokumen_list = []
                 seen_document_nos = set()
                 for arsip in dokumen_list:
-                    if arsip.document_no not in seen_document_nos:
+                    if arsip.document_no and arsip.sub_document_no not in seen_document_nos:
                         unique_dokumen_list.append(arsip)
                         seen_document_nos.add(arsip.document_no)
 
@@ -727,42 +730,45 @@ class DokumenCreateView(CreateView): # Revision juga menggunakan class ini
     template_name = 'DMSApp/CrudDokumen/create.html'
     fields = []  # Remove fields, as we are handling them manually
 
-    def form_valid(self, form):
-        # Get the values from the form
-        nma_dokumen = self.request.POST.get('dokumen')
-        nma_departemen = self.request.POST.get('departemen')
-        nma_arsip = self.request.POST.get('document_name')
-        no_arsip = self.request.POST.get('document_no')
+    def post(self, request, *args, **kwargs):
+        # Get filter parameters from the POST request
+        self.nma_kategori = request.POST.get('kategori')  # from get_context_data
+        self.nma_departemen = request.POST.get('departemen') # from get_context_data
+        # get_context_data for revision
+        self.nma_dokumen = request.POST.get('document_name')
+        self.no_dokumen = request.POST.get('document_no')
         # no_form = self.request.POST.get('form_no')
-        no_revisi = self.request.POST.get('revision_no')
-        sub_dokumen_no = self.request.POST.get('sub_doc_no')
+        self.no_revisi = request.POST.get('revision_no')
+        self.sub_dokumen_no = request.POST.get('sub_doc_no')
         
+        return self.get(request, *args, **kwargs)
+
+    def form_valid(self, form):
         # Retrieve IDs from the database based on the names
-        dokumen_obj = KategoriDokumen.objects.get(document=nma_dokumen)
-        departemen_obj = Departemen.objects.get(department=nma_departemen)
+        kategori_obj = KategoriDokumen.objects.get(category=self.nma_kategori)
+        departemen_obj = Departemen.objects.get(department=self.nma_departemen)
 
         if self.request.user.is_uploader and self.request.user.user_department == departemen_obj:
             
-            # Check if a document name or document no with the same name already exists
-            if Dokumen.objects.filter(document_name=nma_arsip).exists() or Arsip.objects.filter(document_name=nma_arsip, document_no=no_arsip).exists():
-                raise PermissionDenied('An entry with this document name or document number already exists.')
+            '''# Check if a document name or document no with the same name already exists
+            if Dokumen.objects.filter(document_name=nma_arsip).exists() or Dokumen.objects.filter(document_name=nma_arsip, document_no=self.no_dokumen).exists():
+                raise PermissionDenied('An entry with this document name or document number already exists.')'''
                             
-            if sub_dokumen_no:
-                # Check if a document name with sub document number or document no with sub document number already exists
-                if Dokumen.objects.filter(document_name=nma_arsip, sub_document_no=sub_dokumen_no).exists() or Arsip.objects.filter(document_no=no_arsip, sub_document_no=sub_dokumen_no).exists():
+            if self.sub_dokumen_no:
+                form.instance.sub_document_no=self.sub_dokumen_no
+                '''# Check if a document name with sub document number or document no with sub document number already exists
+                if Dokumen.objects.filter(document_name=nma_arsip, sub_document_no=self.sub_dokumen_no).exists() or Dokumen.objects.filter(document_no=self.no_arsip, sub_document_no=self.sub_dokumen_no).exists():
                     raise PermissionDenied('An entry with this document name or document number already exists.')
                 else:
-                    form.instance.sub_document_no=sub_dokumen_no
-
+                    form.instance.sub_document_no=self.sub_dokumen_no'''
+            
             # Get the values revision
             nma_arsip = self.request.GET.get('archive')
 
             if nma_arsip:
                 # Check if a document name and revision no with the same name already exists
-                if Dokumen.objects.filter(document_name=nma_arsip, revision_no=no_revisi).exists():
+                if Dokumen.objects.filter(document_name=nma_arsip, revision_no=self.no_revisi).exists():
                     raise ValidationError('An entry with this revision number already exists.')
-
-                
 
             '''
             elif no_arsip:
@@ -779,14 +785,14 @@ class DokumenCreateView(CreateView): # Revision juga menggunakan class ini
             '''
             
             # Set the IDs to the form instance before saving
-            form.instance.parent_document = dokumen_obj
+            form.instance.parent_category = kategori_obj
             form.instance.parent_department = departemen_obj
 
             # Save the form
             self.object = form.save()
 
             # Handle saving dynamic fields and files
-            directory = os.path.join(folder_target, 'temp_directory', nma_dokumen, nma_departemen)
+            directory = os.path.join(folder_target, 'temp_directory', self.nma_kategori, self.nma_departemen)
             # directory = os.path.join(folder_target, nma_dokumen, nma_departemen)
             
             # Ensure the directory exists
@@ -807,7 +813,7 @@ class DokumenCreateView(CreateView): # Revision juga menggunakan class ini
 
                             # Generate a new filename (you can use different logic to generate it)
                             original_filename, file_extension = os.path.splitext(file_value.name)
-                            new_filename = 'new_name_for_file' + file_extension
+                            new_filename = "yes_i_do" + file_extension
 
                             # filename = fs.save(file_value.name, file_value)
                             filename = fs.save(new_filename, file_value)
@@ -826,7 +832,7 @@ class DokumenCreateView(CreateView): # Revision juga menggunakan class ini
             self.object.save()
 
             # Construct the success URL dynamically
-            success_url = reverse('arsip_view') + f"?menu={nma_dokumen}&dept={nma_departemen}"
+            success_url = reverse('dokumen_view') + f"?dept={self.nma_departemen}&cat={self.nma_kategori}"
 
             # Redirect to the success URL
             return redirect(success_url)
@@ -836,17 +842,15 @@ class DokumenCreateView(CreateView): # Revision juga menggunakan class ini
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        nma_dokumen = self.request.GET.get('menu')
-        nma_departemen = self.request.GET.get('dept')
+        get_nma_kategori = self.request.GET.get('cat')
+        get_nma_departemen = self.request.GET.get('dept')
+        get_nma_dokumen = self.request.GET.get('docs')
 
-        # get_context_data for revision
-        nma_arsip = self.request.GET.get('archive')
-
-        if nma_dokumen:
-            # Retrieve the related MenuDokumen objects for the Departemen
-            nma_label = KategoriDokumen.objects.get(document=nma_dokumen)
-            relasi_label = nma_label.related_label.all()
-            context['nm_dokumen'] = nma_dokumen
+        if get_nma_kategori:
+            # Retrieve the related KategoriDokumen objects for the Departemen
+            kategori_obj = KategoriDokumen.objects.get(category=get_nma_kategori)
+            relasi_label = kategori_obj.related_label.all()
+            context['nm_kategori'] = get_nma_kategori
 
             # Calculate next penomeran_dokumen
             max_document_no = Dokumen.objects.aggregate(Max('document_no'))
@@ -862,14 +866,12 @@ class DokumenCreateView(CreateView): # Revision juga menggunakan class ini
 
             # Add penomeran_dokumen to context
             context['penomeran_dokumen'] = formatted_penomeran_dokumen
+            context['nm_departemen'] = get_nma_departemen
+            context['nm_dokumen'] = get_nma_dokumen
+            nmr_dokumen = Dokumen.objects.filter(document_name=get_nma_dokumen, is_active=True)
+            for i in nmr_dokumen:
+                context['kode_dokumen'] = i.document_no +' REV. '+ i.revision_no
 
-            context['nm_departemen'] = nma_departemen
-            context['nm_arsip'] = nma_arsip
-            kode_arsip = Dokumen.objects.filter(document_name=nma_arsip, is_active=True)
-            for i in kode_arsip:
-                context['kode_arsip'] = i.document_no +' REV. '+ i.revision_no
-
-            
             # Note untuk sementara di disable dulu sampai semua dokumen sudah di upload semua
             # remove revision_no jika register. confirm. 25/06/2024
             
@@ -882,17 +884,172 @@ class DokumenCreateView(CreateView): # Revision juga menggunakan class ini
             context['nm_label'] = relasi_label
                 
             # context['list_label'] = daftar_label
-            context['nma_inisial'] = nma_label.document_initial
+            context['nma_inisial'] = kategori_obj.category_initial
 
             for label_dict in daftar_label:
                 context['list_label'] = label_dict
 
-            username = self.request.user.username  # Adjust as per your user model or LDAP attribute
-            context['username'] = username
+            # username = self.request.user.username  # Adjust as per your user model or LDAP attribute
+            # context['username'] = username
                 
             # get_context_data for revision
-            if nma_arsip:
-                context['archive_list'] = Dokumen.objects.filter(parent_document__document=nma_dokumen, parent_department__department=nma_departemen, document_name=nma_arsip)
+            if get_nma_dokumen:
+                context['dokumen_list'] = Dokumen.objects.filter(parent_category__category=self.nma_kategori, parent_department__department=self.nma_departemen, document_name=self.nma_arsip)
+
+        return context
+    
+
+class DokumenNumberListView(ListView):
+    model = Dokumen
+    template_name = 'DMSApp/CrudDokumen/view_detail.html'
+    context_object_name = 'dokumen_list'
+
+    def get(self, request, *args, **kwargs):
+        # Get filter parameters from the GET request
+        self.nma_kategori = request.GET.get('cat')
+        self.nma_departemen = request.GET.get('dept')
+        # self.nma_dokumen = request.GET.get('docs')
+        self.nomer_dokumen = request.GET.get('docs')
+        self.sub_nomer_dokumen = request.GET.get('sub')
+        
+        return super().get(request, *args, **kwargs)
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        # Apply filters if parameters are provided
+        # queryset = queryset.filter(document_name=self.nma_dokumen, parent_category__category=self.nma_kategori, parent_department__department=self.nma_departemen).order_by('-revision_no')
+        queryset = queryset.filter(document_no=self.nomer_dokumen, parent_category__category=self.nma_kategori, parent_department__department=self.nma_departemen, sub_document_no=self.sub_nomer_dokumen).order_by('-revision_no')
+        
+        return queryset
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        if self.nma_kategori:
+            # Retrieve the related MenuDokumen objects for the Departemen
+            kategori_obj = KategoriDokumen.objects.get(category=self.nma_kategori)
+            relasi_label = kategori_obj.related_label.all()
+            context['nm_kategori'] = self.nma_kategori
+            context['nm_departemen'] = self.nma_departemen
+            # context['nm_dokumen'] = self.nma_dokumen
+
+            nama_dokumen = self.object_list.get(parent_category__category=self.nma_kategori, document_no=self.nomer_dokumen, sub_document_no=self.sub_nomer_dokumen)
+            context['nm_dokumen'] = nama_dokumen.document_name
+            context['inisial_kategori'] = nama_dokumen.parent_category.category_initial
+            context['nmr_dokumen'] = nama_dokumen.document_no
+            
+            if self.sub_nomer_dokumen:
+                context['sub_nmr_dokumen'] = nama_dokumen.sub_document_no
+
+            context['nm_label'] = relasi_label
+
+            context['is_unapproved_instances'] = self.object_list.filter(
+                # document_name=self.nma_dokumen,
+                document_no=self.nomer_dokumen,
+                parent_category__category=self.nma_kategori,
+                parent_department__department=self.nma_departemen,
+                is_approved=False
+            ).exists()
+
+        for label_dict in daftar_label:
+            context['list_label'] = label_dict
+
+        return context
+    
+    
+class DokumenUpdateView(UpdateView):
+    model = Dokumen
+    template_name = 'DMSApp/CrudDokumen/update.html'
+    fields = []  # Remove fields, as we are handling them manually
+
+    def get(self, request, *args, **kwargs):
+        # Get filter parameters from the GET request
+        self.nma_kategori = request.GET.get('cat')
+        self.nma_departemen = request.GET.get('dept')
+        # self.nma_dokumen = request.GET.get('docs')
+        self.nomer_dokumen = request.GET.get('docs')
+        self.sub_nomer_dokumen = request.GET.get('sub')
+        
+        return super().get(request, *args, **kwargs)
+
+    def post(self, request, pk):
+        # Retrieve the Dokumen instance to update
+        document_instance_update = Dokumen.objects.get(id=pk)
+        directory = os.path.join(
+            folder_target,
+            document_instance_update.parent_category.category,
+            document_instance_update.parent_department.department
+        )
+        
+        # Check and handle pdf_file
+        if 'pdf_file' in request.FILES:
+            # archive_instance_update.pdf_file = request.FILES['pdf_file']
+            if document_instance_update.pdf_file:
+                os.remove(document_instance_update.pdf_file.path)
+            file_pdf = request.FILES['pdf_file']
+            document_instance_update.pdf_file.save(os.path.join(directory, file_pdf.name), file_pdf, save=False)
+
+        # Check and handle sheet_file
+        if 'sheet_file' in request.FILES:
+            # archive_instance_update.sheet_file = request.FILES['sheet_file']
+            if document_instance_update.sheet_file:
+                os.remove(document_instance_update.sheet_file.path)
+            file_sheet = request.FILES['sheet_file']
+            document_instance_update.sheet_file.save(os.path.join(directory, file_sheet.name), file_sheet, save=False)
+
+
+        # Check and handle other_file
+        if 'other_file' in request.FILES:
+            # archive_instance_update.other_file = request.FILES['other_file']
+            if document_instance_update.other_file:
+                os.remove(document_instance_update.other_file.path)
+            file_other = request.FILES['other_file']
+            document_instance_update.other_file.save(os.path.join(directory, file_other.name), file_other, save=False)
+
+        # Iterate over POST data
+        for key, value in request.POST.items():
+            if key not in ['pdf_file', 'sheet_file', 'add_file'] and hasattr(document_instance_update, key):
+                setattr(document_instance_update, key, value)
+
+        # Save the updated Dokumen instance
+        document_instance_update.save()
+
+        # Construct the success URL dynamically
+        success_url = reverse('dokumen_view') + f"?dept={document_instance_update.parent_department.department}&cat={document_instance_update.parent_category.category}"
+        # Redirect to the success URL
+        return redirect(success_url)
+
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        context['nm_kategori'] = self.nma_kategori
+        context['nm_departemen'] = self.nma_departemen
+
+        nama_dokumen = Dokumen.objects.get(parent_category__category=self.nma_kategori, document_no=self.nomer_dokumen, sub_document_no=self.sub_nomer_dokumen)
+        context['nm_dokumen'] = nama_dokumen.document_name
+        context['inisial_kategori'] = nama_dokumen.parent_category.category_initial
+        context['nmr_dokumen'] = nama_dokumen.document_no
+
+        if self.sub_nomer_dokumen:
+            context['sub_nmr_dokumen'] = nama_dokumen.sub_document_no
+
+        kode_arsip = Dokumen.objects.filter(document_name=nama_dokumen.document_name, is_active=True)
+        # Retrieve the related KategoriDokumen objects for the Departemen
+        kategori_obj = KategoriDokumen.objects.get(category=self.nma_kategori)
+        relasi_label = kategori_obj.related_label.all()
+        context['nm_label'] = relasi_label
+
+        '''for i in kode_arsip:
+            context['kode_arsip'] = i.document_no +' REV. '+ i.revision_no'''
+        
+
+        for label_dict in daftar_label:
+            context['list_label'] = label_dict
+            
+        # get_context_data for update
+        context['archive_detail'] = self.object
 
         return context
     

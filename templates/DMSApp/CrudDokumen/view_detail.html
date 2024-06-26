@@ -16,12 +16,12 @@
                 {% if nm_departemen %}
                 <li class="breadcrumb-item active" aria-current="page">{{ nm_departemen|capfirst }}</li>
                 {% endif %}
-                <li class="breadcrumb-item active" aria-current="page">{% if nm_dokumen %}<a href='{% url 'arsip_view' %}?dept={{ nm_departemen|custom_slugify }}'>{% endif %}Category</a></li>
-                {% if nm_dokumen %}
-                <li class="breadcrumb-item active" aria-current="page">{% if nm_arsip %}<a href='{% url 'arsip_view' %}?menu={{ nm_dokumen|custom_slugify }}&dept={{ nm_departemen|custom_slugify }}'>{% endif %}{{ nm_dokumen|capfirst }}</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{% if nm_kategori %}<a href='{% url 'dokumen_view' %}?dept={{ nm_departemen|custom_slugify }}'>{% endif %}Category</a></li>
+                {% if nm_kategori %}
+                <li class="breadcrumb-item active" aria-current="page">{% if nm_kategori %}<a href='{% url 'dokumen_view' %}?dept={{ nm_departemen|custom_slugify }}&cat={{ nm_kategori|custom_slugify }}'>{% endif %}{{ nm_kategori|capfirst }}</a></li>
                 {% endif %}
-                {% if nm_arsip %}
-                <li class="breadcrumb-item active" aria-current="page">{{ nm_arsip|capfirst }}</li>
+                {% if nm_dokumen %}
+                <li class="breadcrumb-item active" aria-current="page">{{ inisial_kategori }}.{{ nmr_dokumen }}.{{ sub_nmr_dokumen }} {{ nm_dokumen|capfirst }}</li>
                 {% endif %}
               </ol>
             </nav>
@@ -30,7 +30,7 @@
           <div class="col-12 col-xl-4">
             <div class="justify-content-end d-flex">
               <div class="dropdown flex-md-grow-1 flex-xl-grow-0">
-                <button type="button" onclick="window.location.href='{% url 'arsip_create' %}?menu={{ nm_dokumen|custom_slugify }}&dept={{ nm_departemen|custom_slugify }}&archive={{ nm_arsip|custom_slugify }}'" class="btn btn-primary btn-icon-text" data-toggle="modal" data-target="#mod1">
+                <button type="button" onclick="window.location.href='{% url 'dokumen_create' %}?dept={{ nm_departemen|custom_slugify }}&cat={{ nm_kategori|custom_slugify }}&archive={{ nm_arsip|custom_slugify }}'" class="btn btn-primary btn-icon-text" data-toggle="modal" data-target="#mod1">
                   <i class="ti-plus btn-icon-prepend"></i>
                   Revision
                 </button>
@@ -76,55 +76,42 @@
                   </tr>
                 </thead>
                 <tbody>
-                  {% if archive_list %}
-                    {% for obj in archive_list %}
-                    <tr {% if not obj.is_active %}class="table-secondary"{% endif %}>
-                      
-                        {% for key, value in list_label.items %}
-                        <!-- # Get the names of the related labels -->
-                          {% for u in nm_label %}
-                            {% if u.name == key %}
-                              {% if value.type != "file" %}
-                              <td>{% if value.label == "Document ID" %}{{ obj.parent_document.document_initial }}.{% endif %}{{ obj|get_field_value:key|capfirst }}</td>
+                  {% for obj in dokumen_list %}
+                  <tr {% if not obj.is_active %}class="table-secondary"{% endif %}>
+                      {% for key, value in list_label.items %}
+                      <!-- # Get the names of the related labels -->
+                        {% for u in nm_label %}
+                          {% if u.name == key %}
+                            {% if value.type != "file" %}
+                              {% if value.label == "Document ID" %}
+                              <td>{% if value.label == "Document ID" %}{{ obj.parent_category.category_initial }}.{% endif %}{{ obj|get_field_value:key|capfirst }}{% if obj.sub_document_no %}.{{ obj.sub_document_no }}{% endif %}</td>
+                              {% else %}
+                              <td>{{ obj|get_field_value:key|capfirst }}</td>
                               {% endif %}
                             {% endif %}
-                          {% endfor %}
+                          {% endif %}
                         {% endfor %}
+                      {% endfor %}
 
-                      <td>
-                        {% if obj.is_approved %}<div class="badge {% if not obj.is_active %}badge-secondary{% else %}badge-success{% endif %}">{% if not obj.is_active %}Obsolete{% else %}Approved{% endif %}</div>
-                        {% elif obj.is_rejected %}<div class="badge badge-danger">Cancelled</div>
-                        {% elif obj.is_inprogress %}<div class="badge badge-info">In Review</div>
-                        {% else %}<div class="badge badge-warning">Pending</div>
+                    <td>
+                      {% if obj.is_approved %}<div class="badge {% if not obj.is_active %}badge-secondary{% else %}badge-success{% endif %}">{% if not obj.is_active %}Obsolete{% else %}Approved{% endif %}</div>
+                      {% elif obj.is_rejected %}<div class="badge badge-danger">Cancelled</div>
+                      {% elif obj.is_inprogress %}<div class="badge badge-info">In Review</div>
+                      {% else %}<div class="badge badge-warning">Pending</div>
+                      {% endif %}
+                  </a></td>
+                    <td>
+                      <div class="d-flex">
+                        {% if not obj.is_approved %}
+                        <button type="button" onclick="window.location.href='{% url 'dokumen_update' pk=obj.id %}?dept={{ nm_departemen|custom_slugify }}&cat={{ nm_kategori|custom_slugify }}&docs={{ nmr_dokumen|custom_slugify }}{% if obj.sub_document_no %}&sub={{ obj.sub_document_no|custom_slugify }}{% endif %}'" class="mr-2 btn btn-social-icon btn-twitter btn-rounded" data-toggle="modal" data-target="#mod0-{{ obj.id }}" {% if obj.is_inprogress or obj.is_rejected %} disabled {% endif %}>
+                          <i class="ti-pencil-alt"></i>
+                        </button>
                         {% endif %}
-                    </a></td>
-                      <td>
-                        <div class="d-flex">
-                          {% if not obj.is_approved %}
-                          <button type="button" onclick="window.location.href='{% url 'arsip_update' pk=obj.id %}?menu={{ nm_dokumen|custom_slugify }}&dept={{ nm_departemen|custom_slugify }}&archive={{ obj.document_name|custom_slugify }}'" class="mr-2 btn btn-social-icon btn-twitter btn-rounded" data-toggle="modal" data-target="#mod0-{{ obj.id }}" {% if obj.is_inprogress or obj.is_rejected %} disabled {% endif %}>
-                            <i class="ti-pencil-alt"></i>
-                          </button>
-                          {% endif %}
-                          {% if obj.is_approved %}
-                          <button type="button" class="mr-2 btn btn-social-icon btn-rounded {% if obj.is_active %}btn-facebook{% else %}btn-secondary{% endif %}" data-toggle="modal" data-target="#mod1-{{ obj.id }}">
-                            <i class="ti-check-box"></i>
-                          </button>
-                          {% endif %}
-                          <button type="button" class="mr-2 btn btn-social-icon btn-dribbble btn-rounded" data-toggle="modal" data-target="#mod2-{{ obj.id }}" {% if obj.is_approved or obj.is_inprogress %} disabled {% endif %}>
-                            <i class="ti-trash"></i>
-                          </button>
-                          <button type="button" onclick="window.location.href='{% url 'arsip_detail' pk=obj.id %}?menu={{ nm_dokumen|custom_slugify }}&dept={{ nm_departemen|custom_slugify }}&archive={{ obj.document_name|custom_slugify }}'" class="btn btn-social-icon btn-linkedin btn-rounded">
-                            <i class="ti-info-alt"></i>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                    {% endfor %}
-                  {% else %}
-                  <tr>
-                    <td colspan="100%" class="no-data text-center">No data available in the table.</td>
+                        
+                      </div>
+                    </td>
                   </tr>
-                  {% endif %}
+                  {% endfor %}
                 </tbody>
               </table>
             </div>
@@ -133,6 +120,26 @@
       </div>
     </div>
   </div>
-{% include 'DMSApp/CrudArsip/modal_delete.html' %}
-{% include 'DMSApp/CrudArsip/modal_update.html' %}
+{% include 'DMSApp/CrudDokumen/modal_delete.html' %}
+{% include 'DMSApp/CrudDokumen/modal_update.html' %}
 {% include 'DMSApp/Komponen/footer.html' %}
+
+
+<div class="d-flex">
+  {% if not obj.is_approved %}
+  <button type="button" onclick="window.location.href='{% url 'arsip_update' pk=obj.id %}?menu={{ nm_dokumen|custom_slugify }}&dept={{ nm_departemen|custom_slugify }}&archive={{ obj.document_name|custom_slugify }}'" class="mr-2 btn btn-social-icon btn-twitter btn-rounded" data-toggle="modal" data-target="#mod0-{{ obj.id }}" {% if obj.is_inprogress or obj.is_rejected %} disabled {% endif %}>
+    <i class="ti-pencil-alt"></i>
+  </button>
+  {% endif %}
+  {% if obj.is_approved %}
+  <button type="button" class="mr-2 btn btn-social-icon btn-rounded {% if obj.is_active %}btn-facebook{% else %}btn-secondary{% endif %}" data-toggle="modal" data-target="#mod1-{{ obj.id }}">
+    <i class="ti-check-box"></i>
+  </button>
+  {% endif %}
+  <button type="button" class="mr-2 btn btn-social-icon btn-dribbble btn-rounded" data-toggle="modal" data-target="#mod2-{{ obj.id }}" {% if obj.is_approved or obj.is_inprogress %} disabled {% endif %}>
+    <i class="ti-trash"></i>
+  </button>
+  <button type="button" onclick="window.location.href='{% url 'arsip_detail' pk=obj.id %}?menu={{ nm_dokumen|custom_slugify }}&dept={{ nm_departemen|custom_slugify }}&archive={{ obj.document_name|custom_slugify }}'" class="btn btn-social-icon btn-linkedin btn-rounded">
+    <i class="ti-info-alt"></i>
+  </button>
+</div>

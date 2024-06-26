@@ -16,7 +16,7 @@
                 {% if nm_departemen %}
                 <li class="breadcrumb-item active" aria-current="page">{{ nm_departemen|capfirst }}</li>
                 {% endif %}
-                <li class="breadcrumb-item active" aria-current="page">{% if nm_kategori %}<a href='{% url 'dokumen_view' %}?department={{ nm_departemen|custom_slugify }}'>{% endif %}Category</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{% if nm_kategori %}<a href='{% url 'dokumen_view' %}?dept={{ nm_departemen|custom_slugify }}'>{% endif %}Category</a></li>
                 {% if nm_kategori %}
                 <li class="breadcrumb-item active" aria-current="page">{{ nm_kategori|capfirst }}</li>
                 {% endif %}
@@ -28,7 +28,7 @@
             <div class="col-12 col-xl-4">
               <div class="justify-content-end d-flex">
                 <div class="dropdown flex-md-grow-1 flex-xl-grow-0">
-                <button onclick="window.location.href='{% url 'dokumen_create' %}?category={{ nm_kategori|custom_slugify }}&department={{ nm_departemen|custom_slugify }}'" class="btn btn-primary btn-icon-text">
+                <button onclick="window.location.href='{% url 'dokumen_create' %}?dept={{ nm_departemen|custom_slugify }}&cat={{ nm_kategori|custom_slugify }}'" class="btn btn-primary btn-icon-text">
                     <i class="ti-plus btn-icon-prepend"></i>
                     Register
                   </button>
@@ -46,7 +46,7 @@
       {% for dl in departemen_list %}
         {% if dl.is_active %}
         <div class="col-xl-4 mb-4 stretch-card transparent">
-          <button onclick="window.location.href='{% url 'dokumen_view' %}?category={{ dl.category|custom_slugify }}&department={{ nm_departemen|custom_slugify }}'" 
+          <button onclick="window.location.href='{% url 'dokumen_view' %}?dept={{ nm_departemen|custom_slugify }}&cat={{ dl.category|custom_slugify }}'" 
           class="card card-dark-blue border-0 shadow">
               <div class="card-body">
                 <p class="m-1">{{ dl.category|capfirst }}</p>
@@ -90,17 +90,19 @@
                   </tr>
                 </thead>
                 <tbody>
-                  {% for obj in arsip_list %}
+                  {% for obj in dokumen_list %}
                   <tr>
                     {% for key, value in list_label.items %}
                     <!-- # Get the names of the related labels -->
                       {% for u in nm_label %}
                         {% if u.name == key %}
                           {% if value.type != "file" %}
-                            {% if value.label == "Document Title" %}
-                            <td><a href="{% url 'arsip_list_detail' %}?menu={{ nm_dokumen|custom_slugify }}&dept={{ nm_departemen|custom_slugify }}&archive={{ obj|get_field_value:key|custom_slugify }}">{{ obj|get_field_value:key|capfirst }}</a></td>
+                            {% if value.label == "Document ID" %}
+                            <td><a href="{% url 'dokumen_list_view' %}?dept={{ nm_departemen|custom_slugify }}&cat={{ nm_kategori|custom_slugify }}&docs={{ obj|get_field_value:key|custom_slugify }}{% if obj.sub_document_no %}&sub={{ obj.sub_document_no }}{% endif %}">{{ obj.parent_category.category_initial }}.{{ obj|get_field_value:key|capfirst }}{% if obj.sub_document_no %}.{{ obj.sub_document_no }}{% endif %}</a></td>
                             {% else %}
-                            <td>{% if value.label == "Document ID" %}{{ obj.parent_document.document_initial }}.{% endif %}{{ obj|get_field_value:key }}.{% if obj.sub_document_no %}{{ obj.sub_document_no }}{% endif %}</td>
+                            <td>
+                              {{ obj|get_field_value:key|capfirst }}
+                            </td>
                             {% endif %}
                           {% endif %}
                         {% endif %}

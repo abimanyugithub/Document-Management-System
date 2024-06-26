@@ -325,7 +325,7 @@
             <div class="collapse" id="fms">
               <ul class="nav flex-column sub-menu">
                 {% for sub in cp_departemen_list %}
-                <li class="nav-item"> <a class="nav-link" href="{% url 'dokumen_view' %}?department={{ sub.department|custom_slugify }}"> {{ sub.department|capfirst }}</a></li>
+                <li class="nav-item"> <a class="nav-link" href="{% url 'dokumen_view' %}?dept={{ sub.department|custom_slugify }}"> {{ sub.department|capfirst }}</a></li>
                 {% endfor %}
               </ul>
             </div>
