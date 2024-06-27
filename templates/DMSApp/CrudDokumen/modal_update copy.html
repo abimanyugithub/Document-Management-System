@@ -1,0 +1,89 @@
+{% load custom_filters %}
+
+<!-- Modal update arsip -->
+{% if dokumen_detail %}
+<div class="modal fade" id="mod4" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel" style="display: flex; align-items: center;">
+          <i class="mdi mdi-help-circle mdi-24px text-primary mr-2"></i>
+          <b>{% if dokumen_detail.is_inprogress %}Approve{% else %}Keep{% endif %} {{ dokumen_detail.document_name }}</b>
+        </h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        {% if dokumen_detail.is_inprogress %}Approve{% else %}Keep{% endif %} this document?
+        <hr>
+        <div class="row">
+          <div class="col-6">
+            <h5>Document Title</h5>
+            <p>{{ dokumen_detail.document_name }}</p>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-6 mt-2">
+            <h5>Revision No.</h5>
+            <p>{{ dokumen_detail.revision_no }}</p>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <form class="forms-sample" method="post" action="{% url 'dokumen_status_update' pk=dokumen_detail.id %}">
+          {% csrf_token %}
+          <input type="hidden" name="status" value={% if dokumen_detail.is_inprogress %}"inprogress"{% else %}"pending"{% endif %}>
+          <button type="submit" class="btn btn-twitter">Yes</button>
+        </form>
+        {% if dokumen_detail.is_inprogress %}
+        <form class="forms-sample" method="post" action="{% url 'arsip_status_update' pk=archive_detail.id %}">
+          {% csrf_token %}
+          <input type="hidden" name="status" value="tolak">
+          <button type="submit" class="btn btn-dribbble">Reject</button>
+        </form>
+        {% endif %}
+        
+          <button type="button" class="btn btn-facebook" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- Modal obsolete arsip -->
+{% for obj in archive_list %}
+<div class="modal fade" id="mod1-{{ obj.id }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel" style="display: flex; align-items: center;">
+          <i class="mdi mdi-help-circle mdi-24px text-primary mr-2"></i>
+          <b>{% if obj.is_active %}Deactivate{% else %}Activate{% endif %} archive</b>
+        </h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        {% if obj.is_active %}Deactivate{% else %}Activate{% endif %} archive?
+        <hr>
+        <div class="row">
+          <div class="col-6">
+            <h5>Archive</h5>
+            <p>{{ obj.document_name|capfirst }}</p>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <form class="forms-sample" method="post" action="{% url 'arsip_is_active' pk=obj.id %}">
+          {% csrf_token %}
+          <input type="hidden" name="aktivasi" {% if obj.is_active %}value="nonaktif"{% endif %}>
+        <button type="submit" class="btn btn-twitter">Yes</button>
+      </form>
+        <button type="button" class="btn btn-facebook" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %}

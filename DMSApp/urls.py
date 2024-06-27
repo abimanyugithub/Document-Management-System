@@ -31,6 +31,9 @@ urlpatterns = [
     path('document/create/', views.DokumenCreateView.as_view(), name='dokumen_create'),
     path('document/list-view/', views.DokumenNumberListView.as_view(), name='dokumen_list_view'),
     path('document/update/<str:pk>/', views.DokumenUpdateView.as_view(), name='dokumen_update'),
+    path('document/delete/<str:pk>/', views.DokumenDeleteView.as_view(), name='dokumen_is_delete'),
+    path('document/detail/<str:pk>/', views.DokumenDetailView.as_view(), name='dokumen_detail'),
+    path('document/update-status/<str:pk>/', views.DokumenUpdateStatusView.as_view(), name='dokumen_status_update'),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

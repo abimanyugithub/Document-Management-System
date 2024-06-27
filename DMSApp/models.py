@@ -74,10 +74,13 @@ class Dokumen(models.Model):
     part_name = models.CharField(max_length=100, null=True)
     supplier_name = models.CharField(max_length=100, null=True)
     customer_name = models.CharField(max_length=100, null=True)
-    is_approved = models.BooleanField(default=False, null=True)
-    is_inprogress = models.BooleanField(default=False, null=True)
-    is_rejected = models.BooleanField(default=False, null=True)
+    # status
     is_active = models.BooleanField(default=True)
+    is_inprogress = models.BooleanField(default=False)
+    is_approved = models.BooleanField(default=False)
+    is_released = models.BooleanField(default=False)
+    is_rejected = models.BooleanField(default=False)
+    
     pdf_file = models.FileField(null=True, storage=None) 
     sheet_file = models.FileField(null=True, storage=None)
     other_file = models.FileField(null=True, storage=None)
@@ -88,3 +91,9 @@ class Dokumen(models.Model):
     dokumen = models.ForeignKey(Dokumen, on_delete=models.CASCADE, null=True)
     lampiran = models.FileField(null=True, storage=None)
     is_active = models.BooleanField(default=True)'''
+
+class LogNotifikasi(models.Model):
+    time_stamp = models.DateTimeField(auto_now_add=True, null=True)
+    parent_user = models.ForeignKey(UserDetail, on_delete=models.CASCADE)
+    parent_document = models.ForeignKey(Dokumen, on_delete=models.CASCADE)
+    action = models.CharField(max_length=100, null=True)

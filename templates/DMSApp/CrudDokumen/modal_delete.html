@@ -1,7 +1,7 @@
 {% load custom_filters %}
 
 <!-- Modal delete arsip -->
-{% for obj in archive_list %}
+{% for obj in dokumen_list %}
 <div class="modal fade" id="mod2-{{ obj.id }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">
@@ -19,8 +19,8 @@
         <hr>
         <div class="row">
           <div class="col-6">
-            <h5>Document Name</h5>
-            <p>{{ obj.document_name }}</p>
+            <h5>Document</h5>
+            <p>{{ inisial_kategori }}.{{ nmr_dokumen }}.{{ sub_nmr_dokumen }} {{ nm_dokumen|capfirst }}</p>
           </div>
         </div>
         <div class="row">
@@ -32,7 +32,7 @@
 
       </div>
       <div class="modal-footer">
-        <form class="forms-sample" method="post" action="{% url 'arsip_is_delete' pk=obj.id %}">
+        <form class="forms-sample" method="post" action="{% url 'dokumen_is_delete' pk=obj.id %}">
           {% csrf_token %}
           <button type="submit" class="btn btn-dribbble mr-1">Delete</button>
       </form>

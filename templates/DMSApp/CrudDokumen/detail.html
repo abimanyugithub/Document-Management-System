@@ -40,7 +40,8 @@
 
             <div class="row">
               <div class="col-8">
-                <h4 class="card-title">{{ nm_arsip }}</h4>
+                <h4 class="card-title">{{ dokumen_detail.parent_category.category_initial }}.{{ dokumen_detail.document_no }}{% if dokumen_detail.sub_document_no %}.{{ dokumen_detail.sub_document_no }}{% endif %}</h4>
+                <h4 class="card-title">{{ dokumen_detail.document_name }}</h4>
                 <p class="card-description">
                   Add class <code>.table-striped</code>
                 </p>
@@ -49,63 +50,83 @@
               <div class="col-4">
                 <div class="justify-content-end d-flex">
                   <div class="m-3 inputs">
-                    {% if not archive_detail.is_approved %}
-                    <button type="submit" class="btn btn-primary mr-1" data-toggle="modal" data-target="#mod4">{% if archive_detail.is_inprogress %}Aprrove{% else %}Keep{% endif %}</button>
-                    {% endif %}
-                    <button type="button" class="btn btn-facebook" onclick="window.location.href='{% url 'arsip_list_detail' %}?menu={{ nm_dokumen|custom_slugify }}&dept={{ nm_departemen|custom_slugify }}&archive={{ nm_arsip|custom_slugify }}'">Back</button>
-                  </div>
+                    {% for stat in status %}
+                      {% for key, value in stat.items %}
+                        {% if user.is_releaser and key == 'is_releaser' %}
+                          <button type="submit" class="btn btn-primary mr-1" data-toggle="modal" data-target="#mod4">Release</button>
+                        {% elif not user.is_releaser and key == 'is_approver' %}
+                          <button type="submit" class="btn btn-primary mr-1" data-toggle="modal" data-target="#mod4">Approve</button>
+                        {% endif %}
+                      {% endfor %}
+                    {% endfor %}
+                    </div>
                 </div>
               </div>
-              
-            </div>
-
+            </div><hr>
+            
             <div class="row">
               <div class="card-title col-12">
                 <div class="row">
                   <div class="col-4">
                     <label>status</label>
-                    <p>{% if archive_detail.is_approved %}<div class="badge {% if not archive_detail.is_active %}badge-secondary{% else %}badge-success{% endif %}">{% if not archive_detail.is_active %}Obsolete{% else %}Approved{% endif %}</div>
-                      {% elif archive_detail.is_rejected %}<div class="badge badge-danger">Cancelled</div>
-                      {% else %}<a href="#" class="badge {% if archive_detail.is_inprogress %}badge-info{% else %}badge-warning{% endif %}" data-toggle="modal" data-target="#mod4">
-                        {% if archive_detail.is_inprogress %}
-                            In Review
-                        {% else %}
-                            Pending
-                        {% endif %}</a>
-                      {% endif %}
+                    <p>
+
+                      {% for stat in status %}
+                        {% for key, value in stat.items %}
+                        <div class="badge badge-{{ value.warna }}">{{ value.label }}</div>
+                        {% endfor %}
+                      {% endfor %}
                     </p>
                   </div>
                   <div class="col-4">
                     <label>created date</label>
-                    <p>{{ archive_detail.created_date|date:"d-m-Y" }}</p>
+                    <p>{{ dokumen_detail.created_date|date:"d-m-Y" }}</p>
                   </div>
                   <div class="col-4">
                     <label>department</label>
-                    <p>{{ archive_detail.parent_department.department }}</p>
+                    <p>{{ dokumen_detail.parent_department.department }}</p>
                   </div>
-                </div>
-              </div>
-              {% for key, value in list_label.items %}
-                {% for u in nm_label %}
-                  {% if u.name == key %}
-                    {% if value.type == 'file' %}
-                      <!-- Create new row for file type -->
-                      </div><hr><div class="row">
-                        <div class="col-4">
-                          <h5>{{ value.label }}</h5>
-                          <p><a href="{{ archive_detail|get_field_value:key }}" target="_blank">View {{ value.label }}</a></p>
-                        </div>
-                      </div><div class="row">
-                    {% else %}
-                    <!-- Get the names of the related labels -->
-                    <div class="col-4">
-                      <h5>{{ value.label }}</h5>
-                      <p>{{ archive_detail|get_field_value:u.name }}</p>
+                </div><hr>
+
+                <div div class="row">
+                {% for key, value in list_label.items %}
+                  {% for u in nm_label %}
+                    {% if u.name == key %}
+
+                    <div class="col-6">
+                      {% if value.label == "Document ID" %}
+                      {{ value.label }}:
+                      <p>{% if value.label == "Document ID" %}{{ dokumen_detail.parent_category.category_initial }}.{{ dokumen_detail|get_field_value:u.name }}{% if dokumen_detail.sub_document_no %}.{{ dokumen_detail.sub_document_no }}{% endif %}{% endif %}</p>
+                      {% elif value.type != "file" %}
+                      {{ value.label }}:
+                      <p>{{ dokumen_detail|get_field_value:u.name }}</p>
+                      {% endif %}
                     </div>
+
                     {% endif %}
-                  {% endif %}
+                  {% endfor %}
                 {% endfor %}
-              {% endfor %}
+                </div>
+
+                <div div class="row">
+                  {% for key, value in list_label.items %}
+                    {% for u in nm_label %}
+                      {% if u.name == key %}
+  
+                      {% if value.type == "file" %}
+                      <div class="col-12">
+                      {{ value.label }}:
+                      <p><a href="{{ dokumen_detail|get_field_value:key }}" target="_blank">View {{ value.label }}</a></p>
+                      </div>
+                      {% endif %}
+                     
+  
+                      {% endif %}
+                    {% endfor %}
+                  {% endfor %}
+                </div>
+
+              </div>
             </div>
           </div>
         </div>
@@ -146,5 +167,5 @@
         }
     }
 </script>
-{% include 'DMSApp/CrudArsip/modal_update.html' %} 
+{% include 'DMSApp/CrudDokumen/modal_update.html' %} 
 {% include 'DMSApp/Komponen/footer.html' %}

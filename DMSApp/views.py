@@ -722,7 +722,7 @@ class DokumenListView(ListView):
                 for label_dict in daftar_label:
                     context['list_label'] = label_dict
         return context
-    
+
     
 # contoh penomoran dokumen => 2. FMS.31.01 REV.02_MEMBUAT TAGIHAN CUSTOMER 8. FMS.31.05.02 REV.02_PPH 21 
 class DokumenCreateView(CreateView): # Revision juga menggunakan class ini
@@ -914,6 +914,16 @@ class DokumenNumberListView(ListView):
     template_name = 'DMSApp/CrudDokumen/view_detail.html'
     context_object_name = 'dokumen_list'
 
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        # Apply filters if parameters are provided
+        # queryset = queryset.filter(document_name=self.nma_dokumen, parent_category__category=self.nma_kategori, parent_department__department=self.nma_departemen).order_by('-revision_no')
+        queryset = queryset.filter(document_no=self.nomer_dokumen, parent_category__category=self.nma_kategori, parent_department__department=self.nma_departemen, sub_document_no=self.sub_nomer_dokumen).order_by('-revision_no')
+        
+        return queryset
+    
     def get(self, request, *args, **kwargs):
         # Get filter parameters from the GET request
         self.nma_kategori = request.GET.get('cat')
@@ -924,14 +934,6 @@ class DokumenNumberListView(ListView):
         
         return super().get(request, *args, **kwargs)
 
-    def get_queryset(self):
-        queryset = super().get_queryset()
-
-        # Apply filters if parameters are provided
-        # queryset = queryset.filter(document_name=self.nma_dokumen, parent_category__category=self.nma_kategori, parent_department__department=self.nma_departemen).order_by('-revision_no')
-        queryset = queryset.filter(document_no=self.nomer_dokumen, parent_category__category=self.nma_kategori, parent_department__department=self.nma_departemen, sub_document_no=self.sub_nomer_dokumen).order_by('-revision_no')
-        
-        return queryset
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -964,6 +966,23 @@ class DokumenNumberListView(ListView):
 
         for label_dict in daftar_label:
             context['list_label'] = label_dict
+
+        if nama_dokumen.is_active:
+
+            if nama_dokumen.is_released and nama_dokumen.is_approved:
+                context['status'] = [{'is_releaser': {"label": "Approved", "pesan": "released", "warna": "success"}}]
+
+            # elif and nama_dokumen.is_inprogress and nama_dokumen.is_approved:
+                # context['status'] = [{'is_releaser': {"label": "Form Number", "pesan": "do_release", "warna": "warning"}}]''
+
+            elif nama_dokumen.is_approved:
+                context['status'] = [{'is_releaser': {"label": "Approved by manager", "pesan": "do_waiting_release", "warna": "warning"}}]
+
+            elif nama_dokumen.is_inprogress:
+                context['status'] = [{'is_approver': {"label": "Document in review", "pesan": "do_approve", "warna": "warning"}}]
+
+            else:
+                context['status'] = [{'is_approver': {"label": "Waiting for review", "pesan": "do_waiting_approval", "warna": "info" }}]
 
         return context
     
@@ -1054,7 +1073,6 @@ class DokumenUpdateView(UpdateView):
         '''for i in kode_arsip:
             context['kode_arsip'] = i.document_no +' REV. '+ i.revision_no'''
         
-
         for label_dict in daftar_label:
             context['list_label'] = label_dict
             
@@ -1063,3 +1081,122 @@ class DokumenUpdateView(UpdateView):
 
         return context
     
+class DokumenDeleteView(DeleteView): # show in modal
+
+    def post(self, request, pk):
+        dokumen_instance_delete = Dokumen.objects.get(id=pk)
+        
+        # Delete the model instance
+        dokumen_instance_delete.delete()
+        
+        fs = FileSystemStorage()
+
+        # List of file fields to check and delete
+        file_fields = ['pdf_file', 'sheet_file', 'other_file']
+
+        # Iterate through each file field and delete if it exists
+        for file_field in file_fields:
+            file = getattr(dokumen_instance_delete, file_field)
+            if file and file.name:  # Check if the file field has a file
+                file_path = file.path
+                if fs.exists(file_path):
+                    fs.delete(file_path)
+                    print(f"{file_path} has been deleted.")
+                else:
+                    print(f"{file_path} does not exist.")
+
+        # return redirect(self.request.META.get('HTTP_REFERER'))
+        # Construct the success URL dynamically
+        success_url = reverse('dokumen_view') + f"?dept={dokumen_instance_delete.parent_department.department}&cat={dokumen_instance_delete.parent_category.category}"
+        # Redirect to the success URL
+        return redirect(success_url)
+    
+    
+class DokumenDetailView(DetailView): 
+    model = Dokumen
+    template_name = 'DMSApp/CrudDokumen/detail.html'  # You can customize the template name if needed
+    context_object_name = 'dokumen_detail'  # Specify the name of the variable to be used in the template
+
+    def get(self, request, *args, **kwargs):
+        # Get filter parameters from the GET request
+        self.nma_kategori = request.GET.get('cat')
+        self.nma_departemen = request.GET.get('dept')
+        # self.nma_dokumen = request.GET.get('docs')
+        self.nomer_dokumen = request.GET.get('docs')
+        self.sub_nomer_dokumen = request.GET.get('sub')
+        
+        return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        '''nma_dokumen = self.request.GET.get('menu')
+        nma_departemen = self.request.GET.get('dept')
+        nma_arsip = self.request.GET.get('archive')'''
+
+        # if self.nma_kategori:
+        # Retrieve the related MenuDokumen objects for the Departemen
+        kategori_obj = KategoriDokumen.objects.get(category=self.nma_kategori)
+        relasi_label = kategori_obj.related_label.all()
+        context['nm_kategori'] = self.nma_kategori
+        context['nm_departemen'] = self.nma_departemen
+        '''context['nm_dokumen'] = nma_arsip
+
+        kode_arsip = Dokumen.objects.filter(document_name=nma_arsip, is_active=True)
+
+        for i in kode_arsip:
+            context['kode_arsip'] = i.document_no +' REV. '+ i.revision_no
+        '''
+        context['nm_label'] = relasi_label
+
+        for label_dict in daftar_label:
+            context['list_label'] = label_dict
+
+        if self.get_object().is_active:
+
+            if self.get_object().is_released and self.get_object().is_approved:
+                context['status'] = [{'is_releaser': {"label": "Approved", "pesan": "released", "warna": "success"}}]
+
+            # elif self.get_object().is_inprogress and self.get_object().is_approved:
+                # context['status'] = [{'is_releaser': {"label": "Form Number", "pesan": "do_release", "warna": "warning"}}]''
+
+            elif self.get_object().is_approved:
+                context['status'] = [{'is_releaser': {"label": "Approved by manager", "pesan": "do_waiting_release", "warna": "warning"}}]
+
+            elif self.get_object().is_inprogress:
+                context['status'] = [{'is_approver': {"label": "Document in review", "pesan": "do_approve", "warna": "warning"}}]
+
+            else:
+                context['status'] = [{'is_approver': {"label": "Waiting for review", "pesan": "do_waiting_approval", "warna": "info" }}]
+
+        return context
+    
+    
+class DokumenUpdateStatusView(UpdateView): # Show in modal
+
+    def post(self, request, pk):
+        dokumen_instance_update = Dokumen.objects.get(id=pk)
+        opsi_aktivasi = request.POST.get('status')
+
+        if opsi_aktivasi == "do_waiting_approval":
+            dokumen_instance_update.is_inprogress = True
+            dokumen_instance_update.save(update_fields=['is_inprogress'])
+
+        elif opsi_aktivasi == "do_approve":
+            # Update other instances where is_active is True to False
+            # Dokumen.objects.exclude(id=pk).filter(is_active=True, document_no=archive_instance_update.document_no).update(is_active=False)
+            dokumen_instance_update.is_approved = True
+            dokumen_instance_update.is_inprogress = False
+            dokumen_instance_update.save(update_fields=['is_inprogress', 'is_approved'])
+
+        
+        # elif opsi_aktivasi == "do_waiting_release":
+            # dokumen_instance_update.is_inprogress = True
+            # dokumen_instance_update.save(update_fields=['is_inprogress'])
+
+        elif opsi_aktivasi == "do_release":
+            dokumen_instance_update.is_released = True
+            # dokumen_instance_update.is_inprogress = False
+            # dokumen_instance_update.save(update_fields=['is_inprogress', 'is_released'])
+            dokumen_instance_update.save(update_fields=['is_released'])
+
+        return redirect(self.request.META.get('HTTP_REFERER'))
