@@ -97,3 +97,4 @@ class LogNotifikasi(models.Model):
     parent_user = models.ForeignKey(UserDetail, on_delete=models.CASCADE)
     parent_document = models.ForeignKey(Dokumen, on_delete=models.CASCADE)
     action = models.CharField(max_length=100, null=True)
+    reason = models.TextField(blank=True)

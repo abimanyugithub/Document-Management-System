@@ -31,11 +31,11 @@
             <div class="col">
               <p>Allow Document(s)</p>
               <div class="row">
-                {% for dokumen in list_dokumen %}
+                {% for kategori in list_kategori %}
                 <div class="col-md-6 col-lg-4">
                   <div class="form-check">
                     <label class="form-check-label">
-                    <input type="checkbox" class="form-check-input" name="checklist_dokumen" value="{{ dokumen.id }}">{{ dokumen.document|capfirst }}
+                    <input type="checkbox" class="form-check-input" name="checklist_kategori" value="{{ kategori.id }}">{{ dokumen.document|capfirst }}
                     </label>
                   </div>
                 </div>

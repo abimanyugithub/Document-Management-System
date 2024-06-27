@@ -1,7 +1,7 @@
 from itertools import chain
 from django.shortcuts import render, redirect
 from django.views.generic import TemplateView, CreateView, ListView, UpdateView, DeleteView, DetailView, View
-from .models import UserDetail, Departemen, KategoriDokumen, KategoriDokumenLabel, Dokumen
+from .models import UserDetail, Departemen, KategoriDokumen, KategoriDokumenLabel, Dokumen, LogNotifikasi
 from django.conf import settings
 from urllib.parse import urljoin
 import os, shutil
@@ -730,19 +730,6 @@ class DokumenCreateView(CreateView): # Revision juga menggunakan class ini
     template_name = 'DMSApp/CrudDokumen/create.html'
     fields = []  # Remove fields, as we are handling them manually
 
-    '''def post(self, request, *args, **kwargs):
-        # Get filter parameters from the POST request
-        self.nma_kategori = request.POST.get('kategori')  # from get_context_data
-        self.nma_departemen = request.POST.get('departemen') # from get_context_data
-        # get_context_data for revision
-        self.nma_dokumen = request.POST.get('document_name')
-        self.no_dokumen = request.POST.get('document_no')
-        # no_form = self.request.POST.get('form_no')
-        self.no_revisi = request.POST.get('revision_no')
-        self.sub_dokumen_no = request.POST.get('sub_doc_no')
-        
-        return self.get(request, *args, **kwargs)'''
-
     def form_valid(self, form):
         # Get filter parameters from the POST request
         nma_kategori = self.request.POST.get('kategori')  # from get_context_data
@@ -801,6 +788,9 @@ class DokumenCreateView(CreateView): # Revision juga menggunakan class ini
             # Save the form
             self.object = form.save()
 
+            # Create a value in another model after saving 
+            LogNotifikasi.objects.create(parent_user=self.request.user, parent_document=self.object, action="is_upload", reason="new upload")
+            
             # Handle saving dynamic fields and files
             directory = os.path.join(folder_target, 'temp_directory', nma_kategori, nma_departemen)
             # directory = os.path.join(folder_target, nma_dokumen, nma_departemen)
@@ -863,7 +853,7 @@ class DokumenCreateView(CreateView): # Revision juga menggunakan class ini
             context['nm_kategori'] = get_nma_kategori
 
             # Calculate next penomeran_dokumen
-            max_document_no = Dokumen.objects.aggregate(Max('document_no'))
+            max_document_no = Dokumen.objects.filter(parent_category=kategori_obj.id).aggregate(Max('document_no'))
             if max_document_no['document_no__max'] is not None:
                 current_max = int(max_document_no['document_no__max'])
                 next_number = current_max + 1
@@ -1129,16 +1119,23 @@ class DokumenDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        '''nma_dokumen = self.request.GET.get('menu')
-        nma_departemen = self.request.GET.get('dept')
-        nma_arsip = self.request.GET.get('archive')'''
 
         # if self.nma_kategori:
         # Retrieve the related MenuDokumen objects for the Departemen
         kategori_obj = KategoriDokumen.objects.get(category=self.nma_kategori)
         relasi_label = kategori_obj.related_label.all()
+
         context['nm_kategori'] = self.nma_kategori
         context['nm_departemen'] = self.nma_departemen
+
+        nama_dokumen = Dokumen.objects.get(parent_category__category=self.nma_kategori, document_no=self.nomer_dokumen, sub_document_no=self.sub_nomer_dokumen)
+        context['nm_dokumen'] = nama_dokumen.document_name
+        context['inisial_kategori'] = nama_dokumen.parent_category.category_initial
+        context['nmr_dokumen'] = nama_dokumen.document_no
+
+        if self.sub_nomer_dokumen:
+            context['sub_nmr_dokumen'] = nama_dokumen.sub_document_no
+
         '''context['nm_dokumen'] = nma_arsip
 
         kode_arsip = Dokumen.objects.filter(document_name=nma_arsip, is_active=True)
@@ -1168,6 +1165,8 @@ class DokumenDetailView(DetailView):
             else:
                 context['status'] = [{'is_approver': {"label": "Waiting for review", "pesan": "do_waiting_approval", "warna": "info" }}]
 
+        context['log_notifikasi'] = LogNotifikasi.objects.filter(parent_document=nama_dokumen.id)
+
         return context
     
     
@@ -1181,6 +1180,10 @@ class DokumenUpdateStatusView(UpdateView): # Show in modal
             dokumen_instance_update.is_inprogress = True
             dokumen_instance_update.save(update_fields=['is_inprogress'])
 
+            # Create a value in another model after saving
+            LogNotifikasi.objects.create(parent_user=self.request.user, parent_document=dokumen_instance_update, action="is_review", reason="in review approval")
+            
+
         elif opsi_aktivasi == "do_approve":
             # Update other instances where is_active is True to False
             # Dokumen.objects.exclude(id=pk).filter(is_active=True, document_no=archive_instance_update.document_no).update(is_active=False)
@@ -1188,7 +1191,6 @@ class DokumenUpdateStatusView(UpdateView): # Show in modal
             dokumen_instance_update.is_inprogress = False
             dokumen_instance_update.save(update_fields=['is_inprogress', 'is_approved'])
 
-        
         # elif opsi_aktivasi == "do_waiting_release":
             # dokumen_instance_update.is_inprogress = True
             # dokumen_instance_update.save(update_fields=['is_inprogress'])

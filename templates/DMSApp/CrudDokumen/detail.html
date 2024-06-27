@@ -13,18 +13,11 @@
             <h3 class="font-weight-bold">Document Management System</h3>
             <nav aria-label="breadcrumb rounded-0">
               <ol class="breadcrumb">
-                <li class="breadcrumb-item">Document</li>
-                {% if nm_departemen %}
+                <li class="breadcrumb-item">Document</li>   
                 <li class="breadcrumb-item active" aria-current="page">{{ nm_departemen|capfirst }}</li>
-                {% endif %}
-                <li class="breadcrumb-item active" aria-current="page">{% if nm_dokumen %}<a href='{% url 'arsip_view' %}?dept={{ nm_departemen|custom_slugify }}'>{% endif %}Category</a></li>
-                {% if nm_dokumen %}
-                <li class="breadcrumb-item active" aria-current="page">{% if nm_dokumen %}<a href='{% url 'arsip_view' %}?menu={{ nm_dokumen|custom_slugify }}&dept={{ nm_departemen|custom_slugify }}'>{% endif %}{{ nm_dokumen|capfirst }}</a></li>
-                {% endif %}
-                {% if nm_arsip %}
-                <li class="breadcrumb-item active" aria-current="page">{% if nm_dokumen %}<a href='{% url 'arsip_list_detail' %}?menu={{ nm_dokumen|custom_slugify }}&dept={{ nm_departemen|custom_slugify }}&archive={{ nm_arsip|custom_slugify }}'>{% endif %}{{ nm_arsip|capfirst }}</a></li>
-                <li class="breadcrumb-item active" aria-current="page"> {{ kode_arsip }} </li>
-                {% endif %}
+                <li class="breadcrumb-item active" aria-current="page"><a href='{% url 'dokumen_view' %}?dept={{ nm_departemen|custom_slugify }}'>Category</a></li>
+                <li class="breadcrumb-item active" aria-current="page"><a href='{% url 'dokumen_view' %}?dept={{ nm_departemen|custom_slugify }}&cat={{ nm_kategori|custom_slugify }}'>{{ nm_kategori|capfirst }}</a></li>
+                <li class="breadcrumb-item active" aria-current="page"><a href='{% url 'dokumen_list_view' %}?dept={{ nm_departemen|custom_slugify }}&cat={{ nm_kategori|custom_slugify }}&docs={{ nmr_dokumen|custom_slugify }}{% if sub_nmr_dokumen %}&sub={{ sub_nmr_dokumen|custom_slugify }}{% endif %}'>{{ inisial_kategori }}.{{ nmr_dokumen }}.{{ sub_nmr_dokumen }} {{ nm_dokumen|capfirst }}</a></li>
                 <li class="breadcrumb-item active" aria-current="page">Detail</li>
               </ol>
             </nav>
@@ -41,7 +34,7 @@
             <div class="row">
               <div class="col-8">
                 <h4 class="card-title">{{ dokumen_detail.parent_category.category_initial }}.{{ dokumen_detail.document_no }}{% if dokumen_detail.sub_document_no %}.{{ dokumen_detail.sub_document_no }}{% endif %}</h4>
-                <h4 class="card-title">{{ dokumen_detail.document_name }}</h4>
+                <h4 class="card-description">{{ dokumen_detail.document_name }}</h4>
                 <p class="card-description">
                   Add class <code>.table-striped</code>
                 </p>
@@ -54,7 +47,7 @@
                       {% for key, value in stat.items %}
                         {% if user.is_releaser and key == 'is_releaser' %}
                           <button type="submit" class="btn btn-primary mr-1" data-toggle="modal" data-target="#mod4">Release</button>
-                        {% elif not user.is_releaser and key == 'is_approver' %}
+                        {% elif user.is_approver and key == 'is_approver' %}
                           <button type="submit" class="btn btn-primary mr-1" data-toggle="modal" data-target="#mod4">Approve</button>
                         {% endif %}
                       {% endfor %}
@@ -65,12 +58,11 @@
             </div><hr>
             
             <div class="row">
-              <div class="card-title col-12">
+              <div class="card-text col-12">
                 <div class="row">
                   <div class="col-4">
-                    <label>status</label>
+                    <label class="card-title">status</label>
                     <p>
-
                       {% for stat in status %}
                         {% for key, value in stat.items %}
                         <div class="badge badge-{{ value.warna }}">{{ value.label }}</div>
@@ -79,13 +71,27 @@
                     </p>
                   </div>
                   <div class="col-4">
-                    <label>created date</label>
+                    <label class="card-title">created date</label>
                     <p>{{ dokumen_detail.created_date|date:"d-m-Y" }}</p>
                   </div>
                   <div class="col-4">
-                    <label>department</label>
+                    <label class="card-title">department</label>
                     <p>{{ dokumen_detail.parent_department.department }}</p>
                   </div>
+                  {% for log in log_notifikasi %}
+                  <div class="col-4">
+                    <label class="card-title">user</label>
+                    <p>{{ log.parent_user.username }}</p>
+                  </div>
+                  <div class="col-4">
+                    <label class="card-title">action</label>
+                    <p>{{ log.action }}</p>
+                  </div>
+                  <div class="col-4">
+                    <label class="card-title">time</label>
+                    <p>{{ log.time_stamp }}</p>
+                  </div>
+                  {% endfor %}
                 </div><hr>
 
                 <div div class="row">
@@ -93,12 +99,12 @@
                   {% for u in nm_label %}
                     {% if u.name == key %}
 
-                    <div class="col-6">
+                    <div class="col-4">
                       {% if value.label == "Document ID" %}
-                      {{ value.label }}:
+                      <label class="card-title">{{ value.label }}:</label>
                       <p>{% if value.label == "Document ID" %}{{ dokumen_detail.parent_category.category_initial }}.{{ dokumen_detail|get_field_value:u.name }}{% if dokumen_detail.sub_document_no %}.{{ dokumen_detail.sub_document_no }}{% endif %}{% endif %}</p>
                       {% elif value.type != "file" %}
-                      {{ value.label }}:
+                      <label class="card-title">{{ value.label }}:</label>
                       <p>{{ dokumen_detail|get_field_value:u.name }}</p>
                       {% endif %}
                     </div>
@@ -108,18 +114,17 @@
                 {% endfor %}
                 </div>
 
-                <div div class="row">
+                <div div class="row mt-5">
                   {% for key, value in list_label.items %}
                     {% for u in nm_label %}
                       {% if u.name == key %}
   
-                      {% if value.type == "file" %}
-                      <div class="col-12">
-                      {{ value.label }}:
-                      <p><a href="{{ dokumen_detail|get_field_value:key }}" target="_blank">View {{ value.label }}</a></p>
-                      </div>
-                      {% endif %}
-                     
+                        {% if value.type == "file" %}
+                        <div class="col-4">
+                        <label class="card-title">{{ value.label }}:</label>
+                        <p><a href="{{ dokumen_detail|get_field_value:key }}" target="_blank">View {{ value.label }}</a></p>
+                        </div>
+                        {% endif %}
   
                       {% endif %}
                     {% endfor %}
