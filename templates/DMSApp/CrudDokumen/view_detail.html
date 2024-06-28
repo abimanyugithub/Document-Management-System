@@ -21,7 +21,7 @@
                 <li class="breadcrumb-item active" aria-current="page">{% if nm_kategori %}<a href='{% url 'dokumen_view' %}?dept={{ nm_departemen|custom_slugify }}&cat={{ nm_kategori|custom_slugify }}'>{% endif %}{{ nm_kategori|capfirst }}</a></li>
                 {% endif %}
                 {% if nm_dokumen %}
-                <li class="breadcrumb-item active" aria-current="page">{{ inisial_kategori }}.{{ nmr_dokumen }}.{{ sub_nmr_dokumen }} {{ nm_dokumen|capfirst }}</li>
+                <li class="breadcrumb-item active" aria-current="page">{{ inisial_kategori|add:"." }}{{ kode_departemen|add:"."}}{{ nmr_dokumen }}{% if sub_nmr_dokumen %}{{ text|default:"." }}{{ sub_nmr_dokumen }}{% endif %}&nbsp;{{ nm_dokumen|capfirst }}</li>
                 {% endif %}
               </ol>
             </nav>
@@ -50,7 +50,7 @@
 
             <div class="row">
               <div class="col-8">
-                <h4 class="card-title">{{ nm_arsip }}</h4>
+                <h4 class="card-title">{{ nm_dokumen }}</h4>
                 <p class="card-description">
                   Add class <code>.table-striped</code>
                 </p>
@@ -84,7 +84,7 @@
                           {% if u.name == key %}
                             {% if value.type != "file" %}
                               {% if value.label == "Document ID" %}
-                              <td>{% if value.label == "Document ID" %}{{ obj.parent_category.category_initial }}.{% endif %}{{ obj|get_field_value:key|capfirst }}{% if obj.sub_document_no %}.{{ obj.sub_document_no }}{% endif %}</td>
+                              <td>{{ inisial_kategori|add:"." }}{% if kode_departemen %}{{ kode_departemen|add:"." }}{% endif %}{{ obj|get_field_value:key|capfirst }}{% if obj.sub_document_no %}{{ text|default:"."}}{{ obj.sub_document_no }}{% endif %}</td>
                               {% else %}
                               <td>{{ obj|get_field_value:key|capfirst }}</td>
                               {% endif %}

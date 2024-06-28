@@ -17,7 +17,8 @@
                 <li class="breadcrumb-item active" aria-current="page">{{ nm_departemen|capfirst }}</li>
                 <li class="breadcrumb-item active" aria-current="page"><a href='{% url 'dokumen_view' %}?dept={{ nm_departemen|custom_slugify }}'>Category</a></li>
                 <li class="breadcrumb-item active" aria-current="page"><a href='{% url 'dokumen_view' %}?dept={{ nm_departemen|custom_slugify }}&cat={{ nm_kategori|custom_slugify }}'>{{ nm_kategori|capfirst }}</a></li>
-                <li class="breadcrumb-item active" aria-current="page"><a href='{% url 'dokumen_list_view' %}?dept={{ nm_departemen|custom_slugify }}&cat={{ nm_kategori|custom_slugify }}&docs={{ nmr_dokumen|custom_slugify }}{% if sub_nmr_dokumen %}&sub={{ sub_nmr_dokumen|custom_slugify }}{% endif %}'>{{ inisial_kategori }}.{{ nmr_dokumen }}.{{ sub_nmr_dokumen }} {{ nm_dokumen|capfirst }}</a></li>
+                <li class="breadcrumb-item active" aria-current="page"><a href='{% url 'dokumen_list_view' %}?dept={{ nm_departemen|custom_slugify }}&cat={{ nm_kategori|custom_slugify }}&docs={{ nmr_dokumen|custom_slugify }}{% if sub_nmr_dokumen %}&sub={{ sub_nmr_dokumen|custom_slugify }}{% endif %}'>
+                  {{ inisial_kategori|add:"." }}{{ kode_departemen|add:"." }}{{ nmr_dokumen }}{% if sub_nmr_dokumen %}{{ text|default:"." }}{{ sub_nmr_dokumen }}{% endif %}&nbsp;{{ nm_dokumen|capfirst }}</a></li>
                 <li class="breadcrumb-item active" aria-current="page">Detail</li>
               </ol>
             </nav>
@@ -26,20 +27,19 @@
       </div>
     </div>
 
-    <div class="row">
+    <div class="row" id="accordion">
       <div class="col-lg-12 grid-margin stretch-card">
         <div class="card shadow">
           <div class="card-body">
-
+            <!-- row -->
             <div class="row">
               <div class="col-8">
-                <h4 class="card-title">{{ dokumen_detail.parent_category.category_initial }}.{{ dokumen_detail.document_no }}{% if dokumen_detail.sub_document_no %}.{{ dokumen_detail.sub_document_no }}{% endif %}</h4>
-                <h4 class="card-description">{{ dokumen_detail.document_name }}</h4>
+                <h4 class="card-title">{{ inisial_kategori|add:"." }}{{ kode_departemen|add:"." }}{{ nmr_dokumen }}{% if sub_nmr_dokumen %}{{ text|default:"." }}{{ sub_nmr_dokumen }}{% endif %}</h4>
+                <h4 class="card-description">{{ nm_dokumen }}</h4>
                 <p class="card-description">
                   Add class <code>.table-striped</code>
                 </p>
               </div>
-              
               <div class="col-4">
                 <div class="justify-content-end d-flex">
                   <div class="m-3 inputs">
@@ -56,19 +56,13 @@
                 </div>
               </div>
             </div><hr>
-            
+            <!-- row -->
             <div class="row">
               <div class="card-text col-12">
                 <div class="row">
                   <div class="col-4">
-                    <label class="card-title">status</label>
-                    <p>
-                      {% for stat in status %}
-                        {% for key, value in stat.items %}
-                        <div class="badge badge-{{ value.warna }}">{{ value.label }}</div>
-                        {% endfor %}
-                      {% endfor %}
-                    </p>
+                    <label class="card-title">status</label>{% for stat in status %}{% for key, value in stat.items %}
+                    <p><span class="badge badge-{{ value.warna }}">{{ value.label }}</span></p>{% endfor %}{% endfor %}
                   </div>
                   <div class="col-4">
                     <label class="card-title">created date</label>
@@ -78,61 +72,70 @@
                     <label class="card-title">department</label>
                     <p>{{ dokumen_detail.parent_department.department }}</p>
                   </div>
-                  {% for log in log_notifikasi %}
+                </div>
+              </div>
+            </div><hr>
+            <!-- row -->
+            <div div class="row">
+            {% for key, value in list_label.items %}
+              {% for u in nm_label %}
+                {% if u.name == key %}
+                <div class="col-4">
+                  {% if value.label == "Document ID" %}
+                  <label class="card-title">{{ value.label }}</label>
+                  <p>{{ inisial_kategori|add:"." }}{% if kode_departemen %}{{ kode_departemen|add:"." }}{% endif %}{{ dokumen_detail|get_field_value:u.name }}{% if dokumen_detail.sub_document_no %}{{ text|default:"."}}{{ dokumen_detail.sub_document_no }}{% endif %}
+                  {% elif value.type != "file" %}
+                  <label class="card-title">{{ value.label }}</label>
+                  <p>{{ dokumen_detail|get_field_value:u.name }}</p>
+                  {% endif %}
+                </div>
+                {% endif %}
+              {% endfor %}
+            {% endfor %}
+            </div>
+            <!-- row -->
+            <div div class="row mt-5">
+            {% for key, value in list_label.items %}
+              {% for u in nm_label %}
+                {% if u.name == key %}
+                  {% if value.type == "file" %}
                   <div class="col-4">
-                    <label class="card-title">user</label>
-                    <p>{{ log.parent_user.username }}</p>
+                  <label class="card-title">{{ value.label }}</label>
+                  <p><a href="{{ dokumen_detail|get_field_value:key }}" target="_blank">View {{ value.label }}</a></p>
                   </div>
-                  <div class="col-4">
-                    <label class="card-title">action</label>
-                    <p>{{ log.action }}</p>
-                  </div>
-                  <div class="col-4">
-                    <label class="card-title">time</label>
-                    <p>{{ log.time_stamp }}</p>
-                  </div>
-                  {% endfor %}
-                </div><hr>
-
-                <div div class="row">
-                {% for key, value in list_label.items %}
-                  {% for u in nm_label %}
-                    {% if u.name == key %}
-
+                  {% endif %}
+                {% endif %}
+              {% endfor %}
+            {% endfor %}
+            </div>
+                
+            <div class="justify-content-end d-flex">
+              <button class="btn btn-link" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                Show log
+              </button>
+            </div>
+            <!-- row -->
+            <div class="row">
+              <div class="card-text col-12">
+                
+                <div id="collapseOne" class="collapse" aria-labelledby="headingOne" data-parent="#accordion"><hr>
+                  <div class="row">
+                    {% for obj in log_notifikasi %}
                     <div class="col-4">
-                      {% if value.label == "Document ID" %}
-                      <label class="card-title">{{ value.label }}:</label>
-                      <p>{% if value.label == "Document ID" %}{{ dokumen_detail.parent_category.category_initial }}.{{ dokumen_detail|get_field_value:u.name }}{% if dokumen_detail.sub_document_no %}.{{ dokumen_detail.sub_document_no }}{% endif %}{% endif %}</p>
-                      {% elif value.type != "file" %}
-                      <label class="card-title">{{ value.label }}:</label>
-                      <p>{{ dokumen_detail|get_field_value:u.name }}</p>
-                      {% endif %}
+                      <ul class="d-flex flex-column-reverse todo-list">
+                        <li>
+                          <span>{{ obj.time_stamp }}</span>
+                          <p class="mb-0 font-weight-thin text-gray">{{ obj.reason|add:" by "}}{{ obj.parent_user.first_name }} {{ obj.parent_user.last_name }}</p>
+                        <p class="text-gray mb-0 ">Call Sarah Graves</p>
+                        </li>
+                      </ul>
                     </div>
-
-                    {% endif %}
-                  {% endfor %}
-                {% endfor %}
-                </div>
-
-                <div div class="row mt-5">
-                  {% for key, value in list_label.items %}
-                    {% for u in nm_label %}
-                      {% if u.name == key %}
-  
-                        {% if value.type == "file" %}
-                        <div class="col-4">
-                        <label class="card-title">{{ value.label }}:</label>
-                        <p><a href="{{ dokumen_detail|get_field_value:key }}" target="_blank">View {{ value.label }}</a></p>
-                        </div>
-                        {% endif %}
-  
-                      {% endif %}
                     {% endfor %}
-                  {% endfor %}
+                  </div>
                 </div>
-
               </div>
             </div>
+            
           </div>
         </div>
       </div>

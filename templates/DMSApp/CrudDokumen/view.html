@@ -98,7 +98,8 @@
                         {% if u.name == key %}
                           {% if value.type != "file" %}
                             {% if value.label == "Document ID" %}
-                            <td><a href="{% url 'dokumen_list_view' %}?dept={{ nm_departemen|custom_slugify }}&cat={{ nm_kategori|custom_slugify }}&docs={{ obj|get_field_value:key|custom_slugify }}{% if obj.sub_document_no %}&sub={{ obj.sub_document_no }}{% endif %}">{{ obj.parent_category.category_initial }}.{{ obj|get_field_value:key|capfirst }}{% if obj.sub_document_no %}.{{ obj.sub_document_no }}{% endif %}</a></td>
+                            <td><a href="{% url 'dokumen_list_view' %}?dept={{ nm_departemen|custom_slugify }}&cat={{ nm_kategori|custom_slugify }}&docs={{ obj|get_field_value:key|custom_slugify }}{% if obj.sub_document_no %}&sub={{ obj.sub_document_no }}{% endif %}">
+                              {{ inisial_kategori|add:"." }}{{ kode_departemen|add:"." }}{{ obj|get_field_value:key|capfirst }}{% if obj.sub_document_no %}{{ text|default:"." }}{{ obj.sub_document_no }}{% endif %}</a></td>
                             {% else %}
                             <td>
                               {{ obj|get_field_value:key|capfirst }}

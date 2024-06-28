@@ -14,13 +14,9 @@
             <nav aria-label="breadcrumb rounded-0">
               <ol class="breadcrumb">
                 <li class="breadcrumb-item">Document</li>
-                {% if nm_departemen %}
                 <li class="breadcrumb-item active" aria-current="page">{{ nm_departemen|capfirst }}</li>
-                {% endif %}
-                <li class="breadcrumb-item active" aria-current="page">{% if nm_kategori %}<a href='{% url 'dokumen_view' %}?dept={{ nm_departemen|custom_slugify }}'>{% endif %}Category</a></li>
-                {% if nm_kategori %}
-                <li class="breadcrumb-item active" aria-current="page">{% if nm_kategori %}<a href='{% url 'dokumen_view' %}?dept={{ nm_departemen|custom_slugify }}&cat={{ nm_kategori|custom_slugify }}'>{% endif %}{{ nm_kategori|capfirst }}</a></li>
-                {% endif %}
+                <li class="breadcrumb-item active" aria-current="page"><a href='{% url 'dokumen_view' %}?dept={{ nm_departemen|custom_slugify }}'>Category</a></li>
+                <li class="breadcrumb-item active" aria-current="page"><a href='{% url 'dokumen_view' %}?dept={{ nm_departemen|custom_slugify }}&cat={{ nm_kategori|custom_slugify }}'>{{ nm_kategori|capfirst }}</a></li>
                 {% if nma_dokumen %}
                 <li class="breadcrumb-item active" aria-current="page">{% if nm_kategori %}<a href='{% url 'dokumen_view' %}?dept={{ nm_departemen|custom_slugify }}&cat={{ nm_kategori|custom_slugify }}&archive={{ nma_dokumen|custom_slugify }}'>{% endif %}{{ nm_arsip|capfirst }}</a></li>
                 <li class="breadcrumb-item active">{{ kode_arsip }}</li>
@@ -43,7 +39,7 @@
               <div class="col-8">
                 <h4 class="card-title">{% if nm_arsip %} Revision {% else %} Register {% endif %} Document - {{ nm_kategori|capfirst }}</h4>
                 <p class="card-description">
-                  Add class <code>.table-striped</code>{% for u in get_id %}{{ u.name }}{% endfor %}
+                  Add class <code>.table-striped</code>
                 </p>
               </div>
             </div>
@@ -67,10 +63,10 @@
                             {% if value.label == "Document ID" %}
                               <div class="input-group">
                                 <div class="input-group-prepend">
-                                    <span class="input-group-text input-group-text text-dark bg-white border-0" id="staticText">{{ nma_inisial }} — </span>
+                                    <span class="input-group-text input-group-text text-dark bg-white border-0" id="staticText">{{ nma_inisial|add:" — " }}</span>
                                 </div>
                                 <input type="{{ value.type }}" class="form-control" id="{{ key }}" name="{{ key }}" placeholder="{{ value.label }}" value="{{ penomeran_dokumen }}" required >
-                                <span class="input-group-text input-group-text text-dark bg-white border-0" id="staticText"> — </span>
+                                <span class="input-group-text input-group-text text-dark bg-white border-0" id="staticText">{{ text|default:" — " }}</span>
                                 <input type="text" class="form-control" name="sub_doc_no" placeholder="Sub {{ value.label }}">
                               </div>
                             {% else %}

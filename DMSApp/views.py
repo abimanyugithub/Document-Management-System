@@ -686,10 +686,10 @@ class DokumenListView(ListView):
 
         if self.nma_departemen:
             # Retrieve the Departemen object with the given department_id
-            departemen = Departemen.objects.get(department=self.nma_departemen, is_active=True)
+            self.departemen = Departemen.objects.get(department=self.nma_departemen, is_active=True)
                 
             # Retrieve the related MenuDokumen objects for the Departemen
-            queryset = departemen.related_category.all().order_by('category')
+            queryset = self.departemen.related_category.all().order_by('category')
             
         return queryset
 
@@ -702,9 +702,11 @@ class DokumenListView(ListView):
             if self.nma_kategori:
                 context['nm_kategori'] = self.nma_kategori
                 context['data_kategori_list'] = KategoriDokumen.objects.filter(category=self.nma_kategori)
-                nma_label = KategoriDokumen.objects.get(category=self.nma_kategori)
-                relasi_label = nma_label.related_label.all()
+                kategori_obj = KategoriDokumen.objects.get(category=self.nma_kategori)
+                relasi_label = kategori_obj.related_label.all()
                 context['nm_label'] = relasi_label
+                context['kode_departemen'] = self.departemen.department_code
+                context['inisial_kategori'] = kategori_obj.category_initial
 
                 # Fetch the queryset
                 dokumen_list = Dokumen.objects.filter(parent_category__category=self.nma_kategori, parent_department__department=self.nma_departemen).order_by('document_no', '-revision_no')
@@ -712,15 +714,17 @@ class DokumenListView(ListView):
                 # Use Python to filter out duplicates based on document_no
                 unique_dokumen_list = []
                 seen_document_nos = set()
-                for arsip in dokumen_list:
-                    if arsip.document_no and arsip.sub_document_no not in seen_document_nos:
-                        unique_dokumen_list.append(arsip)
-                        seen_document_nos.add(arsip.document_no)
+                for doc in dokumen_list:
+
+                    if doc.document_no and doc.sub_document_no not in seen_document_nos:
+                        unique_dokumen_list.append(doc)
+                        seen_document_nos.add(doc.document_no)
 
                 context['dokumen_list'] = unique_dokumen_list
-
+                    
                 for label_dict in daftar_label:
                     context['list_label'] = label_dict
+                    
         return context
 
     
@@ -731,6 +735,7 @@ class DokumenCreateView(CreateView): # Revision juga menggunakan class ini
     fields = []  # Remove fields, as we are handling them manually
 
     def form_valid(self, form):
+        
         # Get filter parameters from the POST request
         nma_kategori = self.request.POST.get('kategori')  # from get_context_data
         nma_departemen = self.request.POST.get('departemen') # from get_context_data
@@ -745,8 +750,8 @@ class DokumenCreateView(CreateView): # Revision juga menggunakan class ini
         kategori_obj = KategoriDokumen.objects.get(category=nma_kategori)
         departemen_obj = Departemen.objects.get(department=nma_departemen)
 
-        if self.request.user.is_uploader and self.request.user.user_department == departemen_obj:
-            
+        if self.request.user.is_superuser or self.request.user.is_uploader and self.request.user.user_department == departemen_obj:
+                
             '''# Check if a document name or document no with the same name already exists
             if Dokumen.objects.filter(document_name=nma_arsip).exists() or Dokumen.objects.filter(document_name=nma_arsip, document_no=self.no_dokumen).exists():
                 raise PermissionDenied('An entry with this document name or document number already exists.')'''
@@ -789,7 +794,7 @@ class DokumenCreateView(CreateView): # Revision juga menggunakan class ini
             self.object = form.save()
 
             # Create a value in another model after saving 
-            LogNotifikasi.objects.create(parent_user=self.request.user, parent_document=self.object, action="is_upload", reason="new upload")
+            LogNotifikasi.objects.create(parent_user=self.request.user, parent_document=self.object, action="is_upload", reason="Document has been uploaded")
             
             # Handle saving dynamic fields and files
             directory = os.path.join(folder_target, 'temp_directory', nma_kategori, nma_departemen)
@@ -933,14 +938,15 @@ class DokumenNumberListView(ListView):
             kategori_obj = KategoriDokumen.objects.get(category=self.nma_kategori)
             relasi_label = kategori_obj.related_label.all()
             context['nm_kategori'] = self.nma_kategori
-            context['nm_departemen'] = self.nma_departemen
-            # context['nm_dokumen'] = self.nma_dokumen
+            departemen = Departemen.objects.get(department=self.nma_departemen)
+            context['nm_departemen'] = departemen.department
+            context['kode_departemen'] = departemen.department_code
 
             nama_dokumen = self.object_list.get(parent_category__category=self.nma_kategori, document_no=self.nomer_dokumen, sub_document_no=self.sub_nomer_dokumen)
             context['nm_dokumen'] = nama_dokumen.document_name
             context['inisial_kategori'] = nama_dokumen.parent_category.category_initial
             context['nmr_dokumen'] = nama_dokumen.document_no
-            
+
             if self.sub_nomer_dokumen:
                 context['sub_nmr_dokumen'] = nama_dokumen.sub_document_no
 
@@ -963,7 +969,7 @@ class DokumenNumberListView(ListView):
                 context['status'] = [{'is_releaser': {"label": "Approved", "pesan": "released", "warna": "success"}}]
 
             # elif and nama_dokumen.is_inprogress and nama_dokumen.is_approved:
-                # context['status'] = [{'is_releaser': {"label": "Form Number", "pesan": "do_release", "warna": "warning"}}]''
+                # context['status'] = [{'is_releaser': {"label": "Approved by manager", "pesan": "do_release", "warna": "warning"}}]''
 
             elif nama_dokumen.is_approved:
                 context['status'] = [{'is_releaser': {"label": "Approved by manager", "pesan": "do_waiting_release", "warna": "warning"}}]
@@ -1042,14 +1048,14 @@ class DokumenUpdateView(UpdateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-
         context['nm_kategori'] = self.nma_kategori
-        context['nm_departemen'] = self.nma_departemen
 
         nama_dokumen = Dokumen.objects.get(parent_category__category=self.nma_kategori, document_no=self.nomer_dokumen, sub_document_no=self.sub_nomer_dokumen)
         context['nm_dokumen'] = nama_dokumen.document_name
         context['inisial_kategori'] = nama_dokumen.parent_category.category_initial
         context['nmr_dokumen'] = nama_dokumen.document_no
+        context['nm_departemen'] = nama_dokumen.parent_department.department
+        context['kode_departemen'] = nama_dokumen.parent_department.department_code
 
         if self.sub_nomer_dokumen:
             context['sub_nmr_dokumen'] = nama_dokumen.sub_document_no
@@ -1132,6 +1138,7 @@ class DokumenDetailView(DetailView):
         context['nm_dokumen'] = nama_dokumen.document_name
         context['inisial_kategori'] = nama_dokumen.parent_category.category_initial
         context['nmr_dokumen'] = nama_dokumen.document_no
+        context['kode_departemen'] = nama_dokumen.parent_department.department_code
 
         if self.sub_nomer_dokumen:
             context['sub_nmr_dokumen'] = nama_dokumen.sub_document_no
@@ -1153,11 +1160,11 @@ class DokumenDetailView(DetailView):
             if self.get_object().is_released and self.get_object().is_approved:
                 context['status'] = [{'is_releaser': {"label": "Approved", "pesan": "released", "warna": "success"}}]
 
-            # elif self.get_object().is_inprogress and self.get_object().is_approved:
-                # context['status'] = [{'is_releaser': {"label": "Form Number", "pesan": "do_release", "warna": "warning"}}]''
+            elif self.get_object().is_inprogress and self.get_object().is_approved:
+                context['status'] = [{'is_releaser': {"label": "Approved by manager", "pesan": "do_release", "warna": "warning"}}]
 
-            elif self.get_object().is_approved:
-                context['status'] = [{'is_releaser': {"label": "Approved by manager", "pesan": "do_waiting_release", "warna": "warning"}}]
+            # elif self.get_object().is_approved:
+            #    context['status'] = [{'is_releaser': {"label": "Approved by manager", "pesan": "do_waiting_release", "warna": "warning"}}]
 
             elif self.get_object().is_inprogress:
                 context['status'] = [{'is_approver': {"label": "Document in review", "pesan": "do_approve", "warna": "warning"}}]
@@ -1165,7 +1172,8 @@ class DokumenDetailView(DetailView):
             else:
                 context['status'] = [{'is_approver': {"label": "Waiting for review", "pesan": "do_waiting_approval", "warna": "info" }}]
 
-        context['log_notifikasi'] = LogNotifikasi.objects.filter(parent_document=nama_dokumen.id)
+        notifikasi = LogNotifikasi.objects.filter(parent_document=nama_dokumen.id)
+        context['log_notifikasi'] = notifikasi
 
         return context
     
@@ -1176,29 +1184,50 @@ class DokumenUpdateStatusView(UpdateView): # Show in modal
         dokumen_instance_update = Dokumen.objects.get(id=pk)
         opsi_aktivasi = request.POST.get('status')
 
+       
         if opsi_aktivasi == "do_waiting_approval":
-            dokumen_instance_update.is_inprogress = True
-            dokumen_instance_update.save(update_fields=['is_inprogress'])
+            if self.request.user.is_approver and self.request.user.user_department == dokumen_instance_update.parent_department:
+                dokumen_instance_update.is_inprogress = True
+                dokumen_instance_update.save(update_fields=['is_inprogress'])
 
-            # Create a value in another model after saving
-            LogNotifikasi.objects.create(parent_user=self.request.user, parent_document=dokumen_instance_update, action="is_review", reason="in review approval")
+                # Create a value in another model after saving
+                LogNotifikasi.objects.create(parent_user=self.request.user, parent_document=dokumen_instance_update, action="is_review", reason="Document is under review")
             
-
+        # return redirect(self.request.META.get('HTTP_REFERER'))
+            else:
+                raise PermissionDenied("You do not have the necessary permissions.")
+    # elif self.request.user.is_approver and self.request.user.user_department == dokumen_instance_update.parent_department:
         elif opsi_aktivasi == "do_approve":
-            # Update other instances where is_active is True to False
-            # Dokumen.objects.exclude(id=pk).filter(is_active=True, document_no=archive_instance_update.document_no).update(is_active=False)
-            dokumen_instance_update.is_approved = True
-            dokumen_instance_update.is_inprogress = False
-            dokumen_instance_update.save(update_fields=['is_inprogress', 'is_approved'])
+            if self.request.user.is_approver and self.request.user.user_department == dokumen_instance_update.parent_department:
+                # Update other instances where is_active is True to False
+                # Dokumen.objects.exclude(id=pk).filter(is_active=True, document_no=archive_instance_update.document_no).update(is_active=False)
+                dokumen_instance_update.is_approved = True
+                # dokumen_instance_update.is_inprogress = False
+                # dokumen_instance_update.save(update_fields=['is_inprogress', 'is_approved'])
+                dokumen_instance_update.save(update_fields=['is_approved'])
+
+                # Create a value in another model after saving
+                LogNotifikasi.objects.create(parent_user=self.request.user, parent_document=dokumen_instance_update, action="is_approve", reason="Document has been approved")
 
         # elif opsi_aktivasi == "do_waiting_release":
             # dokumen_instance_update.is_inprogress = True
             # dokumen_instance_update.save(update_fields=['is_inprogress'])
 
+        # return redirect(self.request.META.get('HTTP_REFERER'))
+            else:
+                raise PermissionDenied("You do not have the necessary permissions.")
+    # elif self.request.user.is_releaser and self.request.user.user_department == dokumen_instance_update.parent_department:
         elif opsi_aktivasi == "do_release":
-            dokumen_instance_update.is_released = True
-            # dokumen_instance_update.is_inprogress = False
-            # dokumen_instance_update.save(update_fields=['is_inprogress', 'is_released'])
-            dokumen_instance_update.save(update_fields=['is_released'])
+            if self.request.user.is_approver and self.request.user.user_department == dokumen_instance_update.parent_department:
+                dokumen_instance_update.is_released = True
+                dokumen_instance_update.is_inprogress = False
+                # dokumen_instance_update.save(update_fields=['is_inprogress', 'is_released'])
+                dokumen_instance_update.save(update_fields=['is_released', 'is_inprogress'])
 
+                # Create a value in another model after saving
+                LogNotifikasi.objects.create(parent_user=self.request.user, parent_document=dokumen_instance_update, action="is_release", reason="Document has been released")
+            else:
+                raise PermissionDenied("You do not have the necessary permissions.")
         return redirect(self.request.META.get('HTTP_REFERER'))
+        
+        

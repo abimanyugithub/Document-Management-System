@@ -17,7 +17,8 @@
                 <li class="breadcrumb-item active" aria-current="page">{{ nm_departemen|capfirst }}</li>
                 <li class="breadcrumb-item active" aria-current="page"><a href='{% url 'dokumen_view' %}?dept={{ nm_departemen|custom_slugify }}'>Category</a></li>
                 <li class="breadcrumb-item active" aria-current="page"><a href='{% url 'dokumen_view' %}?dept={{ nm_departemen|custom_slugify }}&cat={{ nm_kategori|custom_slugify }}'>{{ nm_kategori|capfirst }}</a></li>
-                <li class="breadcrumb-item active" aria-current="page"><a href='{% url 'dokumen_list_view' %}?dept={{ nm_departemen|custom_slugify }}&cat={{ nm_kategori|custom_slugify }}&docs={{ nmr_dokumen|custom_slugify }}{% if sub_nmr_dokumen %}&sub={{ sub_nmr_dokumen|custom_slugify }}{% endif %}'>{{ inisial_kategori }}.{{ nmr_dokumen }}.{{ sub_nmr_dokumen }} {{ nm_dokumen|capfirst }}</a></li>
+                <li class="breadcrumb-item active" aria-current="page"><a href='{% url 'dokumen_list_view' %}?dept={{ nm_departemen|custom_slugify }}&cat={{ nm_kategori|custom_slugify }}&docs={{ nmr_dokumen|custom_slugify }}{% if sub_nmr_dokumen %}&sub={{ sub_nmr_dokumen|custom_slugify }}{% endif %}'>
+                  {{ inisial_kategori|add:"." }}{{ kode_departemen|add:"." }}{{ nmr_dokumen }}{% if sub_nmr_dokumen %}{{ sub_nmr_dokumen }}{% endif %}&nbsp;{{ nm_dokumen|capfirst }}</a></li>
                 <li class="breadcrumb-item active" aria-current="page">Update</li>
               </ol>
             </nav>
@@ -34,9 +35,9 @@
           <div class="card-body">
             <div class="row">
               <div class="col-8">
-                <h4 class="card-title">{% if nm_archive %} Revision {% else %} Register {% endif %} Document - {{ nm_dokumen|capfirst }}</h4>
+                <h4 class="card-title">{% if nm_dokumen %} Revision {% else %} Register {% endif %} Document - {{ nm_dokumen|capfirst }}</h4>
                 <p class="card-description">
-                  Add class <code>.table-striped</code>{% for u in get_id %}{{ u.name }}{% endfor %}
+                  Add class <code>.table-striped</code>
                 </p>
               </div>
             </div>
@@ -57,10 +58,10 @@
                           {% if value.label == "Document ID" %}
                           <div class="input-group">
                             <div class="input-group-prepend">
-                                <span class="input-group-text input-group-text text-dark bg-white border-0" id="staticText">{{ inisial_kategori }} — </span>
+                                <span class="input-group-text input-group-text text-dark bg-white border-0" id="staticText">{{ inisial_kategori|add:" — " }}</span>
                             </div>
                             <input type="{{ value.type }}" class="form-control" id="{{ key }}" name="{{ key }}" placeholder="{{ value.label }}" value="{{ archive_detail|get_field_value:key }}" required >
-                            <span class="input-group-text input-group-text text-dark bg-white border-0" id="staticText"> — </span>
+                            <span class="input-group-text input-group-text text-dark bg-white border-0" id="staticText">{{ text|default:" — " }}</span>
                             <input type="text" class="form-control" name="sub_doc_no" placeholder="Sub {{ value.label }}" value="{{ sub_nmr_dokumen }}"> 
                           </div>
                           {% else %}

@@ -15,18 +15,19 @@
         </button>
       </div>
       <div class="modal-body">
-        <span class="text-danger">Delete</span> this document?
+        Are you sure you want to <span class="text-danger">delete</span> this document?
         <hr>
         <div class="row">
           <div class="col-6">
             <h5>Document</h5>
-            <p>{{ inisial_kategori }}.{{ nmr_dokumen }}.{{ sub_nmr_dokumen }} {{ nm_dokumen|capfirst }}</p>
+            <p>{{ inisial_kategori|add:"." }}{{ kode_departemen|add:"." }}{{ nmr_dokumen }}{% if sub_nmr_dokumen %}{{ text|default:"." }}{{ sub_nmr_dokumen }}{% endif %}</p>
+            <p>{{ nm_dokumen|capfirst }}</p>
           </div>
         </div>
         <div class="row">
           <div class="col-6 mt-2">
             <h5>Revision No.</h5>
-            <p>{{ obj.revision_no }}</p>
+            <p>{% if obj.revision_no %}{{ obj.revision_no }}{% endif %}</p>
           </div>
         </div>
 
