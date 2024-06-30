@@ -102,15 +102,16 @@
                     </td>
                     <td>
                       <div class="d-flex">
-                        <button type="button" onclick="window.location.href='{% url 'dokumen_update' pk=obj.id %}?dept={{ nm_departemen|custom_slugify }}&cat={{ nm_kategori|custom_slugify }}&docs={{ nmr_dokumen|custom_slugify }}{% if obj.sub_document_no %}&sub={{ obj.sub_document_no|custom_slugify }}{% endif %}'" class="mr-2 btn btn-social-icon btn-twitter btn-rounded" data-toggle="modal" data-target="#mod0-{{ obj.id }}">
-                          <i class="ti-pencil-alt"></i>
-                        </button>
+
+                        {% if obj.is_released and user.is_releaser or user.is_superuser %}
                         <button type="button" class="mr-2 btn btn-social-icon btn-rounded {% if obj.is_active %}btn-facebook{% else %}btn-secondary{% endif %}" data-toggle="modal" data-target="#mod1-{{ obj.id }}">
                           <i class="ti-check-box"></i>
                         </button>
-                        <button type="button" class="mr-2 btn btn-social-icon btn-dribbble btn-rounded" data-toggle="modal" data-target="#mod2-{{ obj.id }}" >
-                          <i class="ti-trash"></i>
-                        </button>
+                        {% endif %}
+
+                        {{ opt_button_update|safe }}
+                        {{ opt_button_delete|safe }}
+                        {{ opt_button_aktifasi|safe }}
                         <button type="button" onclick="window.location.href='{% url 'dokumen_detail' pk=obj.id %}?dept={{ nm_departemen|custom_slugify }}&cat={{ nm_kategori|custom_slugify }}&docs={{ nmr_dokumen|custom_slugify }}{% if obj.sub_document_no %}&sub={{ obj.sub_document_no|custom_slugify }}{% endif %}'" class="btn btn-social-icon btn-linkedin btn-rounded">
                           <i class="ti-info-alt"></i>
                         </button>

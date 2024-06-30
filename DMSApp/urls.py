@@ -34,6 +34,7 @@ urlpatterns = [
     path('document/delete/<str:pk>/', views.DokumenDeleteView.as_view(), name='dokumen_is_delete'),
     path('document/detail/<str:pk>/', views.DokumenDetailView.as_view(), name='dokumen_detail'),
     path('document/update-status/<str:pk>/', views.DokumenUpdateStatusView.as_view(), name='dokumen_status_update'),
+    path('document/activation/<str:pk>/', views.DokumenActivateDeactivateView.as_view(), name='dokumen_is_active')
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

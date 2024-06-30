@@ -15,6 +15,9 @@ from django.contrib.auth.views import LoginView
 from django.contrib.auth import login, logout, authenticate
 import ldap
 from django_auth_ldap.backend import LDAPBackend
+from django.utils.text import slugify
+from .templatetags.custom_filters import custom_slugify  # import the custom filter
+
 
 folder_target = 'media/DMSApp/'
 
@@ -967,7 +970,7 @@ class DokumenNumberListView(ListView):
 
             if nama_dokumen.is_released and nama_dokumen.is_approved:
                 context['status'] = [{'is_releaser': {"label": "Approved", "pesan": "released", "warna": "success"}}]
-
+                    
             # elif and nama_dokumen.is_inprogress and nama_dokumen.is_approved:
                 # context['status'] = [{'is_releaser': {"label": "Approved by manager", "pesan": "do_release", "warna": "warning"}}]''
 
@@ -977,8 +980,54 @@ class DokumenNumberListView(ListView):
             elif nama_dokumen.is_inprogress:
                 context['status'] = [{'is_approver': {"label": "Document in review", "pesan": "do_approve", "warna": "warning"}}]
 
+            # if rejected
+            elif nama_dokumen.is_rejected:
+                context['status'] = [{'is_rejected': {"label": "Rejected", "pesan": "reject", "warna": "danger"}}]
+                
             else:
                 context['status'] = [{'is_approver': {"label": "Waiting for review", "pesan": "do_waiting_approval", "warna": "info" }}]
+
+        else:
+            context['status'] = [{'is_obsolete': {"label": "Obsolete", "warna": "secondary" }}]
+
+
+        # Prepare URL with correct escaping
+        url = reverse('dokumen_update', kwargs={'pk': nama_dokumen.id})
+
+        sub_doc_slug = custom_slugify(nama_dokumen.sub_document_no) if nama_dokumen.sub_document_no else ""
+        sub_doc_param = f"&sub={sub_doc_slug}" if sub_doc_slug else ""
+        # Determine the button class based on nama_dokumen.is_active
+        button_class = 'btn-facebook' if nama_dokumen.is_active else 'btn-secondary'
+
+        # elif nama_dokumen.is_approve:
+        
+        if not nama_dokumen.is_inprogress and not nama_dokumen.is_released:
+            context['opt_button_delete'] = (
+                f'<button type="button" class="mr-2 btn btn-social-icon btn-dribbble btn-rounded" data-toggle="modal" data-target="#mod2-{nama_dokumen.id}" >'
+                f'<i class="ti-trash"></i>'
+                f'</button>'
+            )
+    
+            context['opt_button_update'] = (
+                f'<button type="button" onclick="window.location.href=\'{url}?dept={custom_slugify(nama_dokumen.parent_department.department)}&cat={custom_slugify(nama_dokumen.parent_category.category)}&docs={custom_slugify(nama_dokumen.document_no)}{sub_doc_param}\'" '
+                f'class="mr-2 btn btn-social-icon btn-twitter btn-rounded" data-toggle="modal" data-target="#mod0-{nama_dokumen.id}">'
+                f'<i class="ti-pencil-alt"></i></button>'
+            )
+
+        else:
+
+            '''for obj in context['object_list']:
+                btn = (
+                    f'<button type="button" class="mr-2 btn btn-social-icon btn-rounded {button_class} data-toggle="modal" data-target="#mod1-{obj.id}">'
+                    f'<i class="ti-check-box"></i>'
+                    f'</button>'
+                )
+
+            # Add the buttons to the context
+            context['opt_button_aktifasi'] = btn'''
+            
+            # context['opt_button_aktifasi']='<button type="submit" class="btn btn-primary mr-1" data-toggle="modal" data-target="#mod4">Review</button>'
+                    
 
         return context
     
@@ -1155,22 +1204,42 @@ class DokumenDetailView(DetailView):
         for label_dict in daftar_label:
             context['list_label'] = label_dict
 
-        if self.get_object().is_active:
+        if self.get_object().is_active and self.request.user.user_department == nama_dokumen.parent_department:
 
             if self.get_object().is_released and self.get_object().is_approved:
                 context['status'] = [{'is_releaser': {"label": "Approved", "pesan": "released", "warna": "success"}}]
-
+                
             elif self.get_object().is_inprogress and self.get_object().is_approved:
-                context['status'] = [{'is_releaser': {"label": "Approved by manager", "pesan": "do_release", "warna": "warning"}}]
-
+                context['status'] = [{'is_releaser': {"label": "Approved by manager","sub_label": "release", "pesan": "do_release", "warna": "warning"}}]
+                
+                # Do something for approver who are active
+                if self.request.user.is_releaser and self.request.user.is_active:
+                    context['opt_button']='<button type="submit" class="btn btn-primary mr-1" data-toggle="modal" data-target="#mod4">Release</button>' 
+            
             # elif self.get_object().is_approved:
             #    context['status'] = [{'is_releaser': {"label": "Approved by manager", "pesan": "do_waiting_release", "warna": "warning"}}]
 
             elif self.get_object().is_inprogress:
-                context['status'] = [{'is_approver': {"label": "Document in review", "pesan": "do_approve", "warna": "warning"}}]
-
+                context['status'] = [{'is_approver': {"label": "Document in review","sub_label": "approve", "pesan": "do_approve", "warna": "warning"}}]
+                
+                # Do something for approver who are active
+                if self.request.user.is_approver and self.request.user.is_active:
+                    context['opt_button']='<button type="submit" class="btn btn-primary mr-1" data-toggle="modal" data-target="#mod4">Aprove</button>'
+                    context['opt_button_reject']='<button type="submit" class="btn btn-dribbble mr-1" data-toggle="modal" data-target="#mod5">Reject</button>'  
+            
+            # if rejected
+            elif self.get_object().is_rejected:
+                context['status'] = [{'is_rejected': {"label": "Rejected", "pesan": "reject", "warna": "danger"}}]
+                
             else:
-                context['status'] = [{'is_approver': {"label": "Waiting for review", "pesan": "do_waiting_approval", "warna": "info" }}]
+                context['status'] = [{'is_approver': {"label": "Waiting for review","sub_label": "review", "pesan": "do_waiting_approval", "warna": "info" }}]
+
+                # Do something for approver who are active
+                if self.request.user.is_approver and self.request.user.is_active:
+                    context['opt_button']='<button type="submit" class="btn btn-primary mr-1" data-toggle="modal" data-target="#mod4">Review</button>'
+
+        elif not self.get_object().is_active:
+            context['status'] = [{'is_obsolete': {"label": "Obsolete", "warna": "secondary" }}]
 
         notifikasi = LogNotifikasi.objects.filter(parent_document=nama_dokumen.id)
         context['log_notifikasi'] = notifikasi
@@ -1183,7 +1252,6 @@ class DokumenUpdateStatusView(UpdateView): # Show in modal
     def post(self, request, pk):
         dokumen_instance_update = Dokumen.objects.get(id=pk)
         opsi_aktivasi = request.POST.get('status')
-
        
         if opsi_aktivasi == "do_waiting_approval":
             if self.request.user.is_approver and self.request.user.user_department == dokumen_instance_update.parent_department:
@@ -1218,7 +1286,8 @@ class DokumenUpdateStatusView(UpdateView): # Show in modal
                 raise PermissionDenied("You do not have the necessary permissions.")
     # elif self.request.user.is_releaser and self.request.user.user_department == dokumen_instance_update.parent_department:
         elif opsi_aktivasi == "do_release":
-            if self.request.user.is_approver and self.request.user.user_department == dokumen_instance_update.parent_department:
+            # if self.request.user.is_approver and self.request.user.user_department == dokumen_instance_update.parent_department:
+            if self.request.user.is_releaser:
                 dokumen_instance_update.is_released = True
                 dokumen_instance_update.is_inprogress = False
                 # dokumen_instance_update.save(update_fields=['is_inprogress', 'is_released'])
@@ -1228,6 +1297,50 @@ class DokumenUpdateStatusView(UpdateView): # Show in modal
                 LogNotifikasi.objects.create(parent_user=self.request.user, parent_document=dokumen_instance_update, action="is_release", reason="Document has been released")
             else:
                 raise PermissionDenied("You do not have the necessary permissions.")
+        
+        # reject
+        else:
+            if self.request.user.is_approver and self.request.user.user_department == dokumen_instance_update.parent_department:
+                dokumen_instance_update.is_rejected = True
+                dokumen_instance_update.is_inprogress = False
+                dokumen_instance_update.save(update_fields=['is_rejected', 'is_inprogress'])
+
+                # Create a value in another model after saving
+                LogNotifikasi.objects.create(parent_user=self.request.user, parent_document=dokumen_instance_update, action="is_reject", reason="Document has been rejected")
+            
+            else:
+                raise PermissionDenied("You do not have the necessary permissions.")
         return redirect(self.request.META.get('HTTP_REFERER'))
         
-        
+class DokumenActivateDeactivateView(UpdateView): # Show in modal
+
+    def post(self, request, pk):
+        dokumen_instance_update = Dokumen.objects.get(id=pk)
+        opsi_aktivasi = request.POST.get('aktivasi')
+
+        if opsi_aktivasi == "nonaktif":
+            if self.request.user.is_releaser or self.request.user.is_superuser:
+                dokumen_instance_update.is_active = False
+                dokumen_instance_update.save(update_fields=['is_active'])
+
+                # Create a value in another model after saving
+                LogNotifikasi.objects.create(parent_user=self.request.user, parent_document=dokumen_instance_update, action="is_obsolete", reason="Document has been obsoleted")
+            
+            else:
+                raise PermissionDenied("You do not have the necessary permissions.")
+
+        else:
+            if self.request.user.is_releaser or self.request.user.is_superuser:
+            # Update other instances where is_active is True to False
+            # Dokumen.objects.exclude(id=pk).filter(is_active=True, document_no=dokumen_instance_update.document_no).update(is_active=False)
+
+                dokumen_instance_update.is_active = True
+                dokumen_instance_update.save(update_fields=['is_active'])
+
+                # Create a value in another model after saving
+                LogNotifikasi.objects.create(parent_user=self.request.user, parent_document=dokumen_instance_update, action="is_obsolete", reason="Document has been activated")
+            
+            else:
+                raise PermissionDenied("You do not have the necessary permissions.")
+
+        return redirect(self.request.META.get('HTTP_REFERER'))

@@ -4,6 +4,8 @@ from django.db.models.fields.files import FieldFile
 from django.utils.dateformat import format
 import datetime  # Ensure datetime is imported correctly
 from django.db.models import CharField, TextField
+import re
+from django.utils.text import slugify
 
 register = template.Library()
 
@@ -19,6 +21,8 @@ def get_field_value(obj, attr_name):
 @register.filter
 def custom_slugify(value):
     return quote_plus(value)
+    # Use Django's slugify to create a base slug
+    # return slugify(value)
 
 @register.filter
 def get_field_value_exclude_url(obj, attr_name):

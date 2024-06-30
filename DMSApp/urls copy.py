@@ -34,7 +34,7 @@ urlpatterns = [
     # path('archive/detail/<str:pk>/', views.ArsipDetailView.as_view(), name='arsip_detail'),
     #path('archive/detail-list/', views.ArsipDetailListView.as_view(), name='arsip_list_detail'),
     #path('archive/update-status/<str:pk>/', views.ArchiveUpdateStatusView.as_view(), name='arsip_status_update'),
-    path('archive/activation/<str:pk>/', views.ArsipActivateDeactivateView.as_view(), name='arsip_is_active')
+    # path('archive/activation/<str:pk>/', views.ArsipActivateDeactivateView.as_view(), name='arsip_is_active')
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
