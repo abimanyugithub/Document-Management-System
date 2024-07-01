@@ -18,7 +18,7 @@
                 <li class="breadcrumb-item active" aria-current="page"><a href='{% url 'dokumen_view' %}?dept={{ nm_departemen|custom_slugify }}'>Category</a></li>
                 <li class="breadcrumb-item active" aria-current="page"><a href='{% url 'dokumen_view' %}?dept={{ nm_departemen|custom_slugify }}&cat={{ nm_kategori|custom_slugify }}'>{{ nm_kategori|capfirst }}</a></li>
                 <li class="breadcrumb-item active" aria-current="page"><a href='{% url 'dokumen_list_view' %}?dept={{ nm_departemen|custom_slugify }}&cat={{ nm_kategori|custom_slugify }}&docs={{ nmr_dokumen|custom_slugify }}{% if sub_nmr_dokumen %}&sub={{ sub_nmr_dokumen|custom_slugify }}{% endif %}'>
-                  {{ inisial_kategori|add:"." }}{{ kode_departemen|add:"." }}{{ nmr_dokumen }}{% if sub_nmr_dokumen %}{{ sub_nmr_dokumen }}{% endif %}&nbsp;{{ nm_dokumen|capfirst }}</a></li>
+                  {{ inisial_kategori|add:"." }}{% if kode_departemen %}{{ kode_departemen|add:"." }}{% endif %}{{ nmr_dokumen }}{% if sub_nmr_dokumen %}{{ text|default:"." }}{{ sub_nmr_dokumen }}{% endif %}&nbsp;{{ nm_dokumen|capfirst }}</a></li>
                 <li class="breadcrumb-item active" aria-current="page">Update</li>
               </ol>
             </nav>
@@ -27,7 +27,6 @@
       </div>
     </div>
 
-    
     <div class="row">
       
       <div class="col-lg-8 grid-margin stretch-card">

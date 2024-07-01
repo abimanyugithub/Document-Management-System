@@ -742,38 +742,50 @@ class DokumenCreateView(CreateView): # Revision juga menggunakan class ini
         # Get filter parameters from the POST request
         nma_kategori = self.request.POST.get('kategori')  # from get_context_data
         nma_departemen = self.request.POST.get('departemen') # from get_context_data
-        # get_context_data for revision
-        nma_dokumen = self.request.POST.get('document_name')
+        
         no_dokumen = self.request.POST.get('document_no')
         # no_form = self.request.POST.get('form_no')
-        no_revisi = self.request.POST.get('revision_no')
         sub_dokumen_no = self.request.POST.get('sub_doc_no')
+
+        #  for revision
+        revisi = self.request.POST.get('revisi')
+        # nma_dokumen = self.request.POST.get('document_name')
+        no_revisi = self.request.POST.get('revision_no')
 
         # Retrieve IDs from the database based on the names
         kategori_obj = KategoriDokumen.objects.get(category=nma_kategori)
         departemen_obj = Departemen.objects.get(department=nma_departemen)
 
-        if self.request.user.is_superuser or self.request.user.is_uploader and self.request.user.user_department == departemen_obj:
+        if self.request.user.is_uploader and self.request.user.user_department == departemen_obj:
                 
-            '''# Check if a document name or document no with the same name already exists
-            if Dokumen.objects.filter(document_name=nma_arsip).exists() or Dokumen.objects.filter(document_name=nma_arsip, document_no=self.no_dokumen).exists():
-                raise PermissionDenied('An entry with this document name or document number already exists.')'''
-                            
-            if sub_dokumen_no:
+            if not revisi:
+                # Check if document no with the same name already exists
+                if Dokumen.objects.filter(parent_category=kategori_obj.id, parent_department=departemen_obj.id, document_no=no_dokumen).exists():
+                    raise PermissionDenied('An entry with this document number already exists.')
+
+                if sub_dokumen_no:
+                    # Check if a document name with sub document number or document no with sub document number already exists
+                    if Dokumen.objects.filter(parent_category=kategori_obj.id, document_no=no_dokumen, sub_document_no=sub_dokumen_no).exists():
+                        raise PermissionDenied('An entry with this document name or document number already exists.')
+                    
+                    form.instance.sub_document_no=sub_dokumen_no
+            else:
+
                 form.instance.sub_document_no=sub_dokumen_no
+
                 '''# Check if a document name with sub document number or document no with sub document number already exists
                 if Dokumen.objects.filter(document_name=nma_arsip, sub_document_no=self.sub_dokumen_no).exists() or Dokumen.objects.filter(document_no=self.no_arsip, sub_document_no=self.sub_dokumen_no).exists():
                     raise PermissionDenied('An entry with this document name or document number already exists.')
                 else:
                     form.instance.sub_document_no=self.sub_dokumen_no'''
             
-            # Get the values revision
-            nma_arsip = self.request.GET.get('archive')
+            '''# Get the values revision
+            nma_arsip = self.request.GET.get('revision')
 
             if nma_arsip:
                 # Check if a document name and revision no with the same name already exists
                 if Dokumen.objects.filter(document_name=nma_arsip, revision_no=self.no_revisi).exists():
-                    raise ValidationError('An entry with this revision number already exists.')
+                    raise ValidationError('An entry with this revision number already exists.')'''
 
             '''
             elif no_arsip:
@@ -852,13 +864,42 @@ class DokumenCreateView(CreateView): # Revision juga menggunakan class ini
         context = super().get_context_data(**kwargs)
         get_nma_kategori = self.request.GET.get('cat')
         get_nma_departemen = self.request.GET.get('dept')
-        get_nma_dokumen = self.request.GET.get('docs')
+        get_nmr_dokumen = self.request.GET.get('docs')
+        get_sub_dokumen_no = self.request.GET.get('sub')
 
-        if get_nma_kategori:
-            # Retrieve the related KategoriDokumen objects for the Departemen
-            kategori_obj = KategoriDokumen.objects.get(category=get_nma_kategori)
-            relasi_label = kategori_obj.related_label.all()
-            context['nm_kategori'] = get_nma_kategori
+        # if get_nma_kategori:
+        # Retrieve the related KategoriDokumen objects for the Departemen
+        kategori_obj = KategoriDokumen.objects.get(category=get_nma_kategori)
+        relasi_label = kategori_obj.related_label.all()
+        context['nm_kategori'] = get_nma_kategori
+
+        # get_context_data for revision
+        if get_nmr_dokumen:
+            dokumen_list_revisi = Dokumen.objects.filter(parent_department__department=get_nma_departemen, parent_category=kategori_obj.id, document_no=get_nmr_dokumen, sub_document_no=get_sub_dokumen_no)
+            for revisi in dokumen_list_revisi:
+                context['revisi']=revisi
+                # Add penomeran_dokumen to context
+                context['penomeran_dokumen'] = revisi.document_no
+                context['sub_nmr_dokumen'] = revisi.sub_document_no
+                context['nm_dokumen'] = revisi.document_name
+
+            # Calculate next penomeran_revision_number
+            max_revision_no = Dokumen.objects.filter(parent_category=kategori_obj.id).aggregate(Max('revision_no'))
+            if max_revision_no['revision_no__max'] is not None:
+                current_max = int(max_revision_no['revision_no__max'])
+                next_number = current_max + 1
+            else:
+                # If no documents exist yet
+                next_number = 1
+
+            # Format penomeran_revisi with leading zeros (e.g., "00", "01", "02")
+            formatted_penomeran_revisi = str(next_number).zfill(2)
+
+            # Add penomeran_revisi to context
+            context['penomeran_revisi'] = formatted_penomeran_revisi
+            
+
+        else:
 
             # Calculate next penomeran_dokumen
             max_document_no = Dokumen.objects.filter(parent_category=kategori_obj.id).aggregate(Max('document_no'))
@@ -874,36 +915,37 @@ class DokumenCreateView(CreateView): # Revision juga menggunakan class ini
 
             # Add penomeran_dokumen to context
             context['penomeran_dokumen'] = formatted_penomeran_dokumen
-            context['nm_departemen'] = get_nma_departemen
-            context['nm_dokumen'] = get_nma_dokumen
-            '''nmr_dokumen = Dokumen.objects.filter(document_name=get_nma_dokumen, is_active=True)
-            for i in nmr_dokumen:
-                context['kode_dokumen'] = i.document_no +' REV. '+ i.revision_no'''
 
-            # Note untuk sementara di disable dulu sampai semua dokumen sudah di upload semua
-            # remove revision_no jika register. confirm. 25/06/2024
-            
-            '''
-            if kode_arsip.exists():
-                context['nm_label'] = relasi_label
-            else:
-                context['nm_label'] = relasi_label.exclude(name='revision_no')
-            '''
+        departemen = Departemen.objects.get(department=get_nma_departemen)
+        context['nm_departemen'] = departemen.department
+        context['kode_departemen'] = departemen.department_code
+        
+        '''nmr_dokumen = Dokumen.objects.filter(document_name=get_nma_dokumen, is_active=True)
+        for i in nmr_dokumen:
+            context['kode_dokumen'] = i.document_no +' REV. '+ i.revision_no'''
+
+        # Note untuk sementara di disable dulu sampai semua dokumen sudah di upload semua
+        # remove revision_no jika register. confirm. 25/06/2024
+        
+        '''
+        if kode_arsip.exists():
             context['nm_label'] = relasi_label
+        else:
+            context['nm_label'] = relasi_label.exclude(name='revision_no')
+        '''
+        context['nm_label'] = relasi_label
+            
+        # context['list_label'] = daftar_label
+        context['inisial_kategori'] = kategori_obj.category_initial
+
+        for label_dict in daftar_label:
+            context['list_label'] = label_dict
+
+        # username = self.request.user.username  # Adjust as per your user model or LDAP attribute
+        # context['username'] = username
+            
+        
                 
-            # context['list_label'] = daftar_label
-            context['nma_inisial'] = kategori_obj.category_initial
-
-            for label_dict in daftar_label:
-                context['list_label'] = label_dict
-
-            # username = self.request.user.username  # Adjust as per your user model or LDAP attribute
-            # context['username'] = username
-                
-            # get_context_data for revision
-            if get_nma_dokumen:
-                context['dokumen_list'] = Dokumen.objects.filter(parent_category__category=self.nma_kategori, parent_department__department=self.nma_departemen, document_name=self.nma_arsip)
-
         return context
     
 
@@ -945,22 +987,24 @@ class DokumenNumberListView(ListView):
             context['nm_departemen'] = departemen.department
             context['kode_departemen'] = departemen.department_code
 
-            nama_dokumen = self.object_list.get(parent_category__category=self.nma_kategori, document_no=self.nomer_dokumen, sub_document_no=self.sub_nomer_dokumen)
-            context['nm_dokumen'] = nama_dokumen.document_name
-            context['inisial_kategori'] = nama_dokumen.parent_category.category_initial
-            context['nmr_dokumen'] = nama_dokumen.document_no
+            # correct
+            list_nama_dokumen = self.object_list.filter(parent_category__category=self.nma_kategori, document_no=self.nomer_dokumen, sub_document_no=self.sub_nomer_dokumen)
+            for nama_dokumen in list_nama_dokumen:
+                context['nm_dokumen'] = nama_dokumen.document_name
+                context['inisial_kategori'] = nama_dokumen.parent_category.category_initial
+                context['nmr_dokumen'] = nama_dokumen.document_no
 
             if self.sub_nomer_dokumen:
                 context['sub_nmr_dokumen'] = nama_dokumen.sub_document_no
 
             context['nm_label'] = relasi_label
 
-            context['is_unapproved_instances'] = self.object_list.filter(
+            context['is_unreleased_instances'] = self.object_list.filter(
                 # document_name=self.nma_dokumen,
-                document_no=self.nomer_dokumen,
-                parent_category__category=self.nma_kategori,
-                parent_department__department=self.nma_departemen,
-                is_approved=False
+                parent_category=nama_dokumen.parent_category,
+                document_no=nama_dokumen.document_no,
+                sub_document_no=nama_dokumen.sub_document_no,
+                is_released=False
             ).exists()
 
         for label_dict in daftar_label:
@@ -1109,7 +1153,7 @@ class DokumenUpdateView(UpdateView):
         if self.sub_nomer_dokumen:
             context['sub_nmr_dokumen'] = nama_dokumen.sub_document_no
 
-        kode_arsip = Dokumen.objects.filter(document_name=nama_dokumen.document_name, is_active=True)
+        # kode_arsip = Dokumen.objects.filter(document_name=nama_dokumen.document_name, is_active=True)
         # Retrieve the related KategoriDokumen objects for the Departemen
         kategori_obj = KategoriDokumen.objects.get(category=self.nma_kategori)
         relasi_label = kategori_obj.related_label.all()
@@ -1174,6 +1218,7 @@ class DokumenDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        pk = self.kwargs.get('pk')
 
         # if self.nma_kategori:
         # Retrieve the related MenuDokumen objects for the Departemen
@@ -1183,7 +1228,7 @@ class DokumenDetailView(DetailView):
         context['nm_kategori'] = self.nma_kategori
         context['nm_departemen'] = self.nma_departemen
 
-        nama_dokumen = Dokumen.objects.get(parent_category__category=self.nma_kategori, document_no=self.nomer_dokumen, sub_document_no=self.sub_nomer_dokumen)
+        nama_dokumen = Dokumen.objects.get(id=pk, parent_category__category=self.nma_kategori, document_no=self.nomer_dokumen, sub_document_no=self.sub_nomer_dokumen)
         context['nm_dokumen'] = nama_dokumen.document_name
         context['inisial_kategori'] = nama_dokumen.parent_category.category_initial
         context['nmr_dokumen'] = nama_dokumen.document_no

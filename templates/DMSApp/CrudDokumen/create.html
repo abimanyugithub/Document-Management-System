@@ -17,9 +17,9 @@
                 <li class="breadcrumb-item active" aria-current="page">{{ nm_departemen|capfirst }}</li>
                 <li class="breadcrumb-item active" aria-current="page"><a href='{% url 'dokumen_view' %}?dept={{ nm_departemen|custom_slugify }}'>Category</a></li>
                 <li class="breadcrumb-item active" aria-current="page"><a href='{% url 'dokumen_view' %}?dept={{ nm_departemen|custom_slugify }}&cat={{ nm_kategori|custom_slugify }}'>{{ nm_kategori|capfirst }}</a></li>
-                {% if nma_dokumen %}
-                <li class="breadcrumb-item active" aria-current="page">{% if nm_kategori %}<a href='{% url 'dokumen_view' %}?dept={{ nm_departemen|custom_slugify }}&cat={{ nm_kategori|custom_slugify }}&archive={{ nma_dokumen|custom_slugify }}'>{% endif %}{{ nm_arsip|capfirst }}</a></li>
-                <li class="breadcrumb-item active">{{ kode_arsip }}</li>
+                {% if revisi %}
+                <li class="breadcrumb-item active" aria-current="page"><a href='{% url 'dokumen_list_view' %}?dept={{ nm_departemen|custom_slugify }}&cat={{ nm_kategori|custom_slugify }}&docs={{ penomeran_dokumen|custom_slugify }}{% if sub_nmr_dokumen %}&sub={{ sub_nmr_dokumen|custom_slugify }}{% endif %}'>
+                  {{ inisial_kategori|add:"." }}{% if kode_departemen %}{{ kode_departemen|add:"." }}{% endif %}{{ nmr_dokumen }}{% if sub_nmr_dokumen %}{{ text|default:"." }}{{ sub_nmr_dokumen }}{% endif %}&nbsp;{{ nm_dokumen|capfirst }}</a></li>
                 <li class="breadcrumb-item active">Revision</li>
                 {% else %}
                 <li class="breadcrumb-item active">Register</li>
@@ -37,7 +37,7 @@
           <div class="card-body">
             <div class="row">
               <div class="col-8">
-                <h4 class="card-title">{% if nm_arsip %} Revision {% else %} Register {% endif %} Document - {{ nm_kategori|capfirst }}</h4>
+                <h4 class="card-title">{% if revisi %} Revision {% else %} Register {% endif %} Document - {{ nm_kategori|capfirst }}</h4>
                 <p class="card-description">
                   Add class <code>.table-striped</code>
                 </p>
@@ -51,6 +51,10 @@
 
                   <input type="hidden" name="kategori" value="{{ nm_kategori }}">
                   <input type="hidden" name="departemen" value="{{ nm_departemen }}">
+                  
+                  {% if revisi %}
+                      <input type="hidden" name="revisi" value="{{ revisi }}">
+                  {% endif %}
 
                   {% for key, value in list_label.items %}
                   <!-- # Get the names of the related labels -->
@@ -59,26 +63,26 @@
                         {% if value.type != "file" %}
                           <div class="form-group">
                             <label for="{{ key }}">{{ value.label }}</label>
-
                             {% if value.label == "Document ID" %}
                               <div class="input-group">
                                 <div class="input-group-prepend">
-                                    <span class="input-group-text input-group-text text-dark bg-white border-0" id="staticText">{{ nma_inisial|add:" — " }}</span>
+                                    <span class="input-group-text input-group-text text-dark bg-white border-0" id="staticText">{{ inisial_kategori|add:" — " }}</span>
                                 </div>
-                                <input type="{{ value.type }}" class="form-control" id="{{ key }}" name="{{ key }}" placeholder="{{ value.label }}" value="{{ penomeran_dokumen }}" required >
+                                <input type="{{ value.type }}" class="form-control" id="{{ key }}" name="{{ key }}" placeholder="{{ value.label }}" {% if revisi %} value="{{ penomeran_dokumen }}" readonly {% endif %} required >
                                 <span class="input-group-text input-group-text text-dark bg-white border-0" id="staticText">{{ text|default:" — " }}</span>
-                                <input type="text" class="form-control" name="sub_doc_no" placeholder="Sub {{ value.label }}">
+                                <input type="text" class="form-control" name="sub_doc_no" placeholder="Sub {{ value.label }}" {% if sub_nmr_dokumen %} value={{ sub_nmr_dokumen }} readonly {% endif %}>
                               </div>
                             {% else %}
-
-                            <input type="{{ value.type }}" class="form-control" id="{{ key }}" name="{{ key }}" placeholder="{{ value.label }}" required 
+                              <input type="{{ value.type }}" class="form-control" id="{{ key }}" name="{{ key }}" placeholder="{{ value.label }}" required
+                              {% if revisi %}
+                                {% if value.label == "Document Title" %}
+                                  value={{ nm_dokumen }}
+                                {% elif value.label == "Revision No" %}
+                                  value={{ penomeran_revisi }} readonly
+                                  {% endif %}
+                              {% endif %}>
                             
-                            {% for obj in archive_list %}
-                              {% if value.label == "Document Title" %} value="{{ obj|get_field_value:key }}" readonly{% endif %}
-                              {% if value.label == "Document ID" %} value="{{ obj|get_field_value:key }}" readonly{% endif %}
-                            {% endfor %}>
                             {% endif %}
-
                           </div>
                         {% else %}
                           <div class="form-group">

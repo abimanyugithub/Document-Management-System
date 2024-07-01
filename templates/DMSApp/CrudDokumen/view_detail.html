@@ -21,16 +21,16 @@
                 <li class="breadcrumb-item active" aria-current="page">{% if nm_kategori %}<a href='{% url 'dokumen_view' %}?dept={{ nm_departemen|custom_slugify }}&cat={{ nm_kategori|custom_slugify }}'>{% endif %}{{ nm_kategori|capfirst }}</a></li>
                 {% endif %}
                 {% if nm_dokumen %}
-                <li class="breadcrumb-item active" aria-current="page">{{ inisial_kategori|add:"." }}{{ kode_departemen|add:"."}}{{ nmr_dokumen }}{% if sub_nmr_dokumen %}{{ text|default:"." }}{{ sub_nmr_dokumen }}{% endif %}&nbsp;{{ nm_dokumen|capfirst }}</li>
+                <li class="breadcrumb-item active" aria-current="page">{{ inisial_kategori|add:"." }}{% if kode_departemen %}{{ kode_departemen|add:"." }}{% endif %}{{ nmr_dokumen }}{% if sub_nmr_dokumen %}{{ text|default:"." }}{{ sub_nmr_dokumen }}{% endif %}&nbsp;{{ nm_dokumen|capfirst }}</li>
                 {% endif %}
               </ol>
             </nav>
           </div>
-          {% if not is_unapproved_instances %}
+          {% if not is_unreleased_instances %}
           <div class="col-12 col-xl-4">
             <div class="justify-content-end d-flex">
               <div class="dropdown flex-md-grow-1 flex-xl-grow-0">
-                <button type="button" onclick="window.location.href='{% url 'dokumen_create' %}?dept={{ nm_departemen|custom_slugify }}&cat={{ nm_kategori|custom_slugify }}&archive={{ nm_arsip|custom_slugify }}'" class="btn btn-primary btn-icon-text" data-toggle="modal" data-target="#mod1">
+                <button type="button" onclick="window.location.href='{% url 'dokumen_create' %}?dept={{ nm_departemen|custom_slugify }}&cat={{ nm_kategori|custom_slugify }}&docs={{ nmr_dokumen|custom_slugify }}{% if sub_nmr_dokumen %}&sub={{ sub_nmr_dokumen|custom_slugify }}{% endif %}'" class="btn btn-primary btn-icon-text">
                   <i class="ti-plus btn-icon-prepend"></i>
                   Revision
                 </button>
